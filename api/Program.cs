@@ -91,4 +91,17 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// Agregar endpoints básicos para health check y root
+app.MapGet("/", () => new { 
+    message = "ADHSOFT SPORT API - Bienvenido", 
+    status = "running",
+    environment = app.Environment.EnvironmentName,
+    timestamp = DateTime.UtcNow 
+});
+
+app.MapGet("/health", () => new { 
+    status = "healthy", 
+    timestamp = DateTime.UtcNow 
+});
+
 app.Run();
