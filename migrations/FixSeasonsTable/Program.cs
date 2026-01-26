@@ -35,7 +35,8 @@ try
         ALTER TABLE servicios 
         ADD COLUMN IF NOT EXISTS codigo VARCHAR(50),
         ADD COLUMN IF NOT EXISTS tipo VARCHAR(50),
-        ADD COLUMN IF NOT EXISTS pronto_pago DECIMAL(10,2);
+        ADD COLUMN IF NOT EXISTS pronto_pago DECIMAL(10,2),
+        ADD COLUMN IF NOT EXISTS recurrente_mensual BOOLEAN NOT NULL DEFAULT false;
         
         -- Agregar columnas faltantes a productos  
         ALTER TABLE productos
