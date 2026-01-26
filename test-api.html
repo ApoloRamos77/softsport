@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test API - Fix Recibos</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: #fff; }
+        button { padding: 10px 20px; margin: 5px; background: #3b82f6; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #2563eb; }
+        button.success-btn { background: #10b981; }
+        button.success-btn:hover { background: #059669; }
+        pre { background: #2a2a2a; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .error { color: #ef4444; }
+        .success { color: #10b981; }
+    </style>
+</head>
+<body>
+    <h1>Test API - Fix Student Assignments in Recibos</h1>
+    <button class="success-btn" onclick="fixRecibos()">Fix Student Assignments</button>
+    <button onclick="testRecibos()">Get All Recibos</button>
+    <div id="result"></div>
+
+    <script>
+        async function fixRecibos() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>Actualizando recibos...</p>';
+            
+            try {
+                const response = await fetch('http://localhost:5081/api/recibos/fix-student-assignments', {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <p class="success">✓ Éxito! Recibos actualizados</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p class="error">✗ Error: ${error.message}</p>
+                    <pre>${error.stack}</pre>
+                `;
+            }
+        }
+
+        async function testRecibos() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>Cargando...</p>';
+            
+            try {
+                const response = await fetch('http://localhost:5081/api/recibos');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <p class="success">✓ Éxito! Se encontraron ${data.length} recibo(s)</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p class="error">✗ Error: ${error.message}</p>
+                    <pre>${error.stack}</pre>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

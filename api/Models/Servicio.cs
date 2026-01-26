@@ -1,0 +1,35 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace SoftSportAPI.Models
+{
+    [Table("servicios")]
+    public class Servicio : AuditableEntity
+    {
+        [Key]
+        [Column("id")]
+        public int Id { get; set; }
+
+        [Required]
+        [Column("nombre")]
+        [MaxLength(150)]
+        public string Nombre { get; set; } = string.Empty;
+
+        [Column("descripcion")]
+        [MaxLength(500)]
+        public string? Descripcion { get; set; }
+
+        [Required]
+        [Column("precio", TypeName = "decimal(12,2)")]
+        public decimal Precio { get; set; }
+
+        [Column("pronto_pago", TypeName = "decimal(12,2)")]
+        public decimal? ProntoPago { get; set; }
+
+        [Column("recurrente_mensual")]
+        public bool RecurrenteMensual { get; set; } = false;
+
+        [Column("activo")]
+        public bool Activo { get; set; } = true;
+    }
+}

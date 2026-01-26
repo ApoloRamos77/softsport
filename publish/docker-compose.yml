@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  # Frontend - React App
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - softsport-network
+
+  # Backend - .NET API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5081:5081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5081
+      # IMPORTANTE: Actualizar con tu connection string real
+      - ConnectionStrings__DefaultConnection=Server=TU_SERVIDOR;Database=Sys_Academia;User Id=sa;Password=TU_PASSWORD;TrustServerCertificate=True
+    restart: unless-stopped
+    networks:
+      - softsport-network
+
+networks:
+  softsport-network:
+    driver: bridge

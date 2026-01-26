@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fix Recibos</title>
+</head>
+<body>
+    <button onclick="fixRecibos()">Fix Student Assignments</button>
+    <div id="result"></div>
+
+    <script>
+        async function fixRecibos() {
+            try {
+                const response = await fetch('http://localhost:5081/api/recibos/fix-student-assignments', {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('result').innerHTML = '<pre>Error: ' + error.message + '</pre>';
+            }
+        }
+    </script>
+</body>
+</html>

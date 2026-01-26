@@ -1,0 +1,241 @@
+/* Estilos base para Soft Sport - Tema Claro */
+
+:root {
+  --bg-primary: #F8FAFC;
+  --bg-secondary: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --border-color: #E2E8F0;
+  --text-primary: #1E293B;
+  --text-secondary: #64748B;
+  --accent-blue: #27BBF5;
+  --accent-green: #7CB342;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Source Sans Pro', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Animaciones personalizadas */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* Scrollbar personalizado */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Transiciones suaves */
+* {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Override de clases Tailwind para tema claro */
+.bg-\\[\\#111827\\] {
+  background-color: #FFFFFF !important;
+}
+
+.bg-\\[\\#0d1117\\] {
+  background-color: #F8FAFC !important;
+}
+
+/* Colores de fondo oscuros a claros */
+.bg-slate-900, .bg-slate-900\\/30, .bg-slate-900\\/20, .bg-slate-900\\/50 {
+  background-color: #F1F5F9 !important;
+}
+
+.bg-slate-800, .bg-slate-800\\/30, .bg-slate-800\\/50, .bg-slate-800\\/20, .bg-slate-800\\/40 {
+  background-color: #F8FAFC !important;
+}
+
+.bg-slate-700, .bg-slate-700\\/50 {
+  background-color: #FFFFFF !important;
+}
+
+.bg-slate-600 {
+  background-color: #F1F5F9 !important;
+}
+
+/* Colores de fondo gris oscuro a claro */
+.bg-gray-900, .bg-gray-800, .bg-gray-700 {
+  background-color: #F8FAFC !important;
+}
+
+/* Hover states */
+.hover\\:bg-slate-900:hover {
+  background-color: #E2E8F0 !important;
+}
+
+.hover\\:bg-slate-800:hover, .hover\\:bg-slate-700:hover {
+  background-color: #F1F5F9 !important;
+}
+
+.hover\\:bg-slate-600:hover {
+  background-color: #E2E8F0 !important;
+}
+
+.hover\\:bg-gray-800:hover, .hover\\:bg-gray-700:hover {
+  background-color: #E2E8F0 !important;
+}
+
+/* Bordes oscuros a claros */
+.border-slate-900, .border-slate-900\\/50 {
+  border-color: #CBD5E1 !important;
+}
+
+.border-slate-800, .border-slate-800\\/50 {
+  border-color: #E2E8F0 !important;
+}
+
+.border-slate-700, .border-slate-700\\/50 {
+  border-color: #CBD5E1 !important;
+}
+
+.border-slate-600 {
+  border-color: #CBD5E1 !important;
+}
+
+/* Textos oscuros */
+.text-white {
+  color: #1E293B !important;
+}
+
+.text-slate-300 {
+  color: #475569 !important;
+}
+
+.text-slate-400, .text-slate-500 {
+  color: #64748B !important;
+}
+
+.text-slate-200 {
+  color: #475569 !important;
+}
+
+/* Hover text states */
+.hover\\:text-white:hover {
+  color: #1E293B !important;
+}
+/* Cards y contenedores */
+.card, .card-body {
+  background-color: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+}
+
+/* Tablas */
+table {
+  background-color: #FFFFFF !important;
+}
+
+thead {
+  background-color: #F8FAFC !important;
+  color: #64748B !important;
+}
+
+tbody tr {
+  background-color: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+}
+
+tbody tr:hover {
+  background-color: #F8FAFC !important;
+}
+
+/* Inputs y formularios */
+input, select, textarea {
+  background-color: #FFFFFF !important;
+  border-color: #CBD5E1 !important;
+  color: #1E293B !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  background-color: #FFFFFF !important;
+  border-color: #27BBF5 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(39, 187, 245, 0.1) !important;
+}
+
+/* Checkboxes y switches */
+input[type="checkbox"] {
+  background-color: #FFFFFF !important;
+  border-color: #CBD5E1 !important;
+}
+
+input[type="checkbox"]:checked {
+  background-color: #27BBF5 !important;
+  border-color: #27BBF5 !important;
+}
+
+/* Botones */
+.btn {
+  font-weight: 500;
+}
+
+/* Badges y tags */
+.badge {
+  font-weight: 600;
+}
+
+/* Modales */
+.modal-content {
+  background-color: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+}
+
+.modal-header, .modal-footer {
+  border-color: #E2E8F0 !important;
+}
+
+/* Dropdowns */
+.dropdown-menu {
+  background-color: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+}
+
+.dropdown-item {
+  color: #1E293B !important;
+}
+
+.dropdown-item:hover {
+  background-color: #F8FAFC !important;
+}
+
+/* Override para dark mode deshabilitado */
+[data-bs-theme="light"] {
+  --bs-body-bg: #F8FAFC !important;
+  --bs-body-color: #1E293B !important;
+  --bs-border-color: #E2E8F0 !important;
+}

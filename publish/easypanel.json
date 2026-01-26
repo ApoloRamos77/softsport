@@ -1,0 +1,54 @@
+{
+  "$schema": "https://easypanel.io/schemas/v1",
+  "services": [
+    {
+      "type": "app",
+      "data": {
+        "serviceName": "softsport-backend",
+        "source": {
+          "type": "docker",
+          "image": "softsport-backend:latest"
+        },
+        "domains": [
+          {
+            "host": "$(PRIMARY_DOMAIN)",
+            "port": 5081
+          }
+        ],
+        "env": [
+          "ASPNETCORE_ENVIRONMENT=Production",
+          "ASPNETCORE_URLS=http://+:5081",
+          "ConnectionStrings__DefaultConnection=$(DB_CONNECTION_STRING)"
+        ],
+        "ports": [
+          {
+            "published": 5081,
+            "target": 5081
+          }
+        ]
+      }
+    },
+    {
+      "type": "app",
+      "data": {
+        "serviceName": "softsport-frontend",
+        "source": {
+          "type": "docker",
+          "image": "softsport-frontend:latest"
+        },
+        "domains": [
+          {
+            "host": "$(PRIMARY_DOMAIN)",
+            "port": 80
+          }
+        ],
+        "ports": [
+          {
+            "published": 80,
+            "target": 80
+          }
+        ]
+      }
+    }
+  ]
+}
