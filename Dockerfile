@@ -13,6 +13,9 @@ COPY api/ api/
 WORKDIR /src/api
 RUN dotnet publish "SoftSportAPI.csproj" -c Release -o /app/publish
 
+# Eliminar launchSettings.json si existe en el publish
+RUN rm -f /app/publish/Properties/launchSettings.json
+
 # Imagen final optimizada
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app

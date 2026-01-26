@@ -12,6 +12,7 @@ npm-debug.log
 *.user
 *.suo
 *.cache
+**/Properties/launchSettings.json
 
 # Frontend build
 dist/
