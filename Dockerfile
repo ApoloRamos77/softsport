@@ -23,9 +23,10 @@ COPY --from=build /app/publish .
 # Exponer el puerto (Easypanel puede usar cualquier puerto)
 EXPOSE 8080
 
-# Variables de entorno por defecto
+# Variables de entorno por defecto - IMPORTANTE: Deshabilitar launchSettings.json
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
+ENV DOTNET_LAUNCH_PROFILE=""
 
 # Comando de inicio
 ENTRYPOINT ["dotnet", "SoftSportAPI.dll"]
