@@ -41,6 +41,15 @@ try
         ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT true,
         ADD COLUMN IF NOT EXISTS codigo VARCHAR(50);
         
+        -- Agregar columnas faltantes a trainings
+        ALTER TABLE trainings
+        ADD COLUMN IF NOT EXISTS hora_inicio TIME,
+        ADD COLUMN IF NOT EXISTS hora_fin TIME,
+        ADD COLUMN IF NOT EXISTS ubicacion VARCHAR(500),
+        ADD COLUMN IF NOT EXISTS categoria_id INTEGER,
+        ADD COLUMN IF NOT EXISTS tipo VARCHAR(100),
+        ADD COLUMN IF NOT EXISTS estado VARCHAR(50) DEFAULT 'Programado';
+        
         -- Verificar que recibos tenga todas las columnas
         ALTER TABLE recibos
         ADD COLUMN IF NOT EXISTS observaciones TEXT,
