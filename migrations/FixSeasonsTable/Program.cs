@@ -7,36 +7,54 @@ try
     using var connection = new NpgsqlConnection(connectionString);
     await connection.OpenAsync();
     
-    Console.WriteLine("🔧 Agregando columnas faltantes a tabla alumnos...\n");
+    Console.WriteLine("🔧 Verificando y creando tablas y columnas faltantes...\n");
     
+    // Script completo para verificar todas las estructuras
     var sql = @"
-        ALTER TABLE alumnos 
-        ADD COLUMN IF NOT EXISTS sexo VARCHAR(1),
-        ADD COLUMN IF NOT EXISTS fotografia VARCHAR(500),
-        ADD COLUMN IF NOT EXISTS codigopais VARCHAR(5),
-        ADD COLUMN IF NOT EXISTS direccion VARCHAR(500),
-        ADD COLUMN IF NOT EXISTS colegio VARCHAR(200),
-        ADD COLUMN IF NOT EXISTS segundorepresentantenombre VARCHAR(200),
-        ADD COLUMN IF NOT EXISTS segundorepresentanteparentesco VARCHAR(100),
-        ADD COLUMN IF NOT EXISTS segundorepresentantecodigo VARCHAR(5),
-        ADD COLUMN IF NOT EXISTS segundorepresentantetelefono VARCHAR(20),
-        ADD COLUMN IF NOT EXISTS segundorepresentanteemail VARCHAR(200),
-        ADD COLUMN IF NOT EXISTS tiposangre VARCHAR(5),
-        ADD COLUMN IF NOT EXISTS alergias VARCHAR(200),
-        ADD COLUMN IF NOT EXISTS condicionesmedicas TEXT,
-        ADD COLUMN IF NOT EXISTS medicamentos TEXT,
-        ADD COLUMN IF NOT EXISTS contactoemergencia VARCHAR(200),
-        ADD COLUMN IF NOT EXISTS codigopaisemergencia VARCHAR(5),
-        ADD COLUMN IF NOT EXISTS telefonoemergencia VARCHAR(20),
-        ADD COLUMN IF NOT EXISTS notas TEXT;
+        -- Crear tabla Roles con mayúscula (Entity Framework busca 'Roles')
+        CREATE TABLE IF NOT EXISTS ""Roles"" (
+            ""Id"" SERIAL PRIMARY KEY,
+            ""Nombre"" VARCHAR(200) NOT NULL,
+            ""Descripcion"" VARCHAR(500),
+            ""Tipo"" VARCHAR(50) DEFAULT 'Sistema',
+            ""Academia"" VARCHAR(200),
+            ""FechaCreacion"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            ""FechaModificacion"" TIMESTAMP
+        );
+        
+        -- Crear tabla RolePermissions
+        CREATE TABLE IF NOT EXISTS ""RolePermissions"" (
+            ""Id"" SERIAL PRIMARY KEY,
+            ""RoleId"" INTEGER NOT NULL,
+            ""PermissionKey"" VARCHAR(200) NOT NULL,
+            ""Granted"" BOOLEAN NOT NULL DEFAULT true,
+            CONSTRAINT fk_rolepermissions_role FOREIGN KEY (""RoleId"") REFERENCES ""Roles""(""Id"")
+        );
+        
+        -- Agregar columnas faltantes a servicios
+        ALTER TABLE servicios 
+        ADD COLUMN IF NOT EXISTS codigo VARCHAR(50),
+        ADD COLUMN IF NOT EXISTS tipo VARCHAR(50);
+        
+        -- Agregar columnas faltantes a productos  
+        ALTER TABLE productos
+        ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT true,
+        ADD COLUMN IF NOT EXISTS codigo VARCHAR(50);
+        
+        -- Verificar que recibos tenga todas las columnas
+        ALTER TABLE recibos
+        ADD COLUMN IF NOT EXISTS observaciones TEXT,
+        ADD COLUMN IF NOT EXISTS fecha_creacion TIMESTAMP,
+        ADD COLUMN IF NOT EXISTS fecha_modificacion TIMESTAMP;
     ";
     
     using var command = new NpgsqlCommand(sql, connection);
     await command.ExecuteNonQueryAsync();
     
-    Console.WriteLine("✅ Columnas agregadas exitosamente a tabla alumnos");
+    Console.WriteLine("✅ Todas las tablas y columnas verificadas/creadas exitosamente");
 }
 catch (Exception ex)
 {
     Console.WriteLine($"\n❌ Error: {ex.Message}");
+    Console.WriteLine($"Stack: {ex.StackTrace}");
 }

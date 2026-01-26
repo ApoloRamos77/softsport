@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FixSeasonsTable")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fbe2407525bec98e7560cf1b8b0e0acbdf8142c8")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8e08a6647c7e5ae317ba8681e25b235b05a2397e")]
 [assembly: System.Reflection.AssemblyProductAttribute("FixSeasonsTable")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FixSeasonsTable")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
