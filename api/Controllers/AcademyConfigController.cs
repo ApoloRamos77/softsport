@@ -60,7 +60,7 @@ namespace SoftSportAPI.Controllers
                 
                 if (existingConfig == null)
                 {
-                    academyConfig.FechaActualizacion = DateTime.Now;
+                    academyConfig.FechaActualizacion = DateTime.UtcNow;
                     _context.Set<AcademyConfig>().Add(academyConfig);
                 }
                 else
@@ -74,7 +74,7 @@ namespace SoftSportAPI.Controllers
                     existingConfig.ColorBotones = academyConfig.ColorBotones;
                     existingConfig.WhatsAppActivado = academyConfig.WhatsAppActivado;
                     existingConfig.PartidasActivado = academyConfig.PartidasActivado;
-                    existingConfig.FechaActualizacion = DateTime.Now;
+                    existingConfig.FechaActualizacion = DateTime.UtcNow;
                     
                     _context.Entry(existingConfig).State = EntityState.Modified;
                 }

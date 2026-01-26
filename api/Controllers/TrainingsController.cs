@@ -94,7 +94,7 @@ namespace SoftSportAPI.Controllers
             }
 
             // Soft delete: solo marcar como anulado
-            training.FechaAnulacion = DateTime.Now;
+            training.FechaAnulacion = DateTime.UtcNow;
             training.UsuarioAnulacion = "admin"; // TODO: obtener del usuario autenticado
             
             await _context.SaveChangesAsync();

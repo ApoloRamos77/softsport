@@ -32,7 +32,7 @@ namespace SoftSportAPI.Controllers
                 try
                 {
                     partidosJugados = await _context.Games
-                        .Where(g => g.Fecha.HasValue && g.Fecha.Value < DateTime.Now)
+                        .Where(g => g.Fecha.HasValue && g.Fecha.Value < DateTime.UtcNow)
                         .CountAsync();
                 }
                 catch
@@ -84,7 +84,7 @@ namespace SoftSportAPI.Controllers
                 try
                 {
                     proximosPartidos = await _context.Games
-                        .Where(g => g.Fecha.HasValue && g.Fecha.Value >= DateTime.Now)
+                        .Where(g => g.Fecha.HasValue && g.Fecha.Value >= DateTime.UtcNow)
                         .OrderBy(g => g.Fecha)
                         .Take(5)
                         .Select(g => new
@@ -103,7 +103,7 @@ namespace SoftSportAPI.Controllers
                 }
 
                 // Cumpleañeros del mes
-                var mesActual = DateTime.Now.Month;
+                var mesActual = DateTime.UtcNow.Month;
                 var cumpleaneros = await _context.Alumnos
                     .Where(a => a.FechaNacimiento.HasValue && a.FechaNacimiento.Value.Month == mesActual)
                     .Select(a => new
@@ -128,7 +128,7 @@ namespace SoftSportAPI.Controllers
                     .ToListAsync();
 
                 // Alumnos recientes (últimos 30 días)
-                var hace30Dias = DateTime.Now.AddDays(-30);
+                var hace30Dias = DateTime.UtcNow.AddDays(-30);
                 var alumnosRecientes = await _context.Alumnos
                     .Where(a => a.FechaRegistro >= hace30Dias)
                     .OrderByDescending(a => a.FechaRegistro)
@@ -178,8 +178,8 @@ namespace SoftSportAPI.Controllers
         {
             try
             {
-                var now = DateTime.Now;
-                var startDate = new DateTime(now.Year, now.Month, 1).AddMonths(-11); // Últimos 12 meses
+                var now = DateTime.UtcNow;
+                var startDate = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc).AddMonths(-11); // Últimos 12 meses
 
                 var months = new List<object>();
 

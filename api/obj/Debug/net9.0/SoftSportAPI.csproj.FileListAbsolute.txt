@@ -163,3 +163,7 @@ C:\Proyecto_2026\Soft_Sport\api\obj\Debug\net9.0\refint\SoftSportAPI.dll
 C:\Proyecto_2026\Soft_Sport\api\obj\Debug\net9.0\SoftSportAPI.pdb
 C:\Proyecto_2026\Soft_Sport\api\obj\Debug\net9.0\SoftSportAPI.genruntimeconfig.cache
 C:\Proyecto_2026\Soft_Sport\api\obj\Debug\net9.0\ref\SoftSportAPI.dll
+C:\Proyecto_2026\Soft_Sport\api\bin\Debug\net9.0\appsettings.PostgreSQL.json
+C:\Proyecto_2026\Soft_Sport\api\bin\Debug\net9.0\Npgsql.dll
+C:\Proyecto_2026\Soft_Sport\api\bin\Debug\net9.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
+C:\Proyecto_2026\Soft_Sport\api\obj\Debug\net9.0\SoftSportAPI.sourcelink.json

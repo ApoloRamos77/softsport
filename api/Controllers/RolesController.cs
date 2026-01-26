@@ -88,7 +88,7 @@ namespace SoftSportAPI.Controllers
                 Descripcion = roleDto.Descripcion,
                 Tipo = roleDto.Tipo ?? "Sistema",
                 Academia = roleDto.Academia,
-                FechaCreacion = DateTime.Now
+                FechaCreacion = DateTime.UtcNow
             };
 
             _context.Roles.Add(role);
@@ -131,7 +131,7 @@ namespace SoftSportAPI.Controllers
             role.Descripcion = roleDto.Descripcion;
             role.Tipo = roleDto.Tipo ?? "Sistema";
             role.Academia = roleDto.Academia;
-            role.FechaModificacion = DateTime.Now;
+            role.FechaModificacion = DateTime.UtcNow;
 
             // Eliminar permisos existentes
             var existingPermissions = await _context.RolePermissions

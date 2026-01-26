@@ -112,7 +112,7 @@ namespace SoftSportAPI.Controllers
             existingUser.Nombre = user.Nombre;
             existingUser.Apellido = user.Apellido;
             existingUser.Telefono = user.Telefono;
-            existingUser.UpdatedAt = DateTime.Now;
+            existingUser.UpdatedAt = DateTime.UtcNow;
 
             try
             {
@@ -148,7 +148,7 @@ namespace SoftSportAPI.Controllers
 
             // Update password (in production, hash the password)
             user.PasswordHash = request.NewPassword;
-            user.UpdatedAt = DateTime.Now;
+            user.UpdatedAt = DateTime.UtcNow;
 
             try
             {
