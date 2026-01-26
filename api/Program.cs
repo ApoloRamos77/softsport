@@ -79,11 +79,13 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
-if (app.Environment.IsDevelopment())
+// Habilitar Swagger en todos los ambientes para facilitar testing
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "SoftSport API v1");
+    c.RoutePrefix = "swagger"; // Accesible en /swagger
+});
 
 app.UseCors("AllowFrontend");
 
