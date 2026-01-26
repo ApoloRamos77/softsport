@@ -1,0 +1,41 @@
+# Directorios de Node.js
+node_modules/
+npm-debug.log
+
+# Directorios de compilación .NET
+**/bin/
+**/obj/
+**/out/
+
+# Archivos de Visual Studio
+.vs/
+*.user
+*.suo
+*.cache
+
+# Frontend build
+dist/
+.vite/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentación y scripts locales
+*.md
+!README.md
+start-*.ps1
+start-all.ps1
+
+# Archivos de configuración local
+.env.local
+*.local
+
+# Tests y migraciones locales
+fix-*.html
+fix-*.csx
+test-*.html
+
+# Publicaciones anteriores
+publish/
