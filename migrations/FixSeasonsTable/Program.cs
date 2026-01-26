@@ -34,7 +34,8 @@ try
         -- Agregar columnas faltantes a servicios
         ALTER TABLE servicios 
         ADD COLUMN IF NOT EXISTS codigo VARCHAR(50),
-        ADD COLUMN IF NOT EXISTS tipo VARCHAR(50);
+        ADD COLUMN IF NOT EXISTS tipo VARCHAR(50),
+        ADD COLUMN IF NOT EXISTS pronto_pago DECIMAL(10,2);
         
         -- Agregar columnas faltantes a productos  
         ALTER TABLE productos

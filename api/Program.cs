@@ -17,6 +17,12 @@ builder.Services.AddSwaggerGen();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 var usePostgres = builder.Configuration.GetValue<bool>("UsePostgreSQL", false);
 
+// Enable legacy timestamp behavior for PostgreSQL to avoid DateTime Kind issues
+if (usePostgres)
+{
+    AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+}
+
 builder.Services.AddDbContext<SoftSportDbContext>(options =>
 {
     if (usePostgres)

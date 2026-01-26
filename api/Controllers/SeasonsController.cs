@@ -58,6 +58,16 @@ namespace SoftSportAPI.Controllers
             season.FechaCreacion = DateTime.UtcNow;
             season.UsuarioCreacion = "admin";
 
+            // Convert dates to UTC if provided
+            if (season.FechaInicio.HasValue && season.FechaInicio.Value.Kind != DateTimeKind.Utc)
+            {
+                season.FechaInicio = DateTime.SpecifyKind(season.FechaInicio.Value, DateTimeKind.Utc);
+            }
+            if (season.FechaFin.HasValue && season.FechaFin.Value.Kind != DateTimeKind.Utc)
+            {
+                season.FechaFin = DateTime.SpecifyKind(season.FechaFin.Value, DateTimeKind.Utc);
+            }
+
             _context.Seasons.Add(season);
             await _context.SaveChangesAsync();
 
@@ -86,6 +96,16 @@ namespace SoftSportAPI.Controllers
             // Set audit fields
             season.FechaModificacion = DateTime.UtcNow;
             season.UsuarioModificacion = "admin";
+
+            // Convert dates to UTC if provided
+            if (season.FechaInicio.HasValue && season.FechaInicio.Value.Kind != DateTimeKind.Utc)
+            {
+                season.FechaInicio = DateTime.SpecifyKind(season.FechaInicio.Value, DateTimeKind.Utc);
+            }
+            if (season.FechaFin.HasValue && season.FechaFin.Value.Kind != DateTimeKind.Utc)
+            {
+                season.FechaFin = DateTime.SpecifyKind(season.FechaFin.Value, DateTimeKind.Utc);
+            }
 
             _context.Entry(season).State = EntityState.Modified;
 

@@ -155,6 +155,8 @@ CREATE TABLE IF NOT EXISTS servicios (
     nombre VARCHAR(150) NOT NULL,
     descripcion VARCHAR(500),
     precio DECIMAL(12,2) NOT NULL DEFAULT 0,
+    pronto_pago DECIMAL(10,2),
+    recurrente_mensual BOOLEAN NOT NULL DEFAULT false,
     activo BOOLEAN NOT NULL DEFAULT true,
     codigo VARCHAR(50),
     tipo VARCHAR(50),
