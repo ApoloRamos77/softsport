@@ -36,7 +36,13 @@ CREATE TABLE IF NOT EXISTS representantes (
     telefono VARCHAR(50),
     parentesco VARCHAR(50),
     direccion VARCHAR(250),
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_creacion TIMESTAMP,
+    usuario_creacion VARCHAR(100),
+    fecha_modificacion TIMESTAMP,
+    usuario_modificacion VARCHAR(100),
+    fecha_anulacion TIMESTAMP,
+    usuario_anulacion VARCHAR(100)
 );
 
 -- ====================================================================
@@ -47,7 +53,13 @@ CREATE TABLE IF NOT EXISTS categorias (
     nombre VARCHAR(100) NOT NULL,
     descripcion VARCHAR(500),
     edad_min INTEGER,
-    edad_max INTEGER
+    edad_max INTEGER,
+    fecha_creacion TIMESTAMP,
+    usuario_creacion VARCHAR(100),
+    fecha_modificacion TIMESTAMP,
+    usuario_modificacion VARCHAR(100),
+    fecha_anulacion TIMESTAMP,
+    usuario_anulacion VARCHAR(100)
 );
 
 -- ====================================================================
@@ -56,7 +68,13 @@ CREATE TABLE IF NOT EXISTS categorias (
 CREATE TABLE IF NOT EXISTS grupos (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
-    descripcion VARCHAR(500)
+    descripcion VARCHAR(500),
+    fecha_creacion TIMESTAMP,
+    usuario_creacion VARCHAR(100),
+    fecha_modificacion TIMESTAMP,
+    usuario_modificacion VARCHAR(100),
+    fecha_anulacion TIMESTAMP,
+    usuario_anulacion VARCHAR(100)
 );
 
 -- ====================================================================
@@ -66,7 +84,13 @@ CREATE TABLE IF NOT EXISTS becas (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     porcentaje DECIMAL(5,2) NOT NULL,
-    descripcion VARCHAR(500)
+    descripcion VARCHAR(500),
+    fecha_creacion TIMESTAMP,
+    usuario_creacion VARCHAR(100),
+    fecha_modificacion TIMESTAMP,
+    usuario_modificacion VARCHAR(100),
+    fecha_anulacion TIMESTAMP,
+    usuario_anulacion VARCHAR(100)
 );
 
 -- ====================================================================
@@ -88,6 +112,35 @@ CREATE TABLE IF NOT EXISTS alumnos (
     estado VARCHAR(50) DEFAULT 'Activo',
     fecha_registro DATE NOT NULL DEFAULT CURRENT_DATE,
     representante_id INTEGER,
+    -- Campos adicionales de información básica
+    sexo VARCHAR(1),
+    fotografia VARCHAR(500),
+    codigopais VARCHAR(5),
+    direccion VARCHAR(500),
+    colegio VARCHAR(200),
+    -- Segundo representante
+    segundorepresentantenombre VARCHAR(200),
+    segundorepresentanteparentesco VARCHAR(100),
+    segundorepresentantecodigo VARCHAR(5),
+    segundorepresentantetelefono VARCHAR(20),
+    segundorepresentanteemail VARCHAR(200),
+    -- Campos médicos
+    tiposangre VARCHAR(5),
+    alergias VARCHAR(200),
+    condicionesmedicas TEXT,
+    medicamentos TEXT,
+    contactoemergencia VARCHAR(200),
+    codigopaisemergencia VARCHAR(5),
+    telefonoemergencia VARCHAR(20),
+    -- Campos administrativos
+    notas TEXT,
+    -- Campos de auditoría
+    fecha_creacion TIMESTAMP,
+    usuario_creacion VARCHAR(100),
+    fecha_modificacion TIMESTAMP,
+    usuario_modificacion VARCHAR(100),
+    fecha_anulacion TIMESTAMP,
+    usuario_anulacion VARCHAR(100),
     CONSTRAINT fk_alumnos_representante FOREIGN KEY (representante_id) REFERENCES representantes(id),
     CONSTRAINT fk_alumnos_grupo FOREIGN KEY (grupo_id) REFERENCES grupos(id),
     CONSTRAINT fk_alumnos_categoria FOREIGN KEY (categoria_id) REFERENCES categorias(id),
@@ -102,7 +155,15 @@ CREATE TABLE IF NOT EXISTS servicios (
     nombre VARCHAR(150) NOT NULL,
     descripcion VARCHAR(500),
     precio DECIMAL(12,2) NOT NULL DEFAULT 0,
-    activo BOOLEAN NOT NULL DEFAULT true
+    activo BOOLEAN NOT NULL DEFAULT true,
+    codigo VARCHAR(50),
+    tipo VARCHAR(50),
+    fecha_creacion TIMESTAMP,
+    usuario_creacion VARCHAR(100),
+    fecha_modificacion TIMESTAMP,
+    usuario_modificacion VARCHAR(100),
+    fecha_anulacion TIMESTAMP,
+    usuario_anulacion VARCHAR(100)
 );
 
 -- ====================================================================
@@ -114,7 +175,15 @@ CREATE TABLE IF NOT EXISTS productos (
     sku VARCHAR(100),
     descripcion VARCHAR(500),
     precio DECIMAL(12,2) NOT NULL DEFAULT 0,
-    cantidad INTEGER NOT NULL DEFAULT 0
+    cantidad INTEGER NOT NULL DEFAULT 0,
+    activo BOOLEAN NOT NULL DEFAULT true,
+    codigo VARCHAR(50),
+    fecha_creacion TIMESTAMP,
+    usuario_creacion VARCHAR(100),
+    fecha_modificacion TIMESTAMP,
+    usuario_modificacion VARCHAR(100),
+    fecha_anulacion TIMESTAMP,
+    usuario_anulacion VARCHAR(100)
 );
 
 -- ====================================================================
@@ -125,7 +194,13 @@ CREATE TABLE IF NOT EXISTS payment_methods (
     nombre VARCHAR(150) NOT NULL,
     descripcion VARCHAR(500),
     currency VARCHAR(10),
-    activo BOOLEAN NOT NULL DEFAULT true
+    activo BOOLEAN NOT NULL DEFAULT true,
+    fecha_creacion TIMESTAMP,
+    usuario_creacion VARCHAR(100),
+    fecha_modificacion TIMESTAMP,
+    usuario_modificacion VARCHAR(100),
+    fecha_anulacion TIMESTAMP,
+    usuario_anulacion VARCHAR(100)
 );
 
 -- ====================================================================
@@ -142,7 +217,10 @@ CREATE TABLE IF NOT EXISTS recibos (
     total DECIMAL(12,2) NOT NULL DEFAULT 0,
     estado VARCHAR(50) NOT NULL DEFAULT 'Pendiente',
     payment_method_id INTEGER,
-    created_by INTEGER
+    created_by INTEGER,
+    observaciones TEXT,
+    fecha_creacion TIMESTAMP,
+    fecha_modificacion TIMESTAMP
 );
 
 -- ====================================================================
@@ -181,7 +259,13 @@ CREATE TABLE IF NOT EXISTS seasons (
     nombre VARCHAR(150) NOT NULL,
     fecha_inicio DATE,
     fecha_fin DATE,
-    activo BOOLEAN NOT NULL DEFAULT true
+    activo BOOLEAN NOT NULL DEFAULT true,
+    fecha_creacion TIMESTAMP,
+    usuario_creacion VARCHAR(100),
+    fecha_modificacion TIMESTAMP,
+    usuario_modificacion VARCHAR(100),
+    fecha_anulacion TIMESTAMP,
+    usuario_anulacion VARCHAR(100)
 );
 
 -- ====================================================================
@@ -204,7 +288,19 @@ CREATE TABLE IF NOT EXISTS trainings (
     titulo VARCHAR(200) NOT NULL,
     descripcion VARCHAR(1000),
     fecha TIMESTAMP,
-    entrenador_id INTEGER
+    hora_inicio TIME,
+    hora_fin TIME,
+    ubicacion VARCHAR(500),
+    categoria_id INTEGER,
+    tipo VARCHAR(100),
+    estado VARCHAR(50) DEFAULT 'Programado',
+    entrenador_id INTEGER,
+    fecha_creacion TIMESTAMP,
+    usuario_creacion VARCHAR(100),
+    fecha_modificacion TIMESTAMP,
+    usuario_modificacion VARCHAR(100),
+    fecha_anulacion TIMESTAMP,
+    usuario_anulacion VARCHAR(100)
 );
 
 -- ====================================================================
@@ -217,7 +313,13 @@ CREATE TABLE IF NOT EXISTS games (
     ubicacion VARCHAR(250),
     rival VARCHAR(200),
     score_local INTEGER,
-    score_visitante INTEGER
+    score_visitante INTEGER,
+    fecha_creacion TIMESTAMP,
+    usuario_creacion VARCHAR(100),
+    fecha_modificacion TIMESTAMP,
+    usuario_modificacion VARCHAR(100),
+    fecha_anulacion TIMESTAMP,
+    usuario_anulacion VARCHAR(100)
 );
 
 -- ====================================================================
@@ -241,7 +343,13 @@ CREATE TABLE IF NOT EXISTS expenses (
     fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     categoria VARCHAR(150),
     referencia VARCHAR(200),
-    estado VARCHAR(50) DEFAULT 'Pendiente'
+    estado VARCHAR(50) DEFAULT 'Pendiente',
+    fecha_creacion TIMESTAMP,
+    usuario_creacion VARCHAR(100),
+    fecha_modificacion TIMESTAMP,
+    usuario_modificacion VARCHAR(100),
+    fecha_anulacion TIMESTAMP,
+    usuario_anulacion VARCHAR(100)
 );
 
 -- ====================================================================
@@ -259,23 +367,23 @@ CREATE TABLE IF NOT EXISTS accounting_entries (
 -- ====================================================================
 -- ROLES Y PERMISOS
 -- ====================================================================
-CREATE TABLE IF NOT EXISTS roles (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE,
-    description VARCHAR(500),
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP
+-- Tabla Roles con mayúsculas para Entity Framework
+CREATE TABLE IF NOT EXISTS "Roles" (
+    "Id" SERIAL PRIMARY KEY,
+    "Nombre" VARCHAR(200) NOT NULL,
+    "Descripcion" VARCHAR(500),
+    "Tipo" VARCHAR(50) DEFAULT 'Sistema',
+    "Academia" VARCHAR(200),
+    "FechaCreacion" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "FechaModificacion" TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS role_permissions (
-    id SERIAL PRIMARY KEY,
-    role_id INTEGER NOT NULL,
-    resource VARCHAR(100) NOT NULL,
-    can_create BOOLEAN NOT NULL DEFAULT false,
-    can_read BOOLEAN NOT NULL DEFAULT false,
-    can_update BOOLEAN NOT NULL DEFAULT false,
-    can_delete BOOLEAN NOT NULL DEFAULT false,
-    CONSTRAINT fk_role_permissions_role FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS "RolePermissions" (
+    "Id" SERIAL PRIMARY KEY,
+    "RoleId" INTEGER NOT NULL,
+    "PermissionKey" VARCHAR(200) NOT NULL,
+    "Granted" BOOLEAN NOT NULL DEFAULT true,
+    CONSTRAINT fk_rolepermissions_role FOREIGN KEY ("RoleId") REFERENCES "Roles"("Id") ON DELETE CASCADE
 );
 
 -- ====================================================================

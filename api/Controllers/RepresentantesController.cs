@@ -36,6 +36,10 @@ namespace SoftSportAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<Representante>> PostRepresentante(Representante representante)
         {
+            // Set audit fields
+            representante.FechaCreacion = DateTime.UtcNow;
+            representante.UsuarioCreacion = "admin";
+
             _context.Representantes.Add(representante);
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetRepresentante), new { id = representante.Id }, representante);
@@ -48,6 +52,10 @@ namespace SoftSportAPI.Controllers
             {
                 return BadRequest();
             }
+
+            // Set audit fields
+            representante.FechaModificacion = DateTime.UtcNow;
+            representante.UsuarioModificacion = "admin";
 
             _context.Entry(representante).State = EntityState.Modified;
 

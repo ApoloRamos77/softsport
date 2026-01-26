@@ -54,6 +54,10 @@ namespace SoftSportAPI.Controllers
                 }
             }
 
+            // Set audit fields
+            season.FechaCreacion = DateTime.UtcNow;
+            season.UsuarioCreacion = "admin";
+
             _context.Seasons.Add(season);
             await _context.SaveChangesAsync();
 
@@ -78,6 +82,10 @@ namespace SoftSportAPI.Controllers
                     s.Activo = false;
                 }
             }
+
+            // Set audit fields
+            season.FechaModificacion = DateTime.UtcNow;
+            season.UsuarioModificacion = "admin";
 
             _context.Entry(season).State = EntityState.Modified;
 
