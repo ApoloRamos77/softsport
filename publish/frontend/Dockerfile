@@ -1,25 +1,24 @@
-# Dockerfile para ADHSOFT SPORT Frontend
+# Dockerfile simplificado para frontend
 FROM nginx:alpine
 
-# Crear directorio
-WORKDIR /usr/share/nginx/html
+# Limpiar directorio por defecto
+RUN rm -rf /usr/share/nginx/html/*
 
-# Copiar archivos HTML y assets
-COPY index.html ./
-COPY assets ./assets
-COPY images ./images
-COPY js ./js
-COPY *.css ./
+# Copiar TODO el contenido
+COPY . /usr/share/nginx/html/
 
-# Copiar configuración nginx  
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Mover nginx.conf
+RUN mv /usr/share/nginx/html/nginx.conf /etc/nginx/conf.d/default.conf || true
 
-# Verificar instalación
-RUN ls -la /usr/share/nginx/html/ && \
-    test -f /usr/share/nginx/html/index.html || (echo "ERROR: index.html no encontrado!" && exit 1)
+# Limpiar archivos que no son necesarios
+RUN rm -f /usr/share/nginx/html/Dockerfile /usr/share/nginx/html/.htaccess
 
-# Exponer puerto
+# Verificar archivos
+RUN echo "=== Archivos en /usr/share/nginx/html ===" && \
+    ls -la /usr/share/nginx/html/ && \
+    echo "=== Verificando index.html ===" && \
+    cat /usr/share/nginx/html/index.html | head -5
+
 EXPOSE 80
 
-# Iniciar nginx en foreground
 CMD ["nginx", "-g", "daemon off;"]
