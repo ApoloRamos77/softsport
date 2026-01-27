@@ -118,6 +118,31 @@ const App: React.FC = () => {
     return () => document.removeEventListener('click', handleOverlayClick);
   }, [isAuthenticated, isSidebarOpen]);
 
+  // Aplicar clases al header y main según estado del sidebar
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const header = document.querySelector('.app-header') as HTMLElement;
+    const main = document.querySelector('.app-main') as HTMLElement;
+    
+    if (header && main) {
+      if (window.innerWidth >= 992) {
+        // Desktop
+        if (isSidebarOpen) {
+          header.style.left = '250px';
+          main.style.marginLeft = '250px';
+        } else {
+          header.style.left = '60px';
+          main.style.marginLeft = '60px';
+        }
+      } else {
+        // Móvil
+        header.style.left = '0';
+        main.style.marginLeft = '0';
+      }
+    }
+  }, [isAuthenticated, isSidebarOpen]);
+
   // Responsive: Ajustar estado del sidebar al redimensionar
   useEffect(() => {
     if (!isAuthenticated) return;

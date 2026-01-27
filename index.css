@@ -255,30 +255,9 @@ input[type="checkbox"]:checked {
   overflow: hidden !important;
 }
 
-/* Sidebar expandido */
-.app-sidebar.expanded {
-  width: 250px !important;
-}
-
-.app-sidebar.expanded ~ .app-header {
-  left: 250px !important;
-}
-
-.app-sidebar.expanded ~ * .app-main {
-  margin-left: 250px !important;
-}
-
 /* Sidebar colapsado */
 .app-sidebar.collapsed {
   width: 60px !important;
-}
-
-.app-sidebar.collapsed ~ .app-header {
-  left: 60px !important;
-}
-
-.app-sidebar.collapsed ~ * .app-main {
-  margin-left: 60px !important;
 }
 
 .app-sidebar.collapsed .brand-image {
