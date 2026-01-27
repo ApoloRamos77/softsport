@@ -30,7 +30,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, currentView, onViewChange }) 
   ];
 
   return (
-    <aside className="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
+    <aside className={`app-sidebar bg-body-secondary shadow ${isOpen ? 'expanded' : 'collapsed'}`} data-bs-theme="dark">
       <div className="sidebar-brand">
         <a href="#" className="brand-link" onClick={(e) => e.preventDefault()}>
           <img src="/images/logo.png" alt="ADHSOFT SPORT" className="brand-image" />
