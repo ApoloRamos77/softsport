@@ -243,79 +243,79 @@ input[type="checkbox"]:checked {
 /* ===== SIDEBAR COLAPSABLE ===== */
 
 .app-sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 250px;
-  z-index: 1040;
-  transition: all 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  bottom: 0 !important;
+  width: 250px !important;
+  z-index: 1040 !important;
+  transition: all 0.3s ease !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
 }
 
 .app-header {
-  position: fixed;
-  top: 0;
-  left: 250px;
-  right: 0;
-  z-index: 1030;
-  transition: left 0.3s ease;
+  position: fixed !important;
+  top: 0 !important;
+  left: 250px !important;
+  right: 0 !important;
+  z-index: 1030 !important;
+  transition: left 0.3s ease !important;
 }
 
 .app-main {
-  margin-left: 250px;
-  padding-top: 60px;
-  min-height: 100vh;
-  transition: margin-left 0.3s ease;
+  margin-left: 250px !important;
+  padding-top: 60px !important;
+  min-height: 100vh !important;
+  transition: margin-left 0.3s ease !important;
 }
 
 /* Sidebar colapsado */
 body.sidebar-collapse .app-sidebar {
-  width: 60px;
+  width: 60px !important;
 }
 
 body.sidebar-collapse .app-header {
-  left: 60px;
+  left: 60px !important;
 }
 
 body.sidebar-collapse .app-main {
-  margin-left: 60px;
+  margin-left: 60px !important;
 }
 
 body.sidebar-collapse .brand-image {
-  width: 40px;
-  height: 40px;
+  width: 40px !important;
+  height: 40px !important;
 }
 
 body.sidebar-collapse .nav-link p {
-  display: none;
+  display: none !important;
 }
 
 body.sidebar-collapse .nav-link {
-  justify-content: center;
-  padding-left: 0;
-  padding-right: 0;
+  justify-content: center !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
 /* Móvil */
 @media (max-width: 991px) {
   .app-sidebar {
-    transform: translateX(-250px);
-    z-index: 1050;
+    transform: translateX(-250px) !important;
+    z-index: 1050 !important;
   }
 
   body.sidebar-open .app-sidebar {
-    transform: translateX(0);
+    transform: translateX(0) !important;
   }
 
   .app-header {
-    left: 0;
+    left: 0 !important;
   }
 
   .app-main {
-    margin-left: 0;
+    margin-left: 0 !important;
   }
 
   body.sidebar-open::before {
