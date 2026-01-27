@@ -23,16 +23,12 @@ try {
     Write-Host "Ejecutando actualización en la base de datos..." -ForegroundColor Yellow
     
     # Comando SQL directo
-    $sqlCommand = @"
-UPDATE usuarios 
-SET password_hash = '\$2a\$11\$hZXV7pJQZ3YwLqEK8YGUuuWvQxPxVqN8xM0kxUWQZK4qLQnXVJK9a'
-WHERE email = 'admin@softsport.com';
-"@
+    $sqlCommand = "UPDATE usuarios SET password_hash = '`$2a`$11`$hZXV7pJQZ3YwLqEK8YGUuuWvQxPxVqN8xM0kxUWQZK4qLQnXVJK9a' WHERE email = 'admin@softsport.com';"
     
     # Ejecutar con psql si está disponible
     if (Get-Command psql -ErrorAction SilentlyContinue) {
         psql -h $localHost -p $dbPort -U $dbUser -d $dbName -c $sqlCommand
-        Write-Host "✓ Contraseña actualizada exitosamente" -ForegroundColor Green
+        Write-Host "Contraseña actualizada exitosamente" -ForegroundColor Green
         Write-Host ""
         Write-Host "Credenciales de acceso:" -ForegroundColor Cyan
         Write-Host "  Email: admin@softsport.com" -ForegroundColor White
