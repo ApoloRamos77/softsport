@@ -24,39 +24,41 @@ const Layout: React.FC<LayoutProps> = ({
   getTitle,
 }) => {
   return (
-    <>
+    <div className="app-wrapper">
       <Sidebar currentView={currentView} onViewChange={onViewChange} />
-      <header className="app-header">
-        <Navbar
-          onNavigate={onNavigate}
-          darkMode={darkMode}
-          toggleTheme={toggleTheme}
-          onLogout={onLogout}
-        />
-      </header>
-      <main className="app-main">
-        <div className="app-content-header">
-          <div className="container-fluid">
-            <div className="row">
-              <div className="col-sm-6">
-                <h3 className="mb-0">{getTitle()}</h3>
-              </div>
-              <div className="col-sm-6">
-                <ol className="breadcrumb float-sm-end">
-                  <li className="breadcrumb-item"><a href="#">Home</a></li>
-                  <li className="breadcrumb-item active" aria-current="page">
-                    {getTitle()}
-                  </li>
-                </ol>
+      <div className="app-container">
+        <header className="app-header">
+          <Navbar
+            onNavigate={onNavigate}
+            darkMode={darkMode}
+            toggleTheme={toggleTheme}
+            onLogout={onLogout}
+          />
+        </header>
+        <main className="app-main">
+          <div className="app-content-header">
+            <div className="container-fluid">
+              <div className="row">
+                <div className="col-sm-6">
+                  <h3 className="mb-0">{getTitle()}</h3>
+                </div>
+                <div className="col-sm-6">
+                  <ol className="breadcrumb float-sm-end">
+                    <li className="breadcrumb-item"><a href="#">Home</a></li>
+                    <li className="breadcrumb-item active" aria-current="page">
+                      {getTitle()}
+                    </li>
+                  </ol>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <div className="app-content">
-          <div className="container-fluid">{children}</div>
-        </div>
-      </main>
-    </>
+          <div className="app-content">
+            <div className="container-fluid">{children}</div>
+          </div>
+        </main>
+      </div>
+    </div>
   );
 };
 
