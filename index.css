@@ -272,23 +272,20 @@ input[type="checkbox"]:checked {
 
 /* ===== DESKTOP (≥992px) - Sidebar colapsable con iconos ===== */
 @media (min-width: 992px) {
-  /* Por defecto: sidebar visible */
-  .app-sidebar {
-    width: 250px !important;
-    transform: translateX(0) !important;
-  }
-
-  /* Estado EXPANDIDO (sidebar-open) */
+  /* Estado EXPANDIDO (sidebar-open) - Por defecto */
   body.sidebar-open .app-sidebar {
     width: 250px !important;
+    transform: translateX(0) !important;
   }
   
   body.sidebar-open .app-header {
     left: 250px !important;
+    width: calc(100% - 250px) !important;
   }
   
   body.sidebar-open .app-main {
     margin-left: 250px !important;
+    width: calc(100% - 250px) !important;
   }
 
   body.sidebar-open .nav-link p {
@@ -305,14 +302,17 @@ input[type="checkbox"]:checked {
   /* Estado COLAPSADO (sidebar-collapse) - Solo iconos */
   body.sidebar-collapse .app-sidebar {
     width: 60px !important;
+    transform: translateX(0) !important;
   }
   
   body.sidebar-collapse .app-header {
     left: 60px !important;
+    width: calc(100% - 60px) !important;
   }
   
   body.sidebar-collapse .app-main {
     margin-left: 60px !important;
+    width: calc(100% - 60px) !important;
   }
 
   body.sidebar-collapse .brand-image {
