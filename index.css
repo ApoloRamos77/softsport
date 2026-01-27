@@ -240,110 +240,90 @@ input[type="checkbox"]:checked {
   --bs-border-color: #E2E8F0 !important;
 }
 
-/* Sidebar Collapse Functionality - Responsive Design */
+/* ===== SIDEBAR LAYOUT - SOLUCIÓN DEFINITIVA ===== */
 
-/* Desktop: Sidebar visible por defecto */
+/* Sidebar siempre fijo a la izquierda */
+.app-sidebar {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  bottom: 0 !important;
+  width: 250px !important;
+  z-index: 1040 !important;
+  transition: transform 0.3s ease-in-out !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+/* Navbar siempre arriba */
+.app-header {
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  z-index: 1030 !important;
+  transition: left 0.3s ease-in-out, width 0.3s ease-in-out !important;
+}
+
+/* Contenido principal */
+.app-main {
+  padding-top: 60px !important;
+  transition: margin-left 0.3s ease-in-out !important;
+  min-height: 100vh !important;
+}
+
+/* ===== DESKTOP (≥992px) ===== */
 @media (min-width: 992px) {
-  .app-sidebar {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    bottom: 0 !important;
-    width: 250px !important;
-    z-index: 1040 !important;
-    transition: all 0.3s ease-in-out !important;
-    overflow-x: hidden !important;
-    transform: translateX(0) !important;
-  }
-
-  body.sidebar-collapse .app-sidebar {
-    transform: translateX(-250px) !important;
-  }
-
+  /* Sidebar abierto: navbar y contenido desplazados */
   body.sidebar-open .app-sidebar {
     transform: translateX(0) !important;
   }
-
-  .app-main {
-    margin-left: 250px !important;
-    padding-top: 60px !important;
-    transition: all 0.3s ease-in-out !important;
-    min-height: 100vh !important;
-    width: calc(100% - 250px) !important;
-  }
-
-  body.sidebar-collapse .app-main {
-    margin-left: 0 !important;
-    width: 100% !important;
-  }
-
-  body.sidebar-open .app-main {
-    margin-left: 250px !important;
-    width: calc(100% - 250px) !important;
-  }
-
-  .app-header {
-    position: fixed !important;
-    top: 0 !important;
-    left: 250px !important;
-    right: 0 !important;
-    z-index: 1030 !important;
-    transition: all 0.3s ease-in-out !important;
-    width: calc(100% - 250px) !important;
-  }
-
-  body.sidebar-collapse .app-header {
-    left: 0 !important;
-    width: 100% !important;
-  }
-
+  
   body.sidebar-open .app-header {
     left: 250px !important;
-    width: calc(100% - 250px) !important;
+  }
+  
+  body.sidebar-open .app-main {
+    margin-left: 250px !important;
+  }
+
+  /* Sidebar cerrado: navbar y contenido ocupan todo el ancho */
+  body.sidebar-collapse .app-sidebar {
+    transform: translateX(-250px) !important;
+  }
+  
+  body.sidebar-collapse .app-header {
+    left: 0 !important;
+  }
+  
+  body.sidebar-collapse .app-main {
+    margin-left: 0 !important;
   }
 }
 
-/* Tablet y Mobile: Sidebar oculto por defecto, overlay cuando está abierto */
+/* ===== MÓVIL (<992px) ===== */
 @media (max-width: 991px) {
+  /* Sidebar siempre fuera de pantalla por defecto */
   .app-sidebar {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    bottom: 0 !important;
-    width: 250px !important;
-    z-index: 1050 !important;
-    transition: all 0.3s ease-in-out !important;
-    overflow-x: hidden !important;
     transform: translateX(-250px) !important;
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+    z-index: 1050 !important;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15) !important;
   }
 
+  /* Cuando se abre, el sidebar aparece encima */
   body.sidebar-open .app-sidebar {
     transform: translateX(0) !important;
   }
 
-  body.sidebar-collapse .app-sidebar {
-    transform: translateX(-250px) !important;
+  /* Navbar y contenido siempre ocupan todo el ancho */
+  .app-header {
+    left: 0 !important;
   }
 
   .app-main {
     margin-left: 0 !important;
-    padding-top: 60px !important;
-    transition: all 0.3s ease-in-out !important;
-    min-height: 100vh !important;
-    width: 100% !important;
   }
 
-  .app-header {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    z-index: 1040 !important;
-    width: 100% !important;
-  }
-
-  /* Overlay oscuro cuando sidebar está abierto en móvil */
+  /* Overlay oscuro cuando sidebar está abierto */
   body.sidebar-open::before {
     content: "";
     position: fixed;
@@ -355,15 +335,6 @@ input[type="checkbox"]:checked {
     z-index: 1045;
     animation: fadeIn 0.3s ease-in-out;
   }
-}
-
-/* Sidebar brand text transition */
-.sidebar-brand .brand-text {
-  transition: opacity 0.3s ease-in-out;
-}
-
-body.sidebar-collapse .sidebar-brand .brand-text {
-  opacity: 0;
 }
 
 /* Login Page Overrides - Asegurar contraste correcto */
