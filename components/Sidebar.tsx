@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import { useSidebar } from '../contexts/SidebarContext';
 
 interface SidebarProps {
-  isOpen: boolean;
   currentView: string;
   onViewChange: (view: string) => void;
 }
@@ -15,7 +15,10 @@ interface MenuItem {
   badgeColor?: string;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, currentView, onViewChange }) => {
+const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) => {
+  const { sidebarShow, setSidebarShow, sidebarUnfoldable } = useSidebar();
+  const sidebarRef = useRef<HTMLDivElement>(null);
+
   const menuSections = {
     principal: [
       { id: 'dashboard', name: 'Dashboard', icon: 'bi-speedometer2' },
@@ -58,55 +61,95 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, currentView, onViewChange }) 
     sistema: 'Sistema',
   };
 
-  return (
-    <aside className={`sidebar-modern ${isOpen ? 'expanded' : 'collapsed'}`}>
-      <div className="sidebar-brand">
-        <div className="brand-link">
-          <img src="/images/logo.png" alt="ADHSOFT SPORT" className="brand-image" />
-          {isOpen && <span className="brand-text">ADHSOFT SPORT</span>}
-        </div>
-      </div>
+  // Cerrar sidebar en móvil al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (window.innerWidth < 992 && sidebarShow) {
+        if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
+          const target = event.target as HTMLElement;
+          // No cerrar si se hace clic en el botón toggle
+          if (!target.closest('[data-sidebar-toggle]')) {
+            setSidebarShow(false);
+          }
+        }
+      }
+    };
 
-      <div className="sidebar-wrapper custom-scrollbar">
-        <nav className="sidebar-nav">
-          {Object.entries(menuSections).map(([sectionKey, items]) => (
-            <div key={sectionKey} className="nav-group">
-              {isOpen && (
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [sidebarShow, setSidebarShow]);
+
+  // Cerrar en móvil al seleccionar un item
+  const handleNavClick = (itemId: string) => {
+    onViewChange(itemId);
+    if (window.innerWidth < 992) {
+      setSidebarShow(false);
+    }
+  };
+
+  const sidebarClasses = [
+    'sidebar-coreui',
+    sidebarShow ? 'show' : '',
+    sidebarUnfoldable ? 'unfoldable' : '',
+  ].filter(Boolean).join(' ');
+
+  return (
+    <>
+      {/* Overlay para móvil */}
+      {sidebarShow && window.innerWidth < 992 && (
+        <div 
+          className="sidebar-backdrop" 
+          onClick={() => setSidebarShow(false)}
+        />
+      )}
+      
+      <div ref={sidebarRef} className={sidebarClasses}>
+        <div className="sidebar-brand">
+          <div className="brand-link">
+            <img src="/images/logo.png" alt="ADHSOFT SPORT" className="brand-image" />
+            <span className="brand-text">ADHSOFT SPORT</span>
+          </div>
+        </div>
+
+        <div className="sidebar-nav-wrapper">
+          <nav className="sidebar-nav">
+            {Object.entries(menuSections).map(([sectionKey, items]) => (
+              <div key={sectionKey} className="nav-group">
                 <div className="nav-group-title">
                   <span>{sectionTitles[sectionKey]}</span>
                 </div>
-              )}
-              <ul className="nav-list">
-                {items.map((item) => (
-                  <li className="nav-item" key={item.id}>
-                    <a
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        onViewChange(item.id);
-                      }}
-                      className={`nav-link ${currentView === item.id ? 'active' : ''}`}
-                      title={!isOpen ? item.name : undefined}
-                    >
-                      <i className={`nav-icon bi ${item.icon}`}></i>
-                      {isOpen && <span className="nav-text">{item.name}</span>}
-                      {currentView === item.id && <div className="active-indicator"></div>}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </nav>
-      </div>
+                <ul className="nav-list">
+                  {items.map((item) => (
+                    <li className="nav-item" key={item.id}>
+                      <a
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleNavClick(item.id);
+                        }}
+                        className={`nav-link ${currentView === item.id ? 'active' : ''}`}
+                        title={item.name}
+                      >
+                        <i className={`nav-icon bi ${item.icon}`}></i>
+                        <span className="nav-text">{item.name}</span>
+                        {currentView === item.id && <div className="active-indicator"></div>}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </nav>
+        </div>
 
-      <div className="sidebar-footer">
-        <div className="footer-content">
-          <i className="bi bi-info-circle"></i>
-          {isOpen && <span className="footer-text">v2.0.1</span>}
+        <div className="sidebar-footer">
+          <div className="footer-content">
+            <i className="bi bi-info-circle"></i>
+            <span className="footer-text">v2.0.1</span>
+          </div>
         </div>
       </div>
-    </aside>
+    </>
   );
 };
 

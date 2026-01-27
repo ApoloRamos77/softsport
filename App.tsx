@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { SidebarProvider } from './contexts/SidebarContext';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
 import Dashboard from './components/Dashboard';
@@ -29,8 +30,6 @@ type View = 'representantes' | 'servicios' | 'grupos' | 'categorias' | 'atletas'
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  // Inicializar sidebar abierto siempre
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('theme');
@@ -81,83 +80,11 @@ const App: React.FC = () => {
   useEffect(() => {
     // Update body classes based on authentication status
     if (isAuthenticated) {
-      const isMobile = window.innerWidth < 992;
-      
-      if (isMobile) {
-        // En móvil: sidebar-open cuando está visible, sin clase cuando está oculto
-        if (isSidebarOpen) {
-          document.body.className = 'layout-fixed sidebar-open bg-body-tertiary';
-        } else {
-          document.body.className = 'layout-fixed bg-body-tertiary';
-        }
-      } else {
-        // En desktop: sidebar-open para expandido, sidebar-collapse para colapsado
-        if (isSidebarOpen) {
-          document.body.className = 'layout-fixed sidebar-open bg-body-tertiary';
-        } else {
-          document.body.className = 'layout-fixed sidebar-collapse bg-body-tertiary';
-        }
-      }
+      document.body.className = 'layout-fixed bg-body-tertiary';
     } else {
       document.body.className = 'hold-transition login-page';
     }
-  }, [isAuthenticated, isSidebarOpen]);
-
-  // Cerrar sidebar al hacer clic en el overlay (solo móviles)
-  useEffect(() => {
-    if (!isAuthenticated || window.innerWidth >= 992) return;
-
-    const handleOverlayClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (isSidebarOpen && !target.closest('.sidebar-modern') && !target.closest('[data-lte-toggle="sidebar"]')) {
-        setIsSidebarOpen(false);
-      }
-    };
-
-    document.addEventListener('click', handleOverlayClick);
-    return () => document.removeEventListener('click', handleOverlayClick);
-  }, [isAuthenticated, isSidebarOpen]);
-
-  // Aplicar clases al header y main según estado del sidebar
-  useEffect(() => {
-    if (!isAuthenticated) return;
-
-    const header = document.querySelector('.app-header') as HTMLElement;
-    const main = document.querySelector('.app-main') as HTMLElement;
-    
-    if (header && main) {
-      if (window.innerWidth >= 992) {
-        // Desktop
-        if (isSidebarOpen) {
-          header.style.left = '260px';
-          main.style.marginLeft = '260px';
-        } else {
-          header.style.left = '70px';
-          main.style.marginLeft = '70px';
-        }
-      } else {
-        // Móvil
-        header.style.left = '0';
-        main.style.marginLeft = '0';
-      }
-    }
-  }, [isAuthenticated, isSidebarOpen]);
-
-  // Responsive: Ajustar estado del sidebar al redimensionar
-  useEffect(() => {
-    if (!isAuthenticated) return;
-
-    const handleResize = () => {
-      const isMobile = window.innerWidth < 992;
-      if (!isMobile && !isSidebarOpen) {
-        // En desktop, si el sidebar está cerrado, abrirlo al cambiar de móvil a desktop
-        setIsSidebarOpen(true);
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [isAuthenticated, isSidebarOpen]);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (darkMode) {
@@ -249,9 +176,8 @@ const App: React.FC = () => {
   };
 
   return (
-    <>
+    <SidebarProvider>
       <Navbar 
-        toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} 
         onNavigate={setCurrentView}
         darkMode={darkMode}
         toggleTheme={toggleTheme}
@@ -259,7 +185,6 @@ const App: React.FC = () => {
       />
       
       <Sidebar 
-        isOpen={isSidebarOpen} 
         currentView={currentView} 
         onViewChange={(view) => setCurrentView(view as View)} 
       />
@@ -289,7 +214,7 @@ const App: React.FC = () => {
           </div>
         </div>
       </main>
-    </>
+    </SidebarProvider>
   );
 };
 

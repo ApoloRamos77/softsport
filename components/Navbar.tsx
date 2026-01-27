@@ -1,15 +1,16 @@
 
 import React, { useState, useEffect } from 'react';
+import { useSidebar } from '../contexts/SidebarContext';
 
 interface NavbarProps {
-  toggleSidebar: () => void;
   onNavigate: (view: any) => void;
   darkMode: boolean;
   toggleTheme: () => void;
   onLogout?: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ toggleSidebar, onNavigate, darkMode, toggleTheme, onLogout }) => {
+const Navbar: React.FC<NavbarProps> = ({ onNavigate, darkMode, toggleTheme, onLogout }) => {
+  const { toggleSidebar, sidebarUnfoldable, setSidebarUnfoldable } = useSidebar();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [userData, setUserData] = useState({
     nombre: 'Usuario',
@@ -51,8 +52,31 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar, onNavigate, darkMode, to
       <div className="container-fluid">
         <ul className="navbar-nav">
           <li className="nav-item">
-            <a className="nav-link" data-lte-toggle="sidebar" href="#" role="button" onClick={(e) => { e.preventDefault(); toggleSidebar(); }}>
+            <a 
+              className="nav-link" 
+              data-sidebar-toggle 
+              href="#" 
+              role="button" 
+              onClick={(e) => { 
+                e.preventDefault(); 
+                toggleSidebar(); 
+              }}
+            >
               <i className="bi bi-list"></i>
+            </a>
+          </li>
+          <li className="nav-item d-none d-md-block">
+            <a 
+              className="nav-link" 
+              href="#" 
+              role="button" 
+              onClick={(e) => { 
+                e.preventDefault(); 
+                setSidebarUnfoldable(!sidebarUnfoldable); 
+              }}
+              title={sidebarUnfoldable ? "Desanclar sidebar" : "Anclar sidebar"}
+            >
+              <i className={`bi ${sidebarUnfoldable ? 'bi-pin-angle-fill' : 'bi-pin-angle'}`}></i>
             </a>
           </li>
         </ul>
