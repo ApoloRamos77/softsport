@@ -52,27 +52,51 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, darkMode, toggleTheme, onLo
       <div className="container-fluid">
         <ul className="navbar-nav">
           <li className="nav-item">
-            <a 
-              className="nav-link" 
-              data-sidebar-toggle 
-              href="#" 
-              role="button" 
-              onClick={(e) => { 
-                e.preventDefault(); 
-                toggleSidebar(); 
+            <a
+              className="nav-link"
+              data-sidebar-toggle
+              href="#"
+              role="button"
+              onClick={(e) => {
+                e.preventDefault();
+                toggleSidebar();
               }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '44px',
+                height: '44px',
+                fontSize: '28px',
+                fontWeight: 'bold',
+                color: '#1e293b',
+                backgroundColor: '#f1f5f9',
+                borderRadius: '10px',
+                border: '2px solid #3b82f6'
+              }}
+              title="Toggle Sidebar"
             >
-              <i className="bi bi-list"></i>
+              <i className="bi bi-list" style={{ fontSize: '28px', fontWeight: 'bold' }}></i>
             </a>
           </li>
+          <li className="nav-item">
+            <span style={{
+              marginLeft: '1rem',
+              fontSize: '20px',
+              fontWeight: 'bold',
+              color: '#ef4444'
+            }}>
+              HOLA - TEST DEPLOYMENT
+            </span>
+          </li>
           <li className="nav-item d-none d-md-block">
-            <a 
-              className="nav-link" 
-              href="#" 
-              role="button" 
-              onClick={(e) => { 
-                e.preventDefault(); 
-                setUnfoldable(!unfoldable); 
+            <a
+              className="nav-link"
+              href="#"
+              role="button"
+              onClick={(e) => {
+                e.preventDefault();
+                setUnfoldable(!unfoldable);
               }}
               title={unfoldable ? "Expandir sidebar" : "Contraer sidebar"}
             >
@@ -89,9 +113,9 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, darkMode, toggleTheme, onLo
           </li>
 
           <li className="nav-item dropdown user-menu">
-            <a 
-              href="#" 
-              className="nav-link dropdown-toggle" 
+            <a
+              href="#"
+              className="nav-link dropdown-toggle"
               data-bs-toggle="dropdown"
               onClick={(e) => { e.preventDefault(); setIsUserMenuOpen(!isUserMenuOpen); }}
             >
