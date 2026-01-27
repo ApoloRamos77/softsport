@@ -11,7 +11,7 @@ interface SidebarContextType {
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
 
 export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(window.innerWidth >= 992);
   const [unfoldable, setUnfoldable] = useState(false);
 
   const toggleSidebar = useCallback(() => {

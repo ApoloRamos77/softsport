@@ -1,21 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-
-interface Role {
-  id: number;
-  nombre: string;
-  descripcion: string;
-  tipo: string;
-  academia?: string;
-}
-
-interface Permission {
-  moduloId: number;
-  moduloNombre: string;
-  ver: boolean;
-  crear: boolean;
-  modificar: boolean;
-  eliminar: boolean;
-}
+import { apiService, Role, Permission } from '../services/api';
 
 interface RoleFormProps {
   role?: Role | null;
@@ -26,9 +11,10 @@ const RoleForm: React.FC<RoleFormProps> = ({ role, onCancel }) => {
   const [activeTab, setActiveTab] = useState<'general' | 'permisos'>('general');
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
+  const [loading, setLoading] = useState(false);
   const [permissions, setPermissions] = useState<Permission[]>([
     { moduloId: 1, moduloNombre: 'Dashboard', ver: false, crear: false, modificar: false, eliminar: false },
-    { moduloId: 2, moduloNombre: 'Alumnos', ver: false, crear: false, modificar: false, eliminar: false },
+    { moduloId: 2, moduloNombre: 'Atletas', ver: false, crear: false, modificar: false, eliminar: false },
     { moduloId: 3, moduloNombre: 'Grupos', ver: false, crear: false, modificar: false, eliminar: false },
     { moduloId: 4, moduloNombre: 'Categorías', ver: false, crear: false, modificar: false, eliminar: false },
     { moduloId: 5, moduloNombre: 'Entrenamientos', ver: false, crear: false, modificar: false, eliminar: false },
@@ -38,13 +24,6 @@ const RoleForm: React.FC<RoleFormProps> = ({ role, onCancel }) => {
     { moduloId: 9, moduloNombre: 'Becas', ver: false, crear: false, modificar: false, eliminar: false },
     { moduloId: 10, moduloNombre: 'Servicios', ver: false, crear: false, modificar: false, eliminar: false },
     { moduloId: 11, moduloNombre: 'Productos', ver: false, crear: false, modificar: false, eliminar: false },
-    { moduloId: 12, moduloNombre: 'Métodos de Pago', ver: false, crear: false, modificar: false, eliminar: false },
-    { moduloId: 13, moduloNombre: 'Egresos', ver: false, crear: false, modificar: false, eliminar: false },
-    { moduloId: 14, moduloNombre: 'Ingresos', ver: false, crear: false, modificar: false, eliminar: false },
-    { moduloId: 15, moduloNombre: 'Calendario', ver: false, crear: false, modificar: false, eliminar: false },
-    { moduloId: 16, moduloNombre: 'Pizarra BOV', ver: false, crear: false, modificar: false, eliminar: false },
-    { moduloId: 17, moduloNombre: 'Usuarios (manage_users)', ver: false, crear: false, modificar: false, eliminar: false },
-    { moduloId: 18, moduloNombre: 'Roles (manage_roles)', ver: false, crear: false, modificar: false, eliminar: false },
   ]);
 
   const isEditMode = !!role;
@@ -53,35 +32,30 @@ const RoleForm: React.FC<RoleFormProps> = ({ role, onCancel }) => {
     if (role) {
       setNombre(role.nombre);
       setDescripcion(role.descripcion);
-      loadPermissions(role.id);
+      if (role.id) {
+        loadPermissions(role.id);
+      }
     }
   }, [role]);
 
   const loadPermissions = async (roleId: number) => {
     try {
-      const response = await fetch(`http://localhost:5081/api/roles/${roleId}/permissions`);
-      if (response.ok) {
-        const savedPermissions = await response.json();
-        
-        // Crear un mapa de los permisos guardados
-        const permissionsMap = new Map(
-          savedPermissions.map((p: Permission) => [p.moduloId, p])
-        );
-        
-        // Actualizar el estado de permisos manteniendo todos los módulos
-        setPermissions(prev => prev.map(p => {
-          const saved = permissionsMap.get(p.moduloId);
-          return saved ? saved : p;
-        }));
-      }
+      const savedPermissions = await apiService.getRolePermissions(roleId);
+      const permissionsMap = new Map(
+        savedPermissions.map((p: Permission) => [p.moduloId, p])
+      );
+      setPermissions(prev => prev.map(p => {
+        const saved = permissionsMap.get(p.moduloId);
+        return saved ? saved : p;
+      }));
     } catch (error) {
       console.error('Error cargando permisos:', error);
     }
   };
 
   const handlePermissionChange = (moduloId: number, permission: 'ver' | 'crear' | 'modificar' | 'eliminar') => {
-    setPermissions(prev => prev.map(p => 
-      p.moduloId === moduloId 
+    setPermissions(prev => prev.map(p =>
+      p.moduloId === moduloId
         ? { ...p, [permission]: !p[permission] }
         : p
     ));
@@ -100,7 +74,8 @@ const RoleForm: React.FC<RoleFormProps> = ({ role, onCancel }) => {
       return;
     }
 
-    const roleData = {
+    setLoading(true);
+    const roleData: Role = {
       nombre: nombre.trim(),
       descripcion: descripcion.trim(),
       tipo: 'Sistema',
@@ -108,144 +83,118 @@ const RoleForm: React.FC<RoleFormProps> = ({ role, onCancel }) => {
     };
 
     try {
-      const url = isEditMode 
-        ? `http://localhost:5081/api/roles/${role.id}`
-        : 'http://localhost:5081/api/roles';
-      
-      const response = await fetch(url, {
-        method: isEditMode ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(roleData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al guardar el rol');
+      if (isEditMode && role?.id) {
+        await apiService.updateRole(role.id, roleData);
+        alert('Rol actualizado exitosamente');
+      } else {
+        await apiService.createRole(roleData);
+        alert('Rol creado exitosamente');
       }
-
-      alert(isEditMode ? 'Rol actualizado exitosamente' : 'Rol creado exitosamente');
       onCancel();
     } catch (error) {
       console.error('Error:', error);
       alert('Error al guardar el rol');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-bold text-white">Crear Nuevo Rol</h3>
-        <p className="text-xs text-slate-500">Define un nuevo rol y asigna los permisos correspondientes</p>
-      </div>
+    <div className="card shadow-lg mx-auto border-0" style={{ maxWidth: '900px', backgroundColor: '#0f1419' }}>
+      <div className="card-header bg-transparent border-0 pt-4 pb-2 px-4">
+        <h4 className="mb-1 fw-bold text-white">{isEditMode ? 'Editar Rol' : 'Crear Nuevo Rol'}</h4>
+        <small className="text-secondary">Modifica la información del rol y sus permisos por módulo</small>
 
-      <div className="bg-[#1a2332] border border-slate-700 rounded-lg overflow-hidden">
-        {/* Tabs */}
-        <div className="flex border-b border-slate-700">
+        {/* Custom Tabs */}
+        <div className="d-flex mt-4 p-1 rounded" style={{ backgroundColor: '#161b22' }}>
           <button
+            className={`flex-fill btn border-0 fw-medium py-2 rounded ${activeTab === 'general' ? 'text-white' : 'text-secondary'}`}
+            style={{ backgroundColor: activeTab === 'general' ? '#1f6feb' : 'transparent', transition: 'all 0.2s' }}
             onClick={() => setActiveTab('general')}
-            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
-              activeTab === 'general'
-                ? 'bg-[#111827] text-white border-b-2 border-blue-500'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/30'
-            }`}
           >
             Información General
           </button>
           <button
+            className={`flex-fill btn border-0 fw-medium py-2 rounded ${activeTab === 'permisos' ? 'text-white' : 'text-secondary'}`}
+            style={{ backgroundColor: activeTab === 'permisos' ? '#1f6feb' : 'transparent', transition: 'all 0.2s' }}
             onClick={() => setActiveTab('permisos')}
-            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
-              activeTab === 'permisos'
-                ? 'bg-[#111827] text-white border-b-2 border-blue-500'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/30'
-            }`}
           >
-            Permisos
+            Permisos por Módulo
           </button>
         </div>
+      </div>
 
-        {/* Tab Content */}
-        <div className="p-6">
+      <div className="card-body px-4 pb-4">
+        <form onSubmit={handleSubmit}>
           {activeTab === 'general' ? (
-            <div className="space-y-4">
+            <div className="d-flex flex-column gap-4 mt-2">
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Nombre
-                </label>
+                <label className="form-label text-white fw-bold mb-2">Nombre del Rol</label>
                 <input
                   type="text"
+                  className="form-control text-white border-secondary border-opacity-25"
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
-                  placeholder="Nombre del rol"
-                  className="w-full px-4 py-2 bg-[#1a2332] border border-slate-700 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  placeholder="Ej: Administrador"
+                  style={{ backgroundColor: '#0d1117', padding: '10px', fontSize: '14px' }}
+                  required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Descripción
-                </label>
+                <label className="form-label text-white fw-bold mb-2">Descripción</label>
                 <textarea
+                  className="form-control text-white border-secondary border-opacity-25"
                   value={descripcion}
                   onChange={(e) => setDescripcion(e.target.value)}
-                  placeholder="Descripción del rol"
+                  placeholder="Descripción detallada del rol..."
                   rows={4}
-                  className="w-full px-4 py-2 bg-[#1a2332] border border-slate-700 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none"
+                  style={{ backgroundColor: '#0d1117', padding: '10px', resize: 'none', fontSize: '14px' }}
+                  required
                 />
               </div>
             </div>
           ) : (
-            <div>
-              <h4 className="text-sm font-semibold text-white mb-4">Permisos por Módulo</h4>
-              <p className="text-xs text-slate-400 mb-6">Configura los permisos de acceso para cada módulo del sistema</p>
-              
-              <div className="bg-[#111827] border border-slate-800 rounded-lg overflow-hidden">
-                <table className="w-full text-left text-xs">
-                  <thead className="text-slate-400 bg-slate-900/30 border-b border-slate-800">
+            <div className="mt-2">
+              <div className="mb-4">
+                <h5 className="fw-bold text-white mb-1">Permisos por Módulo</h5>
+                <small className="text-secondary">Configura los permisos de acceso para cada módulo del sistema</small>
+              </div>
+
+              <div className="table-responsive rounded border border-secondary border-opacity-25">
+                <table className="table align-middle mb-0" style={{ borderColor: '#30363d' }}>
+                  <thead style={{ backgroundColor: '#161b22' }}>
                     <tr>
-                      <th className="px-6 py-3 font-semibold">Módulo</th>
-                      <th className="px-6 py-3 font-semibold text-center">Ver</th>
-                      <th className="px-6 py-3 font-semibold text-center">Crear</th>
-                      <th className="px-6 py-3 font-semibold text-center">Modificar</th>
-                      <th className="px-6 py-3 font-semibold text-center">Eliminar</th>
+                      <th className="ps-4 py-3 text-white border-bottom border-secondary border-opacity-25">Módulo</th>
+                      <th className="text-center py-3 text-white border-bottom border-secondary border-opacity-25">Ver</th>
+                      <th className="text-center py-3 text-white border-bottom border-secondary border-opacity-25">Crear</th>
+                      <th className="text-center py-3 text-white border-bottom border-secondary border-opacity-25">Modificar</th>
+                      <th className="text-center py-3 text-white border-bottom border-secondary border-opacity-25">Eliminar</th>
                     </tr>
                   </thead>
                   <tbody>
                     {permissions.map((perm) => (
-                      <tr key={perm.moduloId} className="border-b border-slate-800 hover:bg-slate-800/30 transition-colors">
-                        <td className="px-6 py-4 text-white font-medium">{perm.moduloNombre}</td>
-                        <td className="px-6 py-4 text-center">
-                          <input
-                            type="checkbox"
-                            checked={perm.ver}
-                            onChange={() => handlePermissionChange(perm.moduloId, 'ver')}
-                            className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
-                          />
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <input
-                            type="checkbox"
-                            checked={perm.crear}
-                            onChange={() => handlePermissionChange(perm.moduloId, 'crear')}
-                            className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
-                          />
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <input
-                            type="checkbox"
-                            checked={perm.modificar}
-                            onChange={() => handlePermissionChange(perm.moduloId, 'modificar')}
-                            className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
-                          />
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <input
-                            type="checkbox"
-                            checked={perm.eliminar}
-                            onChange={() => handlePermissionChange(perm.moduloId, 'eliminar')}
-                            className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
-                          />
-                        </td>
+                      <tr key={perm.moduloId} style={{ backgroundColor: '#0d1117' }}>
+                        <td className="ps-4 py-3 fw-medium text-white border-bottom border-secondary border-opacity-10">{perm.moduloNombre}</td>
+                        {['ver', 'crear', 'modificar', 'eliminar'].map((action) => (
+                          <td key={action} className="text-center border-bottom border-secondary border-opacity-10">
+                            <div className="form-check d-flex justify-content-center">
+                              <input
+                                className="form-check-input"
+                                type="checkbox"
+                                checked={(perm as any)[action]}
+                                onChange={() => handlePermissionChange(perm.moduloId, action as any)}
+                                style={{
+                                  backgroundColor: (perm as any)[action] ? '#1f6feb' : 'transparent',
+                                  borderColor: '#30363d',
+                                  width: '18px',
+                                  height: '18px',
+                                  cursor: 'pointer'
+                                }}
+                              />
+                            </div>
+                          </td>
+                        ))}
                       </tr>
                     ))}
                   </tbody>
@@ -253,25 +202,35 @@ const RoleForm: React.FC<RoleFormProps> = ({ role, onCancel }) => {
               </div>
             </div>
           )}
-        </div>
 
-        {/* Footer */}
-        <div className="border-t border-slate-700 px-6 py-4 flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-md text-sm font-medium transition-colors"
-          >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm font-medium transition-colors shadow-lg shadow-blue-500/20"
-          >
-            {isEditMode ? 'Actualizar Rol' : 'Crear Rol'}
-          </button>
-        </div>
+          <div className="d-flex justify-content-end gap-2 mt-5">
+            {/* Using transparent cancel button to match dark theme better or styled outline */}
+            <button
+              type="button"
+              onClick={onCancel}
+              className="btn text-white fw-medium px-4"
+              style={{ backgroundColor: 'transparent' }}
+              disabled={loading}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="btn text-white fw-medium px-4"
+              style={{ backgroundColor: '#1f6feb' }}
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Guardando...
+                </>
+              ) : (
+                'Guardar Cambios'
+              )}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

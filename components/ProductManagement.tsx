@@ -1,15 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import ProductForm from './ProductForm';
-
-interface Producto {
-  id: number;
-  nombre: string;
-  sku?: string;
-  descripcion?: string;
-  precio: number;
-  cantidad: number;
-}
+import { apiService, Producto } from '../services/api';
 
 const ProductManagement: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
@@ -24,8 +16,8 @@ const ProductManagement: React.FC = () => {
 
   const loadProductos = async () => {
     try {
-      const response = await fetch('http://localhost:5081/api/productos');
-      const data = await response.json();
+      setLoading(true);
+      const data = await apiService.getProductos();
       setProductos(data);
     } catch (error) {
       console.error('Error cargando productos:', error);
@@ -36,26 +28,14 @@ const ProductManagement: React.FC = () => {
 
   const handleSubmit = async (productoData: any) => {
     try {
-      const url = editingProducto 
-        ? `http://localhost:5081/api/productos/${editingProducto.id}` 
-        : 'http://localhost:5081/api/productos';
-      const method = editingProducto ? 'PUT' : 'POST';
-
-      const dataToSend = editingProducto 
+      const dataToSend = editingProducto
         ? { ...productoData, id: editingProducto.id }
         : productoData;
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(dataToSend),
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || 'Error al guardar el producto');
+      if (editingProducto) {
+        await apiService.updateProducto(editingProducto.id!, dataToSend);
+      } else {
+        await apiService.createProducto(dataToSend);
       }
 
       await loadProductos();
@@ -76,14 +56,7 @@ const ProductManagement: React.FC = () => {
     if (!confirm('¿Estás seguro de eliminar este producto?')) return;
 
     try {
-      const response = await fetch(`http://localhost:5081/api/productos/${productoId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al eliminar el producto');
-      }
-
+      await apiService.deleteProducto(productoId);
       await loadProductos();
     } catch (error: any) {
       alert(error.message || 'Error al eliminar el producto');
@@ -96,15 +69,15 @@ const ProductManagement: React.FC = () => {
     setEditingProducto(null);
   };
 
-  const filteredProductos = productos.filter(p => 
+  const filteredProductos = productos.filter(p =>
     p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.sku?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (showForm) {
     return (
-      <ProductForm 
-        onCancel={handleCancel} 
+      <ProductForm
+        onCancel={handleCancel}
         onSubmit={handleSubmit}
         initialData={editingProducto}
         isEditing={!!editingProducto}
@@ -113,107 +86,124 @@ const ProductManagement: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-start">
-        <div>
-          <h2 className="text-2xl font-bold text-white">Productos</h2>
-          <p className="text-sm text-slate-400 mt-1">Gestiona el inventario de productos de tu academia</p>
+    <div className="animate-fadeIn" style={{ backgroundColor: '#0d1117', minHeight: '80vh' }}>
+      <div className="max-w-7xl mx-auto px-4 py-4 d-flex flex-column gap-4">
+        <div className="d-flex justify-content-between align-items-end mb-2">
+          <div>
+            <h2 className="mb-1 text-white fw-bold h4">Gestión de Productos</h2>
+            <p className="text-secondary mb-0 small">Gestiona el inventario de productos de tu academia</p>
+          </div>
+          <div className="d-flex gap-2">
+            <button
+              className="btn btn-sm d-flex align-items-center gap-2 text-white border-secondary border-opacity-50"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid #30363d' }}
+            >
+              <i className="bi bi-file-pdf"></i> Exportar PDF
+            </button>
+            <button
+              onClick={() => setShowForm(true)}
+              className="btn btn-primary d-flex align-items-center gap-2 px-3"
+              style={{ backgroundColor: '#1f6feb', borderColor: '#1f6feb', fontWeight: '600' }}
+            >
+              <i className="bi bi-plus-lg"></i> Nuevo Producto
+            </button>
+          </div>
         </div>
-        <button 
-          onClick={() => setShowForm(true)}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-semibold transition-colors"
-        >
-          <i className="fas fa-plus"></i> Nuevo Producto
-        </button>
-      </div>
 
-      <div className="flex items-center gap-4">
-        <div className="relative w-80">
-          <input 
-            type="text" 
-            placeholder="Buscar productos..." 
-            className="bg-[#0f1419] p-2.5 pl-4 rounded-md border border-slate-700 text-sm w-full text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <div className="card border-0 shadow-sm mb-4" style={{ backgroundColor: '#161b22' }}>
+          <div className="card-body p-4">
+            <div className="position-relative" style={{ maxWidth: '400px' }}>
+              <i className="bi bi-search position-absolute text-secondary" style={{ left: '10px', top: '50%', transform: 'translateY(-50%)' }}></i>
+              <input
+                type="text"
+                placeholder="Buscar productos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="form-control border-secondary border-opacity-25 text-white placeholder-secondary"
+                style={{ backgroundColor: '#0d1117', paddingLeft: '35px' }}
+              />
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div className="bg-[#1a2332] border border-slate-700 rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="text-slate-400 bg-[#0f1419] border-b border-slate-700">
-              <tr>
-                <th className="px-6 py-3 font-semibold text-xs uppercase">Producto</th>
-                <th className="px-6 py-3 font-semibold text-xs uppercase">SKU</th>
-                <th className="px-6 py-3 font-semibold text-xs uppercase">Precio</th>
-                <th className="px-6 py-3 font-semibold text-xs uppercase">Cantidad</th>
-                <th className="px-6 py-3 font-semibold text-xs uppercase">Estado</th>
-                <th className="px-6 py-3 font-semibold text-xs uppercase text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-20 text-center text-slate-400">
-                    Cargando...
-                  </td>
-                </tr>
-              ) : filteredProductos.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-20 text-center">
-                    <div className="flex flex-col items-center gap-3 text-slate-500">
-                      <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                      </svg>
-                      <p className="text-sm font-medium">No se encontraron productos</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                filteredProductos.map((producto) => (
-                  <tr key={producto.id} className="border-b border-slate-800 hover:bg-slate-800/30 transition-colors">
-                    <td className="px-6 py-4 text-white font-medium">{producto.nombre}</td>
-                    <td className="px-6 py-4 text-slate-300">{producto.sku || '-'}</td>
-                    <td className="px-6 py-4 text-slate-300">${producto.precio.toFixed(2)}</td>
-                    <td className="px-6 py-4 text-slate-300">{producto.cantidad}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                        producto.cantidad > 10 
-                          ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                          : producto.cantidad > 0
-                          ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
-                          : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                      }`}>
-                        {producto.cantidad > 10 ? 'En Stock' : producto.cantidad > 0 ? 'Bajo' : 'Agotado'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => handleEdit(producto)}
-                          className="text-blue-400 hover:text-blue-300 transition-colors"
-                          title="Editar"
-                        >
-                          <i className="fas fa-edit text-sm"></i>
-                        </button>
-                        <button
-                          onClick={() => handleDelete(producto.id)}
-                          className="text-red-400 hover:text-red-300 transition-colors"
-                          title="Eliminar"
-                        >
-                          <i className="fas fa-trash text-sm"></i>
-                        </button>
-                      </div>
-                    </td>
+        <div className="card border-0 shadow-sm" style={{ backgroundColor: '#0f1419' }}>
+          <div className="card-body p-0">
+            <div className="table-responsive">
+              <table className="table align-middle mb-0" style={{ borderColor: '#30363d' }}>
+                <thead style={{ backgroundColor: '#161b22' }}>
+                  <tr>
+                    <th className="ps-4 py-3 text-white border-bottom border-secondary border-opacity-25 text-uppercase small font-weight-bold">Producto</th>
+                    <th className="py-3 text-white border-bottom border-secondary border-opacity-25 text-uppercase small font-weight-bold">SKU</th>
+                    <th className="py-3 text-white border-bottom border-secondary border-opacity-25 text-uppercase small font-weight-bold">Precio</th>
+                    <th className="py-3 text-white border-bottom border-secondary border-opacity-25 text-uppercase small font-weight-bold">Cantidad</th>
+                    <th className="py-3 text-white border-bottom border-secondary border-opacity-25 text-uppercase small font-weight-bold">Estado</th>
+                    <th className="pe-4 py-3 text-end text-white border-bottom border-secondary border-opacity-25 text-uppercase small font-weight-bold">Acciones</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={6} className="text-center py-5 text-secondary">
+                        <div className="spinner-border text-primary mb-2" role="status"></div>
+                        <p className="mb-0">Cargando...</p>
+                      </td>
+                    </tr>
+                  ) : filteredProductos.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="text-center py-5">
+                        <div className="d-flex flex-column align-items-center">
+                          <i className="bi bi-box-seam text-secondary display-4 mb-3"></i>
+                          <p className="text-muted fw-medium mb-0">No se encontraron productos</p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredProductos.map((producto) => (
+                      <tr key={producto.id} className="hover-bg-dark-lighter" style={{ transition: 'background-color 0.2s' }}>
+                        <td className="ps-4 py-3 text-white fw-medium border-bottom border-secondary border-opacity-10">{producto.nombre}</td>
+                        <td className="py-3 text-secondary border-bottom border-secondary border-opacity-10">{producto.sku || '-'}</td>
+                        <td className="py-3 text-white border-bottom border-secondary border-opacity-10">${producto.precio.toFixed(2)}</td>
+                        <td className="py-3 text-secondary border-bottom border-secondary border-opacity-10">{producto.cantidad}</td>
+                        <td className="py-3 border-bottom border-secondary border-opacity-10">
+                          <span className={`badge bg-opacity-20 border border-opacity-30 text-white ${producto.cantidad > 10
+                            ? 'bg-success border-success'
+                            : producto.cantidad > 0
+                              ? 'bg-warning border-warning'
+                              : 'bg-danger border-danger'
+                            }`}>
+                            {producto.cantidad > 10 ? 'En Stock' : producto.cantidad > 0 ? 'Bajo' : 'Agotado'}
+                          </span>
+                        </td>
+                        <td className="pe-4 py-3 text-end border-bottom border-secondary border-opacity-10">
+                          <div className="d-flex justify-content-end gap-2">
+                            <button
+                              onClick={() => handleEdit(producto)}
+                              className="btn btn-sm text-primary p-0 me-2"
+                              title="Editar"
+                              style={{ backgroundColor: 'transparent', border: 'none' }}
+                            >
+                              <i className="bi bi-pencil"></i>
+                            </button>
+                            <button
+                              onClick={() => handleDelete(producto.id!)}
+                              className="btn btn-sm text-danger p-0"
+                              title="Eliminar"
+                              style={{ backgroundColor: 'transparent', border: 'none' }}
+                            >
+                              <i className="bi bi-trash"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 };
 

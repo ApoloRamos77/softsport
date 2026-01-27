@@ -59,216 +59,234 @@ const AcademyConfig: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 animate-fadeIn">
+    <div className="animate-fadeIn" style={{ backgroundColor: '#0d1117', minHeight: '80vh' }}>
+      <div className="mb-4">
+        <h2 className="text-white fw-bold h4 mb-1">Configuración de la Academia</h2>
+        <p className="text-secondary mb-0 small">Personaliza la información, apariencia y funciones avanzadas</p>
+      </div>
+
       {/* Tabs */}
-      <div className="flex bg-slate-800/50 p-1.5 rounded-lg w-fit gap-1">
-        <button 
+      <div className="d-flex p-1 rounded-3 mb-4 gap-1" style={{ backgroundColor: '#161b22', width: 'fit-content' }}>
+        <button
           onClick={() => setActiveTab('general')}
-          className={`px-8 py-2.5 text-sm font-semibold rounded-md transition-all ${activeTab === 'general' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
+          className={`btn btn-sm px-4 py-2 border-0 fw-bold transition-all ${activeTab === 'general' ? 'btn-primary shadow-sm' : 'text-secondary'}`}
+          style={activeTab === 'general' ? { backgroundColor: '#1f6feb' } : {}}
         >
           General
         </button>
-        <button 
+        <button
           onClick={() => setActiveTab('branding')}
-          className={`px-8 py-2.5 text-sm font-semibold rounded-md transition-all ${activeTab === 'branding' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
+          className={`btn btn-sm px-4 py-2 border-0 fw-bold transition-all ${activeTab === 'branding' ? 'btn-primary shadow-sm' : 'text-secondary'}`}
+          style={activeTab === 'branding' ? { backgroundColor: '#1f6feb' } : {}}
         >
           Branding
         </button>
-        <button 
+        <button
           onClick={() => setActiveTab('avanzado')}
-          className={`px-8 py-2.5 text-sm font-semibold rounded-md transition-all ${activeTab === 'avanzado' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
+          className={`btn btn-sm px-4 py-2 border-0 fw-bold transition-all ${activeTab === 'avanzado' ? 'btn-primary shadow-sm' : 'text-secondary'}`}
+          style={activeTab === 'avanzado' ? { backgroundColor: '#1f6feb' } : {}}
         >
           Avanzado
         </button>
       </div>
 
-      <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-8 shadow-xl">
-        {activeTab === 'general' ? (
-          <div className="space-y-6 animate-fadeIn">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-white">Nombre de la Academia</label>
-                <input 
-                  type="text" 
-                  value={config.nombre}
-                  onChange={(e) => handleInputChange('nombre', e.target.value)}
-                  className="w-full p-3 rounded-lg bg-slate-900/50 border border-slate-700 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all text-sm"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-white">Email</label>
-                <input 
-                  type="email" 
-                  value={config.email || ''}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  placeholder="email@academia.com"
-                  className="w-full p-3 rounded-lg bg-slate-900/50 border border-slate-700 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all text-sm"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-white">Teléfono</label>
-              <div className="flex gap-3">
-                <input 
-                  type="text" 
-                  value={config.telefono || ''}
-                  onChange={(e) => handleInputChange('telefono', e.target.value)}
-                  placeholder="+51977816213"
-                  className="w-40 p-3 rounded-lg bg-slate-900/50 border border-slate-700 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all text-sm"
-                />
-                <input 
-                  type="text" 
-                  placeholder="Número"
-                  className="flex-1 p-3 rounded-lg bg-slate-900/50 border border-slate-700 text-slate-500 placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all text-sm"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-white">Dirección</label>
-              <input 
-                type="text" 
-                value={config.direccion || ''}
-                onChange={(e) => handleInputChange('direccion', e.target.value)}
-                placeholder="Puente Piedra, Lima, Peru"
-                className="w-full p-3 rounded-lg bg-slate-900/50 border border-slate-700 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all text-sm"
-              />
-            </div>
-
-            <div className="flex justify-end pt-6">
-              <button 
-                onClick={handleSave}
-                disabled={saving}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg text-sm font-semibold shadow-lg shadow-blue-600/30 transition-all disabled:opacity-50"
-              >
-                {saving ? 'Guardando...' : 'Guardar Cambios'}
-              </button>
-            </div>
-          </div>
-        ) : activeTab === 'branding' ? (
-          <div className="space-y-8 animate-fadeIn">
-            {/* Logo Section */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-6">
-                <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-lg">
-                   <i className="fas fa-building text-4xl"></i>
+      <div className="card border-0 shadow-lg" style={{ backgroundColor: '#161b22' }}>
+        <div className="card-body p-4 p-md-5">
+          {activeTab === 'general' ? (
+            <div className="animate-fadeIn">
+              <div className="row g-4">
+                <div className="col-12 col-md-6">
+                  <label className="form-label text-secondary small fw-bold mb-1">Nombre de la Academia</label>
+                  <input
+                    type="text"
+                    value={config.nombre}
+                    onChange={(e) => handleInputChange('nombre', e.target.value)}
+                    className="form-control bg-[#0d1117] border-secondary border-opacity-25 text-white placeholder-secondary"
+                  />
                 </div>
-                <div className="flex-1 space-y-3">
-                   <p className="text-sm font-semibold text-white">Subir nuevo logo</p>
-                   <div className="bg-slate-900/50 border border-slate-700 rounded-lg p-3 flex items-center gap-3">
-                      <label className="bg-slate-800 hover:bg-slate-700 cursor-pointer text-sm font-semibold py-2 px-4 rounded-lg border border-slate-600 transition-colors text-white">
-                        Seleccionar archivo
-                        <input type="file" className="hidden" accept="image/*" />
+                <div className="col-12 col-md-6">
+                  <label className="form-label text-secondary small fw-bold mb-1">Email de Contacto</label>
+                  <input
+                    type="email"
+                    value={config.email || ''}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    placeholder="email@academia.com"
+                    className="form-control bg-[#0d1117] border-secondary border-opacity-25 text-white placeholder-secondary"
+                  />
+                </div>
+                <div className="col-12 col-md-6">
+                  <label className="form-label text-secondary small fw-bold mb-1">Teléfono</label>
+                  <input
+                    type="text"
+                    value={config.telefono || ''}
+                    onChange={(e) => handleInputChange('telefono', e.target.value)}
+                    placeholder="+51977816213"
+                    className="form-control bg-[#0d1117] border-secondary border-opacity-25 text-white placeholder-secondary"
+                  />
+                </div>
+                <div className="col-12">
+                  <label className="form-label text-secondary small fw-bold mb-1">Dirección Física</label>
+                  <input
+                    type="text"
+                    value={config.direccion || ''}
+                    onChange={(e) => handleInputChange('direccion', e.target.value)}
+                    placeholder="Puente Piedra, Lima, Peru"
+                    className="form-control bg-[#0d1117] border-secondary border-opacity-25 text-white placeholder-secondary"
+                  />
+                </div>
+              </div>
+
+              <div className="d-flex justify-content-end pt-5">
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="btn btn-primary px-5 py-2 fw-bold"
+                  style={{ backgroundColor: '#1f6feb', borderColor: '#1f6feb' }}
+                >
+                  {saving ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                      Guardando...
+                    </>
+                  ) : 'Guardar Cambios'}
+                </button>
+              </div>
+            </div>
+          ) : activeTab === 'branding' ? (
+            <div className="animate-fadeIn">
+              {/* Logo Section */}
+              <div className="mb-5 pb-4 border-bottom border-secondary border-opacity-10">
+                <div className="d-flex align-items-center gap-4">
+                  <div className="rounded-circle d-flex align-items-center justify-content-center text-white shadow-lg" style={{ width: '80px', height: '80px', backgroundColor: '#1f6feb' }}>
+                    <i className="bi bi-building fs-1"></i>
+                  </div>
+                  <div className="flex-grow-1">
+                    <p className="text-white fw-bold mb-2">Logo de la Academia</p>
+                    <div className="d-flex align-items-center gap-3">
+                      <label className="btn btn-sm btn-outline-secondary border-opacity-25 text-white px-3">
+                        Actualizar Logo
+                        <input type="file" className="hidden" accept="image/*" style={{ display: 'none' }} />
                       </label>
-                      <span className="text-sm text-slate-500">Sin archivos seleccionados</span>
-                   </div>
-                   <p className="text-xs text-slate-500">Formato recomendado: PNG o JPG, tamaño máximo 2MB</p>
+                      <span className="text-secondary small">PNG o JPG. Máx 2MB</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="h-px bg-slate-700/50"></div>
-
-            {/* Customization Section */}
-            <div className="space-y-6">
-              <div className="space-y-6">
-                <div className="space-y-3">
-                  <label className="text-sm font-semibold text-white">Color del menú lateral</label>
-                  <div className="flex gap-3 items-center">
-                    <input 
-                      type="color" 
+              {/* Customization Section */}
+              <div className="row g-4">
+                <div className="col-12 col-md-6">
+                  <label className="form-label text-secondary small fw-bold mb-1">Color del menú lateral</label>
+                  <div className="input-group">
+                    <input
+                      type="color"
                       value={config.colorMenu}
                       onChange={(e) => handleInputChange('colorMenu', e.target.value)}
-                      className="w-12 h-12 rounded-lg border-2 border-slate-700 cursor-pointer bg-slate-900"
+                      className="form-control-color bg-[#0d1117] border-secondary border-opacity-25 rounded-start py-1"
+                      style={{ width: '60px' }}
                     />
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={config.colorMenu}
                       onChange={(e) => handleInputChange('colorMenu', e.target.value)}
-                      className="flex-1 p-3 rounded-lg bg-slate-900/50 border border-slate-700 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all text-sm"
+                      className="form-control bg-[#0d1117] border-secondary border-opacity-25 text-white font-monospace"
                     />
-                    <button 
+                    <button
                       onClick={() => handleInputChange('colorMenu', '#1a73e8')}
-                      className="px-4 py-3 text-sm font-semibold text-slate-400 hover:text-white transition-colors"
+                      className="btn btn-outline-secondary border-opacity-25 text-secondary small"
                     >
-                      Restaurar
+                      Reset
                     </button>
                   </div>
-                  <p className="text-xs text-slate-500">El cambio se aplicará inmediatamente en el menú lateral</p>
                 </div>
 
-                <div className="space-y-3">
-                  <label className="text-sm font-semibold text-white">Color de botones</label>
-                  <p className="text-xs text-slate-400 mb-2">Personaliza el color de todos los botones principales de la plataforma</p>
-                  <div className="flex gap-3 items-center">
-                    <input 
-                      type="color" 
+                <div className="col-12 col-md-6">
+                  <label className="form-label text-secondary small fw-bold mb-1">Color de botones</label>
+                  <div className="input-group">
+                    <input
+                      type="color"
                       value={config.colorBotones}
                       onChange={(e) => handleInputChange('colorBotones', e.target.value)}
-                      className="w-12 h-12 rounded-lg border-2 border-slate-700 cursor-pointer bg-slate-900"
+                      className="form-control-color bg-[#0d1117] border-secondary border-opacity-25 rounded-start py-1"
+                      style={{ width: '60px' }}
                     />
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={config.colorBotones}
                       onChange={(e) => handleInputChange('colorBotones', e.target.value)}
-                      className="flex-1 p-3 rounded-lg bg-slate-900/50 border border-slate-700 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all text-sm"
+                      className="form-control bg-[#0d1117] border-secondary border-opacity-25 text-white font-monospace"
                     />
-                    <button 
+                    <button
                       onClick={() => handleInputChange('colorBotones', '#0B66FF')}
-                      className="px-4 py-3 text-sm font-semibold text-slate-400 hover:text-white transition-colors"
+                      className="btn btn-outline-secondary border-opacity-25 text-secondary small"
                     >
-                      Restaurar
+                      Reset
                     </button>
                   </div>
-                  <p className="text-xs text-slate-500">El cambio se aplicará inmediatamente en todos los botones</p>
                 </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-6 animate-fadeIn">
-            <div className="space-y-6">
-              <div className="flex items-center justify-between p-4 bg-slate-900/30 rounded-lg border border-slate-700/50">
-                <div>
-                  <h4 className="text-base font-semibold text-white mb-1">Activar WhatsApp</h4>
-                  <p className="text-sm text-slate-400">Habilita la integración con WhatsApp para tu academia</p>
-                </div>
-                <button
-                  onClick={() => handleInputChange('whatsAppActivado', !config.whatsAppActivado)}
-                  className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors ${
-                    config.whatsAppActivado ? 'bg-blue-600' : 'bg-slate-700'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                      config.whatsAppActivado ? 'translate-x-8' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-slate-900/30 rounded-lg border border-slate-700/50">
-                <div>
-                  <h4 className="text-base font-semibold text-white mb-1">Activar Partidas</h4>
-                  <p className="text-sm text-slate-400">Gestiona múltiples centros de costo para organizar tus ingresos y egresos</p>
-                </div>
+              <div className="d-flex justify-content-end pt-5">
                 <button
-                  onClick={() => handleInputChange('partidasActivado', !config.partidasActivado)}
-                  className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors ${
-                    config.partidasActivado ? 'bg-blue-600' : 'bg-slate-700'
-                  }`}
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="btn btn-primary px-5 py-2 fw-bold"
+                  style={{ backgroundColor: '#1f6feb', borderColor: '#1f6feb' }}
                 >
-                  <span
-                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                      config.partidasActivado ? 'translate-x-8' : 'translate-x-1'
-                    }`}
-                  />
+                  {saving ? 'Guardando...' : 'Guardar Cambios'}
                 </button>
               </div>
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="animate-fadeIn">
+              <div className="d-flex flex-column gap-3">
+                <div className="d-flex align-items-center justify-content-between p-4 rounded-3 border border-secondary border-opacity-10" style={{ backgroundColor: '#0d1117' }}>
+                  <div>
+                    <h5 className="text-white fw-bold mb-1 fs-6">Notificaciones vía WhatsApp</h5>
+                    <p className="text-secondary mb-0 small">Habilita el envío automático de recibos y avisos por WhatsApp</p>
+                  </div>
+                  <div className="form-check form-switch pe-0">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      role="switch"
+                      checked={config.whatsAppActivado}
+                      onChange={() => handleInputChange('whatsAppActivado', !config.whatsAppActivado)}
+                      style={{ width: '3em', height: '1.5em', cursor: 'pointer' }}
+                    />
+                  </div>
+                </div>
+
+                <div className="d-flex align-items-center justify-content-between p-4 rounded-3 border border-secondary border-opacity-10" style={{ backgroundColor: '#0d1117' }}>
+                  <div>
+                    <h5 className="text-white fw-bold mb-1 fs-6">Gestión por Partidas/Presupuestos</h5>
+                    <p className="text-secondary mb-0 small">Activa el control avanzado de centros de costo contables</p>
+                  </div>
+                  <div className="form-check form-switch pe-0">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      role="switch"
+                      checked={config.partidasActivado}
+                      onChange={() => handleInputChange('partidasActivado', !config.partidasActivado)}
+                      style={{ width: '3em', height: '1.5em', cursor: 'pointer' }}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="d-flex justify-content-end pt-5">
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="btn btn-primary px-5 py-2 fw-bold"
+                  style={{ backgroundColor: '#1f6feb', borderColor: '#1f6feb' }}
+                >
+                  {saving ? 'Guardando...' : 'Guardar Cambios'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import GroupForm from './GroupForm';
+import { apiService } from '../services/api';
 
 interface Grupo {
   id: number;
@@ -20,8 +20,8 @@ const GroupManagement: React.FC = () => {
 
   const loadGrupos = async () => {
     try {
-      const response = await fetch('http://localhost:5081/api/grupos');
-      const data = await response.json();
+      setLoading(true);
+      const data = await apiService.getAll<Grupo>('grupos');
       setGrupos(data);
     } catch (error) {
       console.error('Error cargando grupos:', error);
@@ -32,26 +32,13 @@ const GroupManagement: React.FC = () => {
 
   const handleSubmit = async (grupoData: any) => {
     try {
-      const url = editingGrupo 
-        ? `http://localhost:5081/api/grupos/${editingGrupo.id}` 
-        : 'http://localhost:5081/api/grupos';
-      const method = editingGrupo ? 'PUT' : 'POST';
-
-      const dataToSend = editingGrupo 
-        ? { ...grupoData, id: editingGrupo.id }
-        : grupoData;
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(dataToSend),
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || 'Error al guardar el grupo');
+      if (editingGrupo) {
+        await apiService.update('grupos', editingGrupo.id, {
+          ...grupoData,
+          id: editingGrupo.id
+        });
+      } else {
+        await apiService.create('grupos', grupoData);
       }
 
       await loadGrupos();
@@ -72,14 +59,7 @@ const GroupManagement: React.FC = () => {
     if (!confirm('¿Estás seguro de eliminar este grupo?')) return;
 
     try {
-      const response = await fetch(`http://localhost:5081/api/grupos/${grupoId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al eliminar el grupo');
-      }
-
+      await apiService.delete('grupos', grupoId);
       await loadGrupos();
     } catch (error: any) {
       alert(error.message || 'Error al eliminar el grupo');
@@ -94,8 +74,8 @@ const GroupManagement: React.FC = () => {
 
   if (showForm) {
     return (
-      <GroupForm 
-        onCancel={handleCancel} 
+      <GroupForm
+        onCancel={handleCancel}
         onSubmit={handleSubmit}
         initialData={editingGrupo}
         isEditing={!!editingGrupo}
@@ -104,57 +84,74 @@ const GroupManagement: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="animate-fadeIn" style={{ backgroundColor: '#0d1117', minHeight: '80vh' }}>
+      <div className="d-flex justify-content-between align-items-end mb-4 gap-3 flex-wrap">
         <div>
-          <h2 className="text-xl font-bold">Grupos</h2>
-          <p className="text-sm text-slate-400">Administra los grupos y categorías de tu academia</p>
+          <h2 className="mb-1 text-white fw-bold h4">Gestión de Grupos</h2>
+          <p className="text-secondary mb-0 small">Administra los grupos y horarios de entrenamiento</p>
         </div>
-        <button 
-          onClick={() => setShowForm(true)}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-semibold transition-colors"
-        >
-          <i className="fas fa-plus"></i> Nuevo Grupo
-        </button>
+        <div className="d-flex gap-2">
+          <button
+            onClick={() => setShowForm(true)}
+            className="btn btn-primary d-flex align-items-center gap-2 px-3"
+            style={{ backgroundColor: '#1f6feb', borderColor: '#1f6feb', fontWeight: '600' }}
+          >
+            <i className="bi bi-plus-lg"></i> Nuevo Grupo
+          </button>
+        </div>
       </div>
 
       {loading ? (
-        <div className="py-10 text-center text-slate-400">
-          Cargando...
+        <div className="text-center py-5 text-secondary">
+          <div className="spinner-border text-primary mb-2" role="status">
+            <span className="visually-hidden">Cargando...</span>
+          </div>
+          <p className="mb-0">Cargando grupos...</p>
         </div>
       ) : grupos.length === 0 ? (
-        <div className="py-10 text-slate-400 italic">
-          No hay grupos creados
+        <div className="text-center py-5">
+          <div className="d-flex flex-column align-items-center">
+            <i className="bi bi-collection text-secondary display-4 mb-3"></i>
+            <p className="text-muted fw-medium mb-0">No hay grupos creados</p>
+          </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="row g-4">
           {grupos.map((grupo) => (
-            <div 
-              key={grupo.id} 
-              className="bg-[#111827] border border-slate-800 rounded-lg p-5 hover:border-blue-500/50 transition-all"
-            >
-              <div className="flex justify-between items-start mb-3">
-                <h3 className="text-lg font-bold text-white">{grupo.nombre}</h3>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEdit(grupo)}
-                    className="text-blue-400 hover:text-blue-300 transition-colors"
-                    title="Editar"
-                  >
-                    <i className="fas fa-edit text-sm"></i>
-                  </button>
-                  <button
-                    onClick={() => handleDelete(grupo.id)}
-                    className="text-red-400 hover:text-red-300 transition-colors"
-                    title="Eliminar"
-                  >
-                    <i className="fas fa-trash text-sm"></i>
-                  </button>
+            <div key={grupo.id} className="col-12 col-md-6 col-lg-4">
+              <div className="card h-100 border-0 shadow-sm" style={{ backgroundColor: '#161b22', transition: 'transform 0.2s' }}>
+                <div className="card-body p-4">
+                  <div className="d-flex justify-content-between align-items-start mb-3">
+                    <h5 className="card-title fw-bold mb-0 text-white">{grupo.nombre}</h5>
+                    <div className="d-flex gap-1">
+                      <button
+                        onClick={() => handleEdit(grupo)}
+                        className="btn btn-sm text-primary p-1"
+                        title="Editar"
+                        style={{ background: 'transparent', border: 'none' }}
+                      >
+                        <i className="bi bi-pencil"></i>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(grupo.id)}
+                        className="btn btn-sm text-danger p-1"
+                        title="Eliminar"
+                        style={{ background: 'transparent', border: 'none' }}
+                      >
+                        <i className="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                  {grupo.descripcion && (
+                    <div className="d-flex align-items-center gap-2 mt-2">
+                      <span className="badge border border-secondary border-opacity-30 text-white" style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}>
+                        <i className="bi bi-clock me-1"></i>
+                        {grupo.descripcion}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
-              {grupo.descripcion && (
-                <p className="text-sm text-slate-400">{grupo.descripcion}</p>
-              )}
             </div>
           ))}
         </div>

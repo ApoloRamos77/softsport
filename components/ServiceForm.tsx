@@ -1,14 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
-import { db } from '../services/db';
+import { apiService, Servicio } from '../services/api';
 
 interface ServiceFormProps {
   onCancel: () => void;
   onSave?: () => void;
   serviceId?: number;
+  initialData?: Servicio | null;
 }
 
-const ServiceForm: React.FC<ServiceFormProps> = ({ onCancel, onSave, serviceId }) => {
+const ServiceForm: React.FC<ServiceFormProps> = ({ onCancel, onSave, serviceId, initialData }) => {
   const [formData, setFormData] = useState({
     nombre: '',
     descripcion: '',
@@ -20,23 +21,35 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ onCancel, onSave, serviceId }
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (serviceId) {
-      loadService();
+    if (initialData) {
+      setFormData({
+        nombre: initialData.nombre,
+        descripcion: initialData.descripcion || '',
+        precio: initialData.precio.toString(),
+        prontoPago: initialData.prontoPago?.toString() || '',
+        recurrenteMensual: initialData.recurrenteMensual,
+        activo: initialData.activo
+      });
+    } else if (serviceId) {
+      // Fallback if initialData is not provided but ID is (should be rare with new logic)
+      loadService(serviceId);
     }
-  }, [serviceId]);
+  }, [serviceId, initialData]);
 
-  const loadService = async () => {
+  const loadService = async (id: number) => {
     try {
       setLoading(true);
-      const service = await db.getServicio(serviceId!);
-      setFormData({
-        nombre: service.nombre,
-        descripcion: service.descripcion || '',
-        precio: service.precio.toString(),
-        prontoPago: service.prontoPago?.toString() || '',
-        recurrenteMensual: service.recurrenteMensual,
-        activo: service.activo
-      });
+      const service = await apiService.getServicio(id);
+      if (service) {
+        setFormData({
+          nombre: service.nombre,
+          descripcion: service.descripcion || '',
+          precio: service.precio.toString(),
+          prontoPago: service.prontoPago?.toString() || '',
+          recurrenteMensual: service.recurrenteMensual,
+          activo: service.activo
+        });
+      }
     } catch (error) {
       console.error('Error loading service:', error);
       alert('Error al cargar el servicio');
@@ -47,7 +60,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ onCancel, onSave, serviceId }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.nombre.trim() || !formData.precio) {
       alert('Por favor complete los campos requeridos');
       return;
@@ -56,7 +69,6 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ onCancel, onSave, serviceId }
     try {
       setLoading(true);
       const serviceData = {
-        id: serviceId,
         nombre: formData.nombre.trim(),
         descripcion: formData.descripcion.trim() || undefined,
         precio: parseFloat(formData.precio),
@@ -66,11 +78,13 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ onCancel, onSave, serviceId }
       };
 
       if (serviceId) {
-        await db.updateServicio(serviceId, serviceData);
+        await apiService.updateServicio(serviceId, { ...serviceData, id: serviceId });
+        alert('Servicio actualizado exitosamente');
       } else {
-        await db.createServicio(serviceData);
+        await apiService.createServicio(serviceData);
+        alert('Servicio creado exitosamente');
       }
-      
+
       onSave?.();
     } catch (error) {
       console.error('Error saving service:', error);
@@ -80,104 +94,128 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ onCancel, onSave, serviceId }
     }
   };
 
-  if (loading && serviceId) {
-    return (
-      <div className="bg-[#111827] rounded-lg shadow-xl border border-slate-800 p-8">
-        <p className="text-center text-slate-400">Cargando...</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="bg-[#111827] rounded-lg shadow-xl border border-slate-800 p-8 max-w-lg mx-auto">
-      <h2 className="text-xl font-bold mb-8 text-white">
-        {serviceId ? 'Editar Servicio' : 'Crear Servicio'}
-      </h2>
-      
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-300">
-            Nombre <span className="text-red-500">*</span>
-          </label>
-          <input 
-            type="text" 
-            value={formData.nombre}
-            onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-            className="bg-[#0d1117] border border-blue-500 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 p-3 rounded-md text-white w-full outline-none transition-colors"
-            placeholder="Ingrese el nombre del servicio"
-            required
-          />
-        </div>
+    <div className="max-w-lg mx-auto animate-fadeIn">
+      <div className="card shadow-lg border-secondary border-opacity-25" style={{ backgroundColor: '#161b22' }}>
+        <div className="card-body p-4">
+          <h2 className="text-xl font-bold mb-4 text-white">
+            {serviceId ? 'Editar Servicio' : 'Crear Servicio'}
+          </h2>
 
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-300">Descripción</label>
-          <textarea 
-            rows={4}
-            value={formData.descripcion}
-            onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
-            className="bg-[#0d1117] border border-slate-700 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 p-3 rounded-md text-white w-full resize-none outline-none transition-colors"
-            placeholder="Descripción del servicio..."
-          />
-        </div>
+          <form onSubmit={handleSubmit} className="d-flex flex-column gap-3">
+            <div className="form-group">
+              <label className="form-label text-secondary small fw-bold">
+                Nombre <span className="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.nombre}
+                onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                className="form-control border-secondary border-opacity-25 text-white placeholder-secondary"
+                style={{ backgroundColor: '#0d1117' }}
+                placeholder="Ingrese el nombre del servicio"
+                required
+              />
+            </div>
 
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-300">
-            Precio ($) <span className="text-red-500">*</span>
-          </label>
-          <input 
-            type="number" 
-            step="0.01"
-            min="0"
-            value={formData.precio}
-            onChange={(e) => setFormData({ ...formData, precio: e.target.value })}
-            className="bg-[#0d1117] border border-slate-700 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 p-3 rounded-md text-white w-full outline-none transition-colors"
-            placeholder="0.00"
-            required
-          />
-        </div>
+            <div className="form-group">
+              <label className="form-label text-secondary small fw-bold">Descripción</label>
+              <textarea
+                rows={4}
+                value={formData.descripcion}
+                onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
+                className="form-control border-secondary border-opacity-25 text-white placeholder-secondary"
+                style={{ backgroundColor: '#0d1117', resize: 'none' }}
+                placeholder="Descripción del servicio..."
+              />
+            </div>
 
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-300">Precio con Pronto Pago ($)</label>
-          <input 
-            type="number" 
-            step="0.01"
-            min="0"
-            value={formData.prontoPago}
-            onChange={(e) => setFormData({ ...formData, prontoPago: e.target.value })}
-            className="bg-[#0d1117] border border-slate-700 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 p-3 rounded-md text-white w-full outline-none transition-colors"
-            placeholder="0.00"
-          />
-        </div>
+            <div className="form-group">
+              <label className="form-label text-secondary small fw-bold">
+                Precio ($) <span className="text-danger">*</span>
+              </label>
+              <div className="input-group">
+                <span className="input-group-text border-secondary border-opacity-25 text-secondary" style={{ backgroundColor: '#0d1117' }}>$</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.precio}
+                  onChange={(e) => setFormData({ ...formData, precio: e.target.value })}
+                  className="form-control border-secondary border-opacity-25 text-white"
+                  style={{ backgroundColor: '#0d1117' }}
+                  placeholder="0.00"
+                  required
+                />
+              </div>
+            </div>
 
-        <div className="flex items-center justify-between py-2">
-          <span className="text-sm font-semibold text-slate-300">Recurrente Mensual</span>
-          <button 
-            type="button"
-            onClick={() => setFormData({ ...formData, recurrenteMensual: !formData.recurrenteMensual })}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${formData.recurrenteMensual ? 'bg-blue-600' : 'bg-slate-700'}`}
-          >
-            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.recurrenteMensual ? 'translate-x-6' : 'translate-x-1'}`} />
-          </button>
-        </div>
+            <div className="form-group">
+              <label className="form-label text-secondary small fw-bold">Precio con Pronto Pago ($)</label>
+              <div className="input-group">
+                <span className="input-group-text border-secondary border-opacity-25 text-secondary" style={{ backgroundColor: '#0d1117' }}>$</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.prontoPago}
+                  onChange={(e) => setFormData({ ...formData, prontoPago: e.target.value })}
+                  className="form-control border-secondary border-opacity-25 text-white"
+                  style={{ backgroundColor: '#0d1117' }}
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
 
-        <div className="flex justify-end gap-4 mt-10 pt-4">
-          <button 
-            type="button"
-            onClick={onCancel}
-            disabled={loading}
-            className="px-8 py-2.5 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors font-semibold disabled:opacity-50"
-          >
-            Cancelar
-          </button>
-          <button 
-            type="submit"
-            disabled={loading}
-            className="px-10 py-2.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white transition-all font-semibold shadow-lg shadow-blue-500/20 disabled:opacity-50"
-          >
-            {loading ? 'Guardando...' : (serviceId ? 'Guardar Cambios' : 'Crear Servicio')}
-          </button>
+            <div className="d-flex align-items-center justify-content-between py-2 border-top border-bottom border-secondary border-opacity-10 my-2">
+              <span className="text-secondary small fw-bold">Recurrente Mensual</span>
+              <div className="form-check form-switch">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id="recurrenteSwitch"
+                  checked={formData.recurrenteMensual}
+                  onChange={() => setFormData({ ...formData, recurrenteMensual: !formData.recurrenteMensual })}
+                  style={{ backgroundColor: formData.recurrenteMensual ? '#1f6feb' : '#30363d', borderColor: 'transparent' }}
+                />
+              </div>
+            </div>
+
+            <div className="d-flex align-items-center justify-content-between py-2 border-bottom border-secondary border-opacity-10 mb-3">
+              <span className="text-secondary small fw-bold">Activo</span>
+              <div className="form-check form-switch">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id="activoSwitch"
+                  checked={formData.activo}
+                  onChange={() => setFormData({ ...formData, activo: !formData.activo })}
+                  style={{ backgroundColor: formData.activo ? '#238636' : '#30363d', borderColor: 'transparent' }}
+                />
+              </div>
+            </div>
+
+            <div className="d-flex justify-content-end gap-2 mt-4">
+              <button
+                type="button"
+                onClick={onCancel}
+                disabled={loading}
+                className="btn btn-outline-secondary text-white border-secondary border-opacity-25 hover-bg-dark-lighter"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn btn-primary"
+                style={{ backgroundColor: '#1f6feb', borderColor: '#1f6feb' }}
+              >
+                {loading ? 'Guardando...' : (serviceId ? 'Guardar Cambios' : 'Crear Servicio')}
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
     </div>
   );
 };

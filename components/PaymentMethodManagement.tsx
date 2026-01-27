@@ -1,14 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import PaymentMethodForm from './PaymentMethodForm';
-
-interface PaymentMethod {
-  id: number;
-  nombre: string;
-  descripcion: string;
-  moneda: string;
-  estado: string;
-}
+import { apiService, PaymentMethod } from '../services/api';
 
 const PaymentMethodManagement: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
@@ -49,13 +42,12 @@ const PaymentMethodManagement: React.FC = () => {
   const loadPaymentMethods = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5081/api/paymentmethods');
-      const data = await response.json();
+      const data = await apiService.getPaymentMethods();
       setPaymentMethods(data);
       setFilteredMethods(data);
     } catch (error) {
       console.error('Error cargando métodos de pago:', error);
-      alert('Error al cargar métodos de pago');
+      // alert('Error al cargar métodos de pago');
     } finally {
       setLoading(false);
     }
@@ -72,23 +64,16 @@ const PaymentMethodManagement: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5081/api/paymentmethods/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...paymentMethods.find(m => m.id === id),
-          estado: 'Inactivo'
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al anular el método de pago');
+      // Find current method to create payload (apiService.update usually takes full object or partial depending on implementation)
+      // Our apiService.update takes full object T usually unless defined otherwise.
+      // But let's check if we can just update status?
+      // For safety, let's fetch full object or assume we have it.
+      const method = paymentMethods.find(m => m.id === id);
+      if (method) {
+        await apiService.updatePaymentMethod(id, { ...method, estado: 'Inactivo' });
+        alert('Método de pago anulado exitosamente');
+        loadPaymentMethods();
       }
-
-      alert('Método de pago anulado exitosamente');
-      loadPaymentMethods();
     } catch (error) {
       console.error('Error:', error);
       alert('Error al anular el método de pago');
@@ -106,90 +91,121 @@ const PaymentMethodManagement: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-end">
-        <button 
-          onClick={() => setShowForm(true)}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-semibold transition-colors shadow-lg shadow-blue-500/20"
-        >
-          <i className="fas fa-plus"></i> Nuevo Método de Pago
-        </button>
-      </div>
+    <div className="animate-fadeIn" style={{ backgroundColor: '#0d1117', minHeight: '80vh' }}>
+      <div className="max-w-7xl mx-auto px-4 py-4 d-flex flex-column gap-4">
+        <div className="d-flex justify-content-between align-items-end mb-2">
+          <div>
+            <h2 className="mb-1 text-white fw-bold h4">Métodos de Pago</h2>
+            <p className="text-secondary mb-0 small">Administra las formas de pago aceptadas en la academia</p>
+          </div>
+          <div className="d-flex gap-2">
+            <button
+              onClick={() => setShowForm(true)}
+              className="btn btn-primary d-flex align-items-center gap-2 px-3"
+              style={{ backgroundColor: '#1f6feb', borderColor: '#1f6feb', fontWeight: '600' }}
+            >
+              <i className="bi bi-plus-lg"></i> Nuevo Método
+            </button>
+          </div>
+        </div>
 
-      <div className="relative max-w-sm">
-        <input 
-          type="text" 
-          placeholder="Buscar método de pago..." 
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="bg-[#1a2332] border border-slate-700 text-white placeholder-slate-500 p-2 pl-4 rounded-md text-xs w-full focus:outline-none focus:border-blue-500/50"
-        />
-      </div>
+        <div className="card border-0 mb-4" style={{ backgroundColor: '#161b22' }}>
+          <div className="card-body p-3">
+            <div className="input-group input-group-sm" style={{ maxWidth: '400px' }}>
+              <span className="input-group-text bg-[#0d1117] border-secondary border-opacity-25 text-secondary">
+                <i className="bi bi-search"></i>
+              </span>
+              <input
+                type="text"
+                className="form-control bg-[#0d1117] border-secondary border-opacity-25 text-white placeholder-secondary"
+                placeholder="Buscar por nombre, descripción o moneda..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
 
-      <div className="bg-[#111827] border border-slate-800 rounded-lg overflow-hidden">
-        <table className="w-full text-left text-xs">
-          <thead className="text-slate-500 bg-slate-900/30 border-b border-slate-800">
-            <tr>
-              <th className="px-4 py-3 font-semibold">Nombre</th>
-              <th className="px-4 py-3 font-semibold">Descripción</th>
-              <th className="px-4 py-3 font-semibold text-center">Moneda</th>
-              <th className="px-4 py-3 font-semibold text-center">Estado</th>
-              <th className="px-4 py-3 font-semibold text-right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-16 text-center text-slate-400">
-                  Cargando...
-                </td>
-              </tr>
-            ) : filteredMethods.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-16 text-center text-slate-500">
-                  No se encontraron métodos de pago
-                </td>
-              </tr>
-            ) : (
-              filteredMethods.map((method) => (
-                <tr key={method.id} className="border-b border-slate-800 hover:bg-slate-800/30 transition-colors">
-                  <td className="px-4 py-4 text-white font-medium">{method.nombre}</td>
-                  <td className="px-4 py-4 text-slate-300">{method.descripcion || '-'}</td>
-                  <td className="px-4 py-4 text-slate-300 text-center">{getMonedaLabel(method.moneda)}</td>
-                  <td className="px-4 py-4 text-center">
-                    <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                      method.estado === 'Activo' 
-                        ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                        : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                    }`}>
-                      {method.estado}
-                    </span>
-                  </td>
-                  <td className="px-4 py-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => handleEdit(method)}
-                        disabled={method.estado === 'Inactivo'}
-                        className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 p-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Editar"
-                      >
-                        <i className="fas fa-edit"></i>
-                      </button>
-                      <button
-                        onClick={() => handleAnular(method.id)}
-                        disabled={method.estado === 'Inactivo'}
-                        className="bg-red-500/10 hover:bg-red-500/20 text-red-400 p-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Anular"
-                      >
-                        <i className="fas fa-ban"></i>
-                      </button>
-                    </div>
-                  </td>
+        <div className="card border-0 shadow-sm" style={{ backgroundColor: '#0f1419' }}>
+          <div className="table-responsive">
+            <table className="table align-middle mb-0" style={{ borderColor: '#30363d' }}>
+              <thead style={{ backgroundColor: '#161b22' }}>
+                <tr>
+                  <th className="ps-4 text-white border-bottom border-secondary border-opacity-25 py-3 small fw-bold">Nombre</th>
+                  <th className="text-white border-bottom border-secondary border-opacity-25 py-3 small fw-bold">Descripción</th>
+                  <th className="text-center text-white border-bottom border-secondary border-opacity-25 py-3 small fw-bold">Moneda</th>
+                  <th className="text-center text-white border-bottom border-secondary border-opacity-25 py-3 small fw-bold">Estado</th>
+                  <th className="text-end pe-4 text-white border-bottom border-secondary border-opacity-25 py-3 small fw-bold">Acciones</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={5} className="text-center py-5 text-secondary">
+                      <div className="spinner-border text-primary mb-2" role="status">
+                        <span className="visually-hidden">Cargando...</span>
+                      </div>
+                      <p className="mb-0">Cargando métodos de pago...</p>
+                    </td>
+                  </tr>
+                ) : filteredMethods.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="text-center py-5">
+                      <div className="d-flex flex-column align-items-center">
+                        <i className="bi bi-credit-card text-secondary display-4 mb-3"></i>
+                        <p className="text-muted fw-medium mb-0">No se encontraron métodos de pago</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredMethods.map((method) => (
+                    <tr key={method.id} className="hover-bg-dark-lighter" style={{ transition: 'background-color 0.2s' }}>
+                      <td className="ps-4 fw-bold text-white border-bottom border-secondary border-opacity-10 py-3">
+                        {method.nombre}
+                      </td>
+                      <td className="text-secondary border-bottom border-secondary border-opacity-10 py-3 small">
+                        {method.descripcion || '-'}
+                      </td>
+                      <td className="text-center text-secondary border-bottom border-secondary border-opacity-10 py-3 small">
+                        {getMonedaLabel(method.moneda)}
+                      </td>
+                      <td className="text-center border-bottom border-secondary border-opacity-10 py-3">
+                        <span className={`badge border border-opacity-30 text-white ${method.estado === 'Activo'
+                          ? 'bg-success bg-opacity-20 border-success'
+                          : 'bg-danger bg-opacity-20 border-danger'
+                          }`} style={{ fontSize: '10px' }}>
+                          {method.estado}
+                        </span>
+                      </td>
+                      <td className="text-end pe-4 border-bottom border-secondary border-opacity-10 py-3">
+                        <div className="d-flex justify-content-end gap-2">
+                          <button
+                            onClick={() => handleEdit(method)}
+                            disabled={method.estado === 'Inactivo'}
+                            className="btn btn-sm text-primary p-0"
+                            title="Editar"
+                            style={{ background: 'transparent', border: 'none' }}
+                          >
+                            <i className="bi bi-pencil"></i>
+                          </button>
+                          <button
+                            onClick={() => handleAnular(method.id!)}
+                            disabled={method.estado === 'Inactivo'}
+                            className="btn btn-sm text-danger p-0"
+                            title="Anular"
+                            style={{ background: 'transparent', border: 'none' }}
+                          >
+                            <i className="bi bi-ban"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   );

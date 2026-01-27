@@ -34,7 +34,7 @@ const TrainingForm: React.FC<TrainingFormProps> = ({ training, onCancel, onSave 
   const [selectedPlaysCount, setSelectedPlaysCount] = useState(0);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     titulo: '',
     fecha: '',
@@ -128,167 +128,178 @@ const TrainingForm: React.FC<TrainingFormProps> = ({ training, onCancel, onSave 
   };
 
   return (
-    <div className="max-w-3xl mx-auto bg-[#111827] rounded-lg shadow-xl border border-slate-800 p-8">
-      <h2 className="text-xl font-bold mb-1 text-white">
-        {training ? 'Edición de Entrenamiento' : 'Crear Nuevo Entrenamiento'}
-      </h2>
-      <p className="text-sm text-slate-400 mb-8">Completa la información del entrenamiento y selecciona los alumnos a convocar</p>
-      
-      <form className="space-y-6" onSubmit={handleSave}>
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-300">Nombre</label>
-          <input 
-            type="text" 
-            placeholder="Entrenamiento técnico..."
-            className="form-input-dark p-3 rounded-md border text-white"
-            value={formData.titulo}
-            onChange={e => setFormData({...formData, titulo: e.target.value})}
-            required
-          />
+    <div className="animate-fadeIn" style={{ backgroundColor: '#0d1117', minHeight: '80vh', padding: '20px 0' }}>
+      <div className="max-w-3xl mx-auto bg-[#161b22] rounded-xl shadow-2xl border border-secondary border-opacity-10 p-5 p-md-5">
+        <div className="mb-4">
+          <h2 className="text-xl font-bold text-white mb-1">
+            {training ? 'Edición de Entrenamiento' : 'Crear Nuevo Entrenamiento'}
+          </h2>
+          <p className="text-[11px] text-secondary">Completa la información del entrenamiento y sesiones tácticas</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-slate-300">Fecha</label>
+        <form className="d-flex flex-column gap-4" onSubmit={handleSave}>
+          <div className="form-group mb-0">
+            <label className="text-secondary small fw-bold mb-2 d-block text-uppercase" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Nombre del Entrenamiento *</label>
             <input
-              type="date"
-              className="form-input-dark p-3 rounded-md border text-white"
-              value={formData.fecha}
-              onChange={e => setFormData({...formData, fecha: e.target.value})}
+              type="text"
+              placeholder="Ej: Entrenamiento de técnica individual"
+              className="form-control border-secondary border-opacity-25 text-white bg-[#0d1117] placeholder-secondary"
+              value={formData.titulo}
+              onChange={e => setFormData({ ...formData, titulo: e.target.value })}
               required
             />
           </div>
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-slate-300">Categoría</label>
-            <select 
-              className="form-input-dark p-3 rounded-md border text-white appearance-none bg-no-repeat bg-right" 
-              style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%2364748b\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundSize: '1.5rem', backgroundPosition: 'right 0.75rem center' }}
-              value={formData.categoriaId}
-              onChange={e => setFormData({...formData, categoriaId: e.target.value})}
-            >
-              <option value="">Seleccionar categoría</option>
-              {categorias.map(cat => (
-                <option key={cat.id} value={cat.id}>{cat.nombre}</option>
-              ))}
-            </select>
-          </div>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-slate-300">Hora de Inicio</label>
-            <div className="flex gap-2">
-              <select 
-                className="form-input-dark p-2 rounded border flex-1"
-                value={formData.horaInicio.hora}
-                onChange={e => setFormData({...formData, horaInicio: {...formData.horaInicio, hora: e.target.value}})}
+          <div className="row g-4">
+            <div className="col-md-6">
+              <label className="text-secondary small fw-bold mb-2 d-block text-uppercase" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Fecha *</label>
+              <DatePicker
+                value={formData.fecha}
+                onChange={val => setFormData({ ...formData, fecha: val })}
+                placeholder="Seleccionar fecha"
+              />
+            </div>
+            <div className="col-md-6">
+              <label className="text-secondary small fw-bold mb-2 d-block text-uppercase" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Categoría *</label>
+              <select
+                className="form-select border-secondary border-opacity-25 text-white bg-[#0d1117]"
+                value={formData.categoriaId}
+                onChange={e => setFormData({ ...formData, categoriaId: e.target.value })}
+                required
               >
-                <option value="--">--</option>
-                {Array.from({length: 12}, (_, i) => i + 1).map(h => (
-                  <option key={h} value={h.toString().padStart(2, '0')}>{h.toString().padStart(2, '0')}</option>
+                <option value="" style={{ backgroundColor: '#0d1117' }}>Seleccionar categoría</option>
+                {categorias.map(cat => (
+                  <option key={cat.id} value={cat.id} style={{ backgroundColor: '#0d1117' }}>{cat.nombre}</option>
                 ))}
-              </select>
-              <span className="text-slate-500 self-center">:</span>
-              <select 
-                className="form-input-dark p-2 rounded border flex-1"
-                value={formData.horaInicio.minuto}
-                onChange={e => setFormData({...formData, horaInicio: {...formData.horaInicio, minuto: e.target.value}})}
-              >
-                <option value="--">--</option>
-                {['00', '15', '30', '45'].map(m => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
-              </select>
-              <select 
-                className="form-input-dark p-2 rounded border w-20"
-                value={formData.horaInicio.periodo}
-                onChange={e => setFormData({...formData, horaInicio: {...formData.horaInicio, periodo: e.target.value}})}
-              >
-                <option>AM</option>
-                <option>PM</option>
               </select>
             </div>
           </div>
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-slate-300">Hora de Fin</label>
-            <div className="flex gap-2">
-              <select 
-                className="form-input-dark p-2 rounded border flex-1"
-                value={formData.horaFin.hora}
-                onChange={e => setFormData({...formData, horaFin: {...formData.horaFin, hora: e.target.value}})}
-              >
-                <option value="--">--</option>
-                {Array.from({length: 12}, (_, i) => i + 1).map(h => (
-                  <option key={h} value={h.toString().padStart(2, '0')}>{h.toString().padStart(2, '0')}</option>
-                ))}
-              </select>
-              <span className="text-slate-500 self-center">:</span>
-              <select 
-                className="form-input-dark p-2 rounded border flex-1"
-                value={formData.horaFin.minuto}
-                onChange={e => setFormData({...formData, horaFin: {...formData.horaFin, minuto: e.target.value}})}
-              >
-                <option value="--">--</option>
-                {['00', '15', '30', '45'].map(m => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
-              </select>
-              <select 
-                className="form-input-dark p-2 rounded border w-20"
-                value={formData.horaFin.periodo}
-                onChange={e => setFormData({...formData, horaFin: {...formData.horaFin, periodo: e.target.value}})}
-              >
-                <option>AM</option>
-                <option>PM</option>
-              </select>
+
+          <div className="row g-4">
+            <div className="col-md-6">
+              <label className="text-secondary small fw-bold mb-2 d-block text-uppercase" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Hora de Inicio</label>
+              <div className="d-flex gap-2">
+                <select
+                  className="form-select border-secondary border-opacity-25 text-white bg-[#0d1117] p-2"
+                  value={formData.horaInicio.hora}
+                  onChange={e => setFormData({ ...formData, horaInicio: { ...formData.horaInicio, hora: e.target.value } })}
+                >
+                  <option value="--">--</option>
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map(h => (
+                    <option key={h} value={h.toString().padStart(2, '0')} style={{ backgroundColor: '#0d1117' }}>{h.toString().padStart(2, '0')}</option>
+                  ))}
+                </select>
+                <span className="text-secondary align-self-center">:</span>
+                <select
+                  className="form-select border-secondary border-opacity-25 text-white bg-[#0d1117] p-2"
+                  value={formData.horaInicio.minuto}
+                  onChange={e => setFormData({ ...formData, horaInicio: { ...formData.horaInicio, minuto: e.target.value } })}
+                >
+                  <option value="--">--</option>
+                  {['00', '15', '30', '45'].map(m => (
+                    <option key={m} value={m} style={{ backgroundColor: '#0d1117' }}>{m}</option>
+                  ))}
+                </select>
+                <select
+                  className="form-select border-secondary border-opacity-25 text-white bg-[#0d1117] p-2 w-auto"
+                  value={formData.horaInicio.periodo}
+                  onChange={e => setFormData({ ...formData, horaInicio: { ...formData.horaInicio, periodo: e.target.value } })}
+                >
+                  <option style={{ backgroundColor: '#0d1117' }}>AM</option>
+                  <option style={{ backgroundColor: '#0d1117' }}>PM</option>
+                </select>
+              </div>
+            </div>
+            <div className="col-md-6">
+              <label className="text-secondary small fw-bold mb-2 d-block text-uppercase" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Hora de Fin</label>
+              <div className="d-flex gap-2">
+                <select
+                  className="form-select border-secondary border-opacity-25 text-white bg-[#0d1117] p-2"
+                  value={formData.horaFin.hora}
+                  onChange={e => setFormData({ ...formData, horaFin: { ...formData.horaFin, hora: e.target.value } })}
+                >
+                  <option value="--">--</option>
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map(h => (
+                    <option key={h} value={h.toString().padStart(2, '0')} style={{ backgroundColor: '#0d1117' }}>{h.toString().padStart(2, '0')}</option>
+                  ))}
+                </select>
+                <span className="text-secondary align-self-center">:</span>
+                <select
+                  className="form-select border-secondary border-opacity-25 text-white bg-[#0d1117] p-2"
+                  value={formData.horaFin.minuto}
+                  onChange={e => setFormData({ ...formData, horaFin: { ...formData.horaFin, minuto: e.target.value } })}
+                >
+                  <option value="--">--</option>
+                  {['00', '15', '30', '45'].map(m => (
+                    <option key={m} value={m} style={{ backgroundColor: '#0d1117' }}>{m}</option>
+                  ))}
+                </select>
+                <select
+                  className="form-select border-secondary border-opacity-25 text-white bg-[#0d1117] p-2 w-auto"
+                  value={formData.horaFin.periodo}
+                  onChange={e => setFormData({ ...formData, horaFin: { ...formData.horaFin, periodo: e.target.value } })}
+                >
+                  <option style={{ backgroundColor: '#0d1117' }}>AM</option>
+                  <option style={{ backgroundColor: '#0d1117' }}>PM</option>
+                </select>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-300">Ubicación</label>
-          <div className="relative">
-            <i className="fas fa-map-marker-alt absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
-            <input 
-              type="text" 
-              placeholder="Nombre del lugar del entrenamiento"
-              className="form-input-dark p-3 pl-10 rounded-md border text-white w-full"
-              value={formData.ubicacion}
-              onChange={e => setFormData({...formData, ubicacion: e.target.value})}
+          <div className="form-group mb-0">
+            <label className="text-secondary small fw-bold mb-2 d-block text-uppercase" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Ubicación</label>
+            <div className="position-relative">
+              <i className="bi bi-geo-alt position-absolute text-secondary" style={{ left: '0.75rem', top: '50%', transform: 'translateY(-50%)' }}></i>
+              <input
+                type="text"
+                placeholder="Nombre del lugar o campo"
+                className="form-control border-secondary border-opacity-25 text-white bg-[#0d1117] placeholder-secondary"
+                style={{ paddingLeft: '2.5rem' }}
+                value={formData.ubicacion}
+                onChange={e => setFormData({ ...formData, ubicacion: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="form-group mb-0">
+            <label className="text-secondary small fw-bold mb-2 d-block text-uppercase" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Descripción / Notas</label>
+            <textarea
+              placeholder="Detalles de la sesión..."
+              className="form-control border-secondary border-opacity-25 text-white bg-[#0d1117] placeholder-secondary min-h-[80px]"
+              value={formData.descripcion}
+              onChange={e => setFormData({ ...formData, descripcion: e.target.value })}
             />
           </div>
-          <div className="flex items-center gap-2 mt-1">
-            <input type="checkbox" id="map" className="w-4 h-4 rounded bg-slate-800 border-slate-700" />
-            <label htmlFor="map" className="text-xs text-slate-400 font-semibold cursor-pointer">Buscar en mapa</label>
+
+          <div className="d-flex justify-content-end gap-2 mt-2 pt-4 border-top border-secondary border-opacity-25">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="btn btn-sm px-4 text-secondary hover-text-white border-0 bg-transparent"
+              style={{ fontWeight: '600' }}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="btn btn-sm btn-primary px-5 fw-bold"
+              style={{ backgroundColor: '#1f6feb', borderColor: '#1f6feb' }}
+            >
+              {training ? 'Guardar Cambios' : 'Crear Entrenamiento'}
+            </button>
           </div>
-        </div>
+        </form>
 
-        <div className="flex justify-end gap-4 mt-10 pt-6 border-t border-slate-800">
-          <button 
-            type="button"
-            onClick={onCancel}
-            className="px-6 py-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors font-semibold"
-          >
-            Cancelar
-          </button>
-          <button 
-            type="submit"
-            className="px-8 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-all font-semibold shadow-lg shadow-blue-500/20"
-          >
-            {training ? 'Guardar Cambios' : 'Crear Entrenamiento'}
-          </button>
-        </div>
-      </form>
-
-      {showTacticalModal && (
-        <TacticalPlaysModal 
-          onClose={() => setShowTacticalModal(false)} 
-          onConfirm={(count) => {
-            setSelectedPlaysCount(count);
-            setShowTacticalModal(false);
-          }}
-        />
-      )}
+        {showTacticalModal && (
+          <TacticalPlaysModal
+            onClose={() => setShowTacticalModal(false)}
+            onConfirm={(count) => {
+              setSelectedPlaysCount(count);
+              setShowTacticalModal(false);
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 };

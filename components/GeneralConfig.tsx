@@ -47,69 +47,99 @@ const GeneralConfig: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fadeIn">
-      {/* Security Card */}
-      <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-8 shadow-xl">
-        <div className="flex items-center gap-3 mb-1">
-          <i className="fas fa-shield-alt text-blue-500 text-lg"></i>
-          <h3 className="text-xl font-bold text-white">Seguridad</h3>
-        </div>
-        <p className="text-sm text-slate-400 mb-6">Gestiona la seguridad de tu cuenta</p>
-
-        <div className="space-y-6">
-          <div className="flex items-center gap-2 text-sm font-semibold text-white">
-             <i className="fas fa-lock text-xs"></i> Cambiar Contraseña
-          </div>
-
-          <form className="space-y-5" onSubmit={handleSubmit}>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-white">Contraseña Actual</label>
-              <input 
-                type="password" 
-                value={formData.currentPassword}
-                onChange={(e) => handleInputChange('currentPassword', e.target.value)}
-                placeholder="Ingresa tu contraseña actual"
-                className="w-full p-3 rounded-lg bg-slate-900/50 border border-slate-700 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-white">Nueva Contraseña</label>
-              <input 
-                type="password" 
-                value={formData.newPassword}
-                onChange={(e) => handleInputChange('newPassword', e.target.value)}
-                placeholder="Ingresa tu nueva contraseña"
-                className="w-full p-3 rounded-lg bg-slate-900/50 border border-slate-700 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-white">Confirmar Nueva Contraseña</label>
-              <input 
-                type="password" 
-                value={formData.confirmPassword}
-                onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                placeholder="Confirma tu nueva contraseña"
-                className="w-full p-3 rounded-lg bg-slate-900/50 border border-slate-700 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all text-sm"
-              />
-            </div>
-
-            <div className="flex justify-end pt-4">
-              <button 
-                type="submit"
-                disabled={saving}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg text-sm font-semibold shadow-lg shadow-blue-600/30 transition-all disabled:opacity-50">
-                {saving ? 'Guardando...' : 'Cambiar Contraseña'}
-              </button>
-            </div>
-          </form>
-        </div>
+    <div className="animate-fadeIn" style={{ backgroundColor: '#0d1117', minHeight: '80vh' }}>
+      <div className="mb-4">
+        <h2 className="text-white fw-bold h4 mb-1">Configuración General</h2>
+        <p className="text-secondary mb-0 small">Gestiona la seguridad y preferencias de tu cuenta</p>
       </div>
 
-      {/* Preferences Placeholder */}
-      <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-8 shadow-xl">
-        <h4 className="text-xl font-bold text-white mb-1">Preferencias</h4>
-        <p className="text-sm text-slate-400 mb-6">Configuración de preferencias (próximamente)</p>
-        <p className="text-sm text-slate-500">Esta sección estará disponible próximamente con más opciones de configuración.</p>
+      <div className="row g-4">
+        <div className="col-12 col-lg-7">
+          {/* Security Card */}
+          <div className="card border-0 shadow-lg" style={{ backgroundColor: '#161b22' }}>
+            <div className="card-header bg-transparent border-bottom border-secondary border-opacity-10 py-3 px-4">
+              <div className="d-flex align-items-center gap-2">
+                <i className="bi bi-shield-lock text-primary fs-5"></i>
+                <h5 className="mb-0 text-white fw-bold fs-6">Seguridad de la Cuenta</h5>
+              </div>
+            </div>
+            <div className="card-body p-4">
+              <p className="text-secondary small mb-4">Se recomienda usar una contraseña fuerte que no utilices en otros sitios.</p>
+
+              <form className="d-flex flex-column gap-4" onSubmit={handleSubmit}>
+                <div>
+                  <label className="form-label text-secondary small fw-bold mb-1">Contraseña Actual</label>
+                  <input
+                    type="password"
+                    value={formData.currentPassword}
+                    onChange={(e) => handleInputChange('currentPassword', e.target.value)}
+                    placeholder="Contraseña actual"
+                    className="form-control bg-[#0d1117] border-secondary border-opacity-25 text-white placeholder-secondary"
+                  />
+                </div>
+                <div>
+                  <label className="form-label text-secondary small fw-bold mb-1">Nueva Contraseña</label>
+                  <input
+                    type="password"
+                    value={formData.newPassword}
+                    onChange={(e) => handleInputChange('newPassword', e.target.value)}
+                    placeholder="Nueva contraseña"
+                    className="form-control bg-[#0d1117] border-secondary border-opacity-25 text-white placeholder-secondary"
+                  />
+                </div>
+                <div>
+                  <label className="form-label text-secondary small fw-bold mb-1">Confirmar Nueva Contraseña</label>
+                  <input
+                    type="password"
+                    value={formData.confirmPassword}
+                    onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                    placeholder="Confirmar nueva contraseña"
+                    className="form-control bg-[#0d1117] border-secondary border-opacity-25 text-white placeholder-secondary"
+                  />
+                </div>
+
+                <div className="d-flex justify-content-end pt-2">
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="btn btn-primary px-4 fw-bold"
+                    style={{ backgroundColor: '#1f6feb', borderColor: '#1f6feb' }}
+                  >
+                    {saving ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                        Guardando...
+                      </>
+                    ) : 'Cambiar Contraseña'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-12 col-lg-5">
+          {/* Preferences Card */}
+          <div className="card border-0 shadow-lg" style={{ backgroundColor: '#161b22' }}>
+            <div className="card-header bg-transparent border-bottom border-secondary border-opacity-10 py-3 px-4">
+              <div className="d-flex align-items-center gap-2">
+                <i className="bi bi-gear text-secondary fs-5"></i>
+                <h5 className="mb-0 text-white fw-bold fs-6">Preferencias</h5>
+              </div>
+            </div>
+            <div className="card-body p-4">
+              <div className="text-center py-4">
+                <div className="rounded-circle bg-dark bg-opacity-25 d-inline-flex align-items-center justify-content-center mb-3" style={{ width: '60px', height: '60px' }}>
+                  <i className="bi bi-clock-history text-secondary fs-3"></i>
+                </div>
+                <h6 className="text-white fw-bold mb-2">Próximamente</h6>
+                <p className="text-secondary small mb-0 px-3">
+                  Pronto podrás personalizar el idioma, zona horaria y notificaciones de la plataforma.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -68,7 +68,7 @@ const TacticalBoardEditor: React.FC<TacticalBoardEditorProps> = ({ board, onBack
     ctx.beginPath();
     ctx.arc(width / 2, height / 2, centerRadius, 0, Math.PI * 2);
     ctx.stroke();
-    
+
     // Center point
     ctx.beginPath();
     ctx.arc(width / 2, height / 2, 2, 0, Math.PI * 2);
@@ -79,24 +79,24 @@ const TacticalBoardEditor: React.FC<TacticalBoardEditorProps> = ({ board, onBack
     const penaltyHeight = height * 0.35;
     const goalWidth = width * 0.035;
     const goalHeight = height * 0.17;
-    
+
     // Left penalty area
     ctx.strokeRect(10, height / 2 - penaltyHeight / 2, penaltyWidth, penaltyHeight);
     ctx.strokeRect(10, height / 2 - goalHeight / 2, goalWidth, goalHeight);
-    
+
     // Right penalty area
     ctx.strokeRect(width - 10 - penaltyWidth, height / 2 - penaltyHeight / 2, penaltyWidth, penaltyHeight);
     ctx.strokeRect(width - 10 - goalWidth, height / 2 - goalHeight / 2, goalWidth, goalHeight);
-    
+
     // D-arc Left
     const dArcRadius = centerRadius * 0.75;
     ctx.beginPath();
-    ctx.arc(10 + penaltyWidth, height / 2, dArcRadius, -Math.PI/2, Math.PI/2);
+    ctx.arc(10 + penaltyWidth, height / 2, dArcRadius, -Math.PI / 2, Math.PI / 2);
     ctx.stroke();
-    
+
     // D-arc Right
     ctx.beginPath();
-    ctx.arc(width - 10 - penaltyWidth, height / 2, dArcRadius, Math.PI/2, -Math.PI/2);
+    ctx.arc(width - 10 - penaltyWidth, height / 2, dArcRadius, Math.PI / 2, -Math.PI / 2);
     ctx.stroke();
   };
 
@@ -130,7 +130,7 @@ const TacticalBoardEditor: React.FC<TacticalBoardEditorProps> = ({ board, onBack
       } else {
         await apiService.createTacticalBoard(boardData);
       }
-      
+
       onBack();
     } catch (error) {
       console.error('Error saving tactical board:', error);
@@ -141,51 +141,52 @@ const TacticalBoardEditor: React.FC<TacticalBoardEditorProps> = ({ board, onBack
   };
 
   const toolbarIcons = [
-    { icon: 'fa-mouse-pointer', color: 'bg-blue-500' },
-    { icon: 'fa-circle', color: 'bg-red-500' },
-    { icon: 'fa-caret-up', color: 'bg-yellow-500' },
-    { icon: 'fa-square', color: 'bg-white' },
-    { icon: 'fa-location-arrow', color: 'bg-blue-400' },
+    { icon: 'bi-cursor-fill', color: 'btn-primary' },
+    { icon: 'bi-circle-fill', color: 'btn-danger' },
+    { icon: 'bi-caret-up-fill', color: 'btn-warning' },
+    { icon: 'bi-square-fill', color: 'btn-light' },
+    { icon: 'bi-geo-alt-fill', color: 'btn-info' },
     { separator: true },
-    { icon: 'fa-minus' },
-    { icon: 'fa-long-arrow-alt-up' },
-    { icon: 'fa-font' },
-    { icon: 'fa-square-o', type: 'outline' },
-    { icon: 'fa-circle-o', type: 'outline' },
-    { icon: 'fa-eraser' },
+    { icon: 'bi-dash-lg' },
+    { icon: 'bi-arrow-up' },
+    { icon: 'bi-type' },
+    { icon: 'bi-square' },
+    { icon: 'bi-circle' },
+    { icon: 'bi-eraser-fill' },
     { separator: true },
-    { icon: 'fa-square', dark: true },
-    { icon: 'fa-pencil-alt', label: '2px' },
+    { icon: 'bi-square-fill', dark: true },
+    { icon: 'bi-pencil', label: '2px' },
     { separator: true },
-    { icon: 'fa-undo' },
-    { icon: 'fa-trash-alt' },
-    { icon: 'fa-hand-pointer', color: 'text-red-500' }
+    { icon: 'bi-arrow-counterclockwise' },
+    { icon: 'bi-trash' },
+    { icon: 'bi-hand-index', color: 'text-danger' }
   ];
 
   return (
-    <div className="flex flex-col h-screen bg-[#1a1f2e] overflow-hidden">
+    <div className="d-flex flex-column h-100 overflow-hidden" style={{ backgroundColor: '#161b22', minHeight: '100vh' }}>
       {/* Header */}
-      <div className="flex-shrink-0 flex justify-between items-center px-6 py-3 border-b border-slate-800/30">
-        <div className="flex items-center gap-4">
-          <button onClick={onBack} className="text-slate-400 hover:text-white transition-colors">
-            <i className="fas fa-arrow-left text-lg"></i>
+      <div className="flex-shrink-0 d-flex justify-content-between align-items-center px-4 py-3 border-bottom border-secondary border-opacity-25" style={{ backgroundColor: '#0d1117' }}>
+        <div className="d-flex align-items-center gap-3">
+          <button onClick={onBack} className="btn btn-link text-secondary p-0 hover-text-white">
+            <i className="bi bi-arrow-left fs-5"></i>
           </button>
           <div>
-            <h2 className="text-lg font-bold text-white">Crear Jugada</h2>
-            <p className="text-[10px] text-slate-500">Diseña tu jugada paso a paso</p>
+            <h2 className="h5 font-bold text-white mb-0">Crear Jugada</h2>
+            <p className="small text-secondary mb-0" style={{ fontSize: '11px' }}>Diseña tu jugada paso a paso</p>
           </div>
         </div>
-        <button 
+        <button
           onClick={handleSave}
           disabled={saving}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-md flex items-center gap-2 text-sm font-semibold shadow-lg shadow-blue-500/20 disabled:opacity-50 transition-all"
+          className="btn btn-primary d-flex align-items-center gap-2 btn-sm fw-bold"
+          style={{ backgroundColor: '#1f6feb', borderColor: '#1f6feb' }}
         >
-          <i className="fas fa-save"></i> {saving ? 'Guardando...' : 'Guardar Jugada'}
+          <i className="bi bi-save"></i> {saving ? 'Guardando...' : 'Guardar Jugada'}
         </button>
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden px-6 py-3 space-y-3">
+      <div className="flex-1 d-flex flex-column overflow-hidden px-4 py-3 gap-3">
         {/* Title Input */}
         <div className="flex-shrink-0">
           <input
@@ -193,32 +194,33 @@ const TacticalBoardEditor: React.FC<TacticalBoardEditorProps> = ({ board, onBack
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Sin título"
-            className="text-sm font-bold text-white bg-transparent border-0 focus:outline-none focus:ring-0 px-0 w-full"
+            className="form-control-plaintext text-white fw-bold fs-5 p-0 focus-ring-0"
+            style={{ color: '#ffffff' }}
           />
         </div>
 
         {/* Toolbar */}
-        <div className="flex-shrink-0 bg-[#0d1117] border border-slate-800/50 rounded-lg p-2 overflow-x-auto">
-          <div className="flex items-center gap-1 min-w-max">
+        <div className="flex-shrink-0 border border-secondary border-opacity-25 rounded p-2 overflow-x-auto" style={{ backgroundColor: '#0d1117' }}>
+          <div className="d-flex align-items-center gap-1" style={{ minWidth: 'max-content' }}>
             {toolbarIcons.map((item, idx) => (
               item.separator ? (
-                <div key={idx} className="w-px h-6 bg-slate-700/50 mx-1" />
+                <div key={idx} className="vr mx-2 bg-secondary opacity-50" style={{ height: '20px' }}></div>
               ) : (
-                <button 
-                  key={idx} 
-                  className={`w-8 h-8 flex-shrink-0 rounded-md flex items-center justify-center transition-all ${
-                    item.color 
-                      ? `${item.color} text-white shadow-md` 
+                <button
+                  key={idx}
+                  className={`btn btn-sm d-flex align-items-center justify-content-center p-0 ${item.color
+                      ? `${item.color.startsWith('btn') ? item.color : ''} ${item.color.startsWith('text') ? 'btn-link ' + item.color : ''}`
                       : item.dark
-                      ? 'bg-[#1a1f2e] text-slate-400 hover:text-white'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-                  }`}
+                        ? 'btn-dark text-secondary'
+                        : 'btn-link text-secondary hover-text-white'
+                    }`}
+                  style={{ width: '32px', height: '32px' }}
                   title={item.label}
                 >
                   {item.label && !item.icon ? (
-                    <span className="text-[9px] font-bold">{item.label}</span>
+                    <span style={{ fontSize: '10px', fontWeight: 'bold' }}>{item.label}</span>
                   ) : (
-                    <i className={`fas ${item.icon} text-xs`}></i>
+                    <i className={`bi ${item.icon}`}></i>
                   )}
                 </button>
               )
@@ -228,74 +230,75 @@ const TacticalBoardEditor: React.FC<TacticalBoardEditorProps> = ({ board, onBack
 
         {/* Canvas Area */}
         <div className="flex-shrink-0">
-          <canvas 
-            ref={canvasRef} 
-            width={560} 
-            height={320} 
-            className="cursor-crosshair rounded-lg border-4 border-slate-800/50 shadow-2xl"
-            style={{ backgroundColor: '#10b981' }}
+          <canvas
+            ref={canvasRef}
+            width={560}
+            height={320}
+            className="rounded border border-secondary border-opacity-50 shadow-lg cursor-crosshair"
+            style={{ backgroundColor: '#10b981', maxWidth: '100%', height: 'auto' }}
           />
         </div>
       </div>
 
       {/* Steps Section - Fixed at bottom */}
-      <div className="flex-shrink-0 bg-[#0d1117]/30 border-t border-slate-800/30 px-6 py-4">
-        <div className="flex flex-col gap-3">
-          <div className="flex justify-between items-center">
-            <div className="flex gap-3">
-              <button 
+      <div className="flex-shrink-0 border-top border-secondary border-opacity-25 px-4 py-3" style={{ backgroundColor: 'rgba(13, 17, 23, 0.5)' }}>
+        <div className="d-flex flex-column gap-3">
+          <div className="d-flex justify-content-between align-items-center">
+            <div className="d-flex gap-2">
+              <button
                 onClick={addStep}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-semibold transition-all shadow-lg shadow-blue-500/20"
+                className="btn btn-primary btn-sm d-flex align-items-center gap-2"
+                style={{ backgroundColor: '#1f6feb', borderColor: '#1f6feb' }}
               >
-                <i className="fas fa-plus"></i> Añadir Paso
+                <i className="bi bi-plus-lg"></i> Añadir Paso
               </button>
-              <div className="flex items-center bg-[#0d1117] border border-slate-800/50 rounded-md overflow-hidden">
-                <button 
+              <div className="btn-group btn-group-sm bg-dark border border-secondary border-opacity-25 rounded overflow-hidden" role="group">
+                <button
                   onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
                   disabled={currentStep === 0}
-                  className="px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-800/50 border-r border-slate-800/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  className="btn btn-dark text-secondary border-end border-secondary border-opacity-25"
                 >
-                  <i className="fas fa-chevron-left text-xs"></i>
+                  <i className="bi bi-chevron-left"></i>
                 </button>
-                <button className="px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-800/50 border-r border-slate-800/50 transition-all">
-                  <i className="fas fa-play text-xs"></i>
+                <button className="btn btn-dark text-secondary border-end border-secondary border-opacity-25">
+                  <i className="bi bi-play-fill"></i>
                 </button>
-                <button 
+                <button
                   onClick={() => setCurrentStep(Math.min(steps.length, currentStep + 1))}
                   disabled={currentStep >= steps.length}
-                  className="px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-800/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  className="btn btn-dark text-secondary"
                 >
-                  <i className="fas fa-chevron-right text-xs"></i>
+                  <i className="bi bi-chevron-right"></i>
                 </button>
               </div>
             </div>
-            <span className="text-xs text-slate-500">Paso {currentStep + 1} de {steps.length + 1}</span>
+            <span className="text-secondary small">Paso {currentStep + 1} de {steps.length + 1}</span>
           </div>
 
-          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+          <div className="d-flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
             {steps.length === 0 ? (
-              <div className="flex-shrink-0 w-32 h-20 rounded-lg border-2 border-dashed border-slate-700/50 flex items-center justify-center bg-[#0d1117]">
-                <p className="text-[10px] text-slate-600 text-center px-3 leading-tight">
-                  No hay pasos aún. Haz clic en "Añadir Paso" para comenzar la animación.
+              <div className="flex-shrink-0 d-flex align-items-center justify-content-center border border-dashed border-secondary border-opacity-50 rounded bg-dark" style={{ width: '120px', height: '80px' }}>
+                <p className="text-secondary small text-center mb-0 px-2" style={{ fontSize: '10px' }}>
+                  No hay pasos. Añade uno.
                 </p>
               </div>
             ) : (
               steps.map((src, idx) => (
-                <div 
-                  key={idx} 
-                  className={`relative flex-shrink-0 cursor-pointer rounded-lg overflow-hidden transition-all ${
-                    currentStep === idx 
-                      ? 'ring-2 ring-blue-500 shadow-lg shadow-blue-500/30' 
-                      : 'ring-1 ring-slate-700/50 hover:ring-slate-600'
-                  }`}
+                <div
+                  key={idx}
+                  className={`position-relative flex-shrink-0 rounded overflow-hidden cursor-pointer transition-all ${currentStep === idx
+                      ? 'border border-2 border-primary shadow'
+                      : 'border border-secondary border-opacity-25 hover-border-secondary'
+                    }`}
+                  style={{ width: '120px', height: '80px' }}
                   onClick={() => setCurrentStep(idx)}
                 >
-                  <img 
-                    src={src} 
-                    className="w-32 h-20 object-cover" 
-                    alt={`Paso ${idx + 1}`} 
+                  <img
+                    src={src}
+                    className="w-100 h-100 object-fit-cover"
+                    alt={`Paso ${idx + 1}`}
                   />
-                  <div className="absolute bottom-1 left-1 bg-black/70 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded font-bold">
+                  <div className="position-absolute bottom-0 start-0 m-1 bg-black bg-opacity-75 text-white rounded px-1 fw-bold" style={{ fontSize: '10px' }}>
                     {idx + 1}
                   </div>
                 </div>

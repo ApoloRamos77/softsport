@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import CategoryForm from './CategoryForm';
+import { apiService } from '../services/api';
 
 interface Categoria {
   id: number;
@@ -22,8 +22,8 @@ const CategoryManagement: React.FC = () => {
 
   const loadCategorias = async () => {
     try {
-      const response = await fetch('http://localhost:5081/api/categorias');
-      const data = await response.json();
+      setLoading(true);
+      const data = await apiService.getAll<Categoria>('categorias');
       setCategorias(data);
     } catch (error) {
       console.error('Error cargando categorías:', error);
@@ -34,27 +34,13 @@ const CategoryManagement: React.FC = () => {
 
   const handleSubmit = async (categoriaData: any) => {
     try {
-      const url = editingCategoria 
-        ? `http://localhost:5081/api/categorias/${editingCategoria.id}` 
-        : 'http://localhost:5081/api/categorias';
-      const method = editingCategoria ? 'PUT' : 'POST';
-
-      // Si estamos editando, incluir el ID en el cuerpo
-      const dataToSend = editingCategoria 
-        ? { ...categoriaData, id: editingCategoria.id }
-        : categoriaData;
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(dataToSend),
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || 'Error al guardar la categoría');
+      if (editingCategoria) {
+        await apiService.update('categorias', editingCategoria.id, {
+          ...categoriaData,
+          id: editingCategoria.id
+        });
+      } else {
+        await apiService.create('categorias', categoriaData);
       }
 
       await loadCategorias();
@@ -75,14 +61,7 @@ const CategoryManagement: React.FC = () => {
     if (!confirm('¿Estás seguro de eliminar esta categoría?')) return;
 
     try {
-      const response = await fetch(`http://localhost:5081/api/categorias/${categoriaId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al eliminar la categoría');
-      }
-
+      await apiService.delete('categorias', categoriaId);
       await loadCategorias();
     } catch (error: any) {
       alert(error.message || 'Error al eliminar la categoría');
@@ -97,8 +76,8 @@ const CategoryManagement: React.FC = () => {
 
   if (showForm) {
     return (
-      <CategoryForm 
-        onCancel={handleCancel} 
+      <CategoryForm
+        onCancel={handleCancel}
         onSubmit={handleSubmit}
         initialData={editingCategoria}
         isEditing={!!editingCategoria}
@@ -107,62 +86,81 @@ const CategoryManagement: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="animate-fadeIn" style={{ backgroundColor: '#0d1117', minHeight: '80vh' }}>
+      <div className="d-flex justify-content-between align-items-end mb-4 gap-3 flex-wrap">
         <div>
-          <h2 className="text-xl font-bold">Categorías</h2>
-          <p className="text-sm text-slate-400">Administra las categorías de tu academia</p>
+          <h2 className="mb-1 text-white fw-bold h4">Configuración de Categorías</h2>
+          <p className="text-secondary mb-0 small">Define las categorías por rangos de edad y niveles</p>
         </div>
-        <button 
-          onClick={() => setShowForm(true)}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-semibold transition-colors"
-        >
-          <i className="fas fa-plus"></i> Nueva Categoría
-        </button>
+        <div className="d-flex gap-2">
+          <button
+            onClick={() => setShowForm(true)}
+            className="btn btn-primary d-flex align-items-center gap-2 px-3"
+            style={{ backgroundColor: '#1f6feb', borderColor: '#1f6feb', fontWeight: '600' }}
+          >
+            <i className="bi bi-plus-lg"></i> Nueva Categoría
+          </button>
+        </div>
       </div>
 
       {loading ? (
-        <div className="py-10 text-center text-slate-400">
-          Cargando...
+        <div className="text-center py-5 text-secondary">
+          <div className="spinner-border text-primary mb-2" role="status">
+            <span className="visually-hidden">Cargando...</span>
+          </div>
+          <p className="mb-0">Cargando categorías...</p>
         </div>
       ) : categorias.length === 0 ? (
-        <div className="py-10 text-slate-400 italic">
-          No hay categorías creadas
+        <div className="text-center py-5">
+          <div className="d-flex flex-column align-items-center">
+            <i className="bi bi-tags text-secondary display-4 mb-3"></i>
+            <p className="text-muted fw-medium mb-0">No hay categorías creadas</p>
+          </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="row g-4">
           {categorias.map((categoria) => (
-            <div 
-              key={categoria.id} 
-              className="bg-[#111827] border border-slate-800 rounded-lg p-5 hover:border-blue-500/50 transition-all"
-            >
-              <div className="flex justify-between items-start mb-3">
-                <h3 className="text-lg font-bold text-white">{categoria.nombre}</h3>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEdit(categoria)}
-                    className="text-blue-400 hover:text-blue-300 transition-colors"
-                    title="Editar"
-                  >
-                    <i className="fas fa-edit text-sm"></i>
-                  </button>
-                  <button
-                    onClick={() => handleDelete(categoria.id)}
-                    className="text-red-400 hover:text-red-300 transition-colors"
-                    title="Eliminar"
-                  >
-                    <i className="fas fa-trash text-sm"></i>
-                  </button>
+            <div key={categoria.id} className="col-12 col-md-6 col-lg-4">
+              <div className="card h-100 border-0 shadow-sm" style={{ backgroundColor: '#161b22', transition: 'transform 0.2s' }}>
+                <div className="card-body p-4">
+                  <div className="d-flex justify-content-between align-items-start mb-3">
+                    <h5 className="card-title fw-bold mb-0 text-white">{categoria.nombre}</h5>
+                    <div className="d-flex gap-1">
+                      <button
+                        onClick={() => handleEdit(categoria)}
+                        className="btn btn-sm text-primary p-1"
+                        title="Editar"
+                        style={{ background: 'transparent', border: 'none' }}
+                      >
+                        <i className="bi bi-pencil"></i>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(categoria.id)}
+                        className="btn btn-sm text-danger p-1"
+                        title="Eliminar"
+                        style={{ background: 'transparent', border: 'none' }}
+                      >
+                        <i className="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+
+                  {categoria.descripcion ? (
+                    <p className="card-text text-secondary small mb-3">{categoria.descripcion}</p>
+                  ) : (
+                    <p className="card-text text-muted small fst-italic mb-3">Sin descripción</p>
+                  )}
+
+                  {(categoria.edadMin || categoria.edadMax) && (
+                    <div className="d-flex align-items-center gap-2">
+                      <span className="badge border border-secondary border-opacity-30 text-white" style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}>
+                        <i className="bi bi-people-fill me-1"></i>
+                        Edad: {categoria.edadMin || '?'} - {categoria.edadMax || '?'} años
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
-              {categoria.descripcion && (
-                <p className="text-sm text-slate-400 mb-3">{categoria.descripcion}</p>
-              )}
-              {(categoria.edadMin || categoria.edadMax) && (
-                <div className="text-xs text-slate-500">
-                  Edad: {categoria.edadMin || '?'} - {categoria.edadMax || '?'} años
-                </div>
-              )}
             </div>
           ))}
         </div>

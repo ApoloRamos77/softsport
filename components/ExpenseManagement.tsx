@@ -1,25 +1,16 @@
 
 import React, { useState, useEffect } from 'react';
+import { apiService, Expense } from '../services/api';
 import ExpenseForm from './ExpenseForm';
 import DatePicker from './DatePicker';
-
-interface Expense {
-  id: number;
-  descripcion: string;
-  monto: number;
-  fecha: string;
-  categoria?: string;
-  referencia?: string;
-  estado?: string;
-}
 
 const ExpenseManagement: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
-  const [filters, setFilters] = useState({ 
-    desde: new Date().toISOString().split('T')[0], 
+  const [filters, setFilters] = useState({
+    desde: new Date().toISOString().split('T')[0],
     hasta: new Date().toISOString().split('T')[0],
     metodoPago: 'Todos'
   });
@@ -27,11 +18,8 @@ const ExpenseManagement: React.FC = () => {
   const loadExpenses = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5081/api/expenses');
-      if (response.ok) {
-        const data = await response.json();
-        setExpenses(data);
-      }
+      const data = await apiService.getExpenses();
+      setExpenses(data);
     } catch (error) {
       console.error('Error al cargar egresos:', error);
     } finally {
@@ -44,8 +32,8 @@ const ExpenseManagement: React.FC = () => {
   }, []);
 
   const calcularEstadisticas = () => {
-    const egresosBs = expenses.reduce((sum, e) => sum + e.monto, 0);
-    const egresosDolares = 0; // Por ahora en 0
+    const egresosBs = expenses.reduce((sum, e) => sum + e.monto, 0); // Assuming monto is in Bs or base currency
+    const egresosDolares = 0; // Placeholder as per original code
     const totalRegistros = expenses.length;
     return { egresosBs, egresosDolares, totalRegistros };
   };
@@ -70,23 +58,14 @@ const ExpenseManagement: React.FC = () => {
       const expense = expenses.find(e => e.id === id);
       if (!expense) return;
 
-      const response = await fetch(`http://localhost:5081/api/expenses/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...expense,
-          estado: 'Anulado'
-        }),
+      // Assuming updateExpense handles the PUT logic
+      await apiService.updateExpense(id, {
+        ...expense,
+        estado: 'Anulado'
       });
 
-      if (response.ok) {
-        alert('Egreso anulado exitosamente');
-        loadExpenses();
-      } else {
-        alert('Error al anular el egreso');
-      }
+      alert('Egreso anulado exitosamente');
+      loadExpenses();
     } catch (error) {
       console.error('Error:', error);
       alert('Error al anular el egreso');
@@ -98,130 +77,168 @@ const ExpenseManagement: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-end items-start">
-        <div className="flex gap-2">
-          <button className="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-semibold transition-colors">
-            <i className="fas fa-file-pdf"></i> Exportar PDF
-          </button>
-          <button 
-            onClick={() => setShowForm(true)}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-semibold transition-colors"
-          >
-            <i className="fas fa-plus"></i> Nuevo Egreso
-          </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-[#1a2332] border border-slate-700 p-5 rounded-lg">
-          <p className="text-xs text-slate-400 font-semibold mb-2">Egresos en Bs.</p>
-          <h3 className="text-3xl font-bold text-white mb-1">{stats.egresosBs.toFixed(2)} Bs.</h3>
-          <p className="text-xs text-slate-500">En el rango de fechas</p>
-        </div>
-        <div className="bg-[#1a2332] border border-slate-700 p-5 rounded-lg">
-          <p className="text-xs text-slate-400 font-semibold mb-2">Egresos en $</p>
-          <h3 className="text-3xl font-bold text-white mb-1">${stats.egresosDolares.toFixed(2)}</h3>
-          <p className="text-xs text-slate-500">En el rango de fechas</p>
-        </div>
-        <div className="bg-[#1a2332] border border-slate-700 p-5 rounded-lg">
-          <p className="text-xs text-slate-400 font-semibold mb-2">Total Registros</p>
-          <h3 className="text-3xl font-bold text-white mb-1">{stats.totalRegistros}</h3>
-          <p className="text-xs text-slate-500">Egresos registrados</p>
-        </div>
-      </div>
-
-      <div className="bg-[#1a2332] border border-slate-700 rounded-lg p-5">
-        <h3 className="text-sm font-semibold text-white mb-4">Filtros</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="animate-fadeIn" style={{ backgroundColor: '#0d1117', minHeight: '80vh' }}>
+      <div className="max-w-7xl mx-auto px-4 py-4 d-flex flex-column gap-4">
+        <div className="d-flex justify-content-between align-items-end mb-2">
           <div>
-            <label className="text-xs text-slate-400 block mb-2">Fecha Desde</label>
-            <DatePicker 
-              value={filters.desde} 
-              onChange={(v) => setFilters({...filters, desde: v})} 
-            />
+            <h2 className="mb-1 text-white fw-bold h4">Gestión de Egresos</h2>
+            <p className="text-secondary mb-0 small">Control de gastos y salidas de la academia</p>
           </div>
-          <div>
-            <label className="text-xs text-slate-400 block mb-2">Fecha Hasta</label>
-            <DatePicker 
-              value={filters.hasta} 
-              onChange={(v) => setFilters({...filters, hasta: v})} 
-            />
-          </div>
-          <div>
-            <label className="text-xs text-slate-400 block mb-2">Método de Pago</label>
-            <select 
-              value={filters.metodoPago}
-              onChange={(e) => setFilters({...filters, metodoPago: e.target.value})}
-              className="w-full bg-[#0f1729] border border-slate-600 text-white px-3 py-2 rounded-md text-sm focus:outline-none focus:border-blue-500"
+          <div className="d-flex gap-2">
+            <button
+              className="btn btn-sm d-flex align-items-center gap-2 text-white border-secondary border-opacity-50"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid #30363d' }}
             >
-              <option value="Todos">Todos</option>
-              <option value="Efectivo">Efectivo</option>
-              <option value="Transferencia">Transferencia</option>
-            </select>
+              <i className="bi bi-file-pdf"></i> Exportar PDF
+            </button>
+            <button
+              onClick={() => setShowForm(true)}
+              className="btn btn-primary d-flex align-items-center gap-2 px-3"
+              style={{ backgroundColor: '#1f6feb', borderColor: '#1f6feb', fontWeight: '600' }}
+            >
+              <i className="bi bi-plus-lg"></i> Nuevo Egreso
+            </button>
           </div>
         </div>
-      </div>
 
-      <div className="bg-[#1a2332] border border-slate-700 rounded-lg overflow-hidden">
-        <div className="p-4 border-b border-slate-700">
-          <h3 className="text-sm font-semibold text-white">Lista de Egresos</h3>
+        <div className="row g-4 mb-4">
+          <div className="col-12 col-md-4">
+            <div className="card border-0 shadow-sm h-100" style={{ backgroundColor: '#161b22' }}>
+              <div className="card-body">
+                <p className="text-secondary small fw-bold mb-2">Egresos en Bs.</p>
+                <h3 className="fs-2 fw-bold text-white mb-1">{stats.egresosBs.toFixed(2)} Bs.</h3>
+                <p className="text-secondary small mb-0">En el rango de fechas</p>
+              </div>
+            </div>
+          </div>
+          <div className="col-12 col-md-4">
+            <div className="card border-0 shadow-sm h-100" style={{ backgroundColor: '#161b22' }}>
+              <div className="card-body">
+                <p className="text-secondary small fw-bold mb-2">Egresos en $</p>
+                <h3 className="fs-2 fw-bold text-white mb-1">${stats.egresosDolares.toFixed(2)}</h3>
+                <p className="text-secondary small mb-0">En el rango de fechas</p>
+              </div>
+            </div>
+          </div>
+          <div className="col-12 col-md-4">
+            <div className="card border-0 shadow-sm h-100" style={{ backgroundColor: '#161b22' }}>
+              <div className="card-body">
+                <p className="text-secondary small fw-bold mb-2">Total Registros</p>
+                <h3 className="fs-2 fw-bold text-white mb-1">{stats.totalRegistros}</h3>
+                <p className="text-secondary small mb-0">Egresos registrados</p>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="overflow-x-auto">
-          {loading ? (
-            <div className="text-center py-20 text-slate-400">Cargando...</div>
-          ) : expenses.length === 0 ? (
-            <div className="text-center py-20 text-slate-400">No hay egresos registrados</div>
-          ) : (
-            <table className="w-full">
-              <thead className="bg-[#0f1729] border-b border-slate-700">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-400">#</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-400">Concepto</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-400">Monto</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-400">Fecha</th>
-                  <th className="px-6 py-3 text-right text-xs font-semibold text-slate-400">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {expenses.map((expense) => (
-                  <tr key={expense.id} className="border-b border-slate-800 hover:bg-slate-800/30">
-                    <td className="px-6 py-4 text-white font-medium">#{expense.id}</td>
-                    <td className="px-6 py-4 text-slate-300">{expense.descripcion}</td>
-                    <td className="px-6 py-4 text-slate-300">${expense.monto.toFixed(2)}</td>
-                    <td className="px-6 py-4 text-slate-300">
-                      {new Date(expense.fecha).toLocaleDateString('es-ES')}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {expense.estado !== 'Anulado' && (
-                          <>
-                            <button
-                              onClick={() => handleEdit(expense)}
-                              className="text-blue-400 hover:text-blue-300 transition-colors"
-                              title="Editar"
-                            >
-                              <i className="fas fa-edit text-sm"></i>
-                            </button>
-                            <button
-                              onClick={() => handleAnular(expense.id)}
-                              className="text-red-400 hover:text-red-300 transition-colors"
-                              title="Anular"
-                            >
-                              <i className="fas fa-ban text-sm"></i>
-                            </button>
-                          </>
-                        )}
-                        {expense.estado === 'Anulado' && (
-                          <span className="text-xs text-red-400 font-semibold">ANULADO</span>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+
+        <div className="card border-0 shadow-sm mb-4" style={{ backgroundColor: '#161b22' }}>
+          <div className="card-body">
+            <h6 className="text-white fw-bold mb-3">Filtros</h6>
+            <div className="row g-3">
+              <div className="col-12 col-md-4">
+                <label className="form-label text-secondary small">Fecha Desde</label>
+                <input
+                  type="date"
+                  value={filters.desde}
+                  onChange={(e) => setFilters({ ...filters, desde: e.target.value })}
+                  className="form-control border-secondary border-opacity-25 text-white"
+                  style={{ backgroundColor: '#0d1117' }}
+                />
+              </div>
+              <div className="col-12 col-md-4">
+                <label className="form-label text-secondary small">Fecha Hasta</label>
+                <input
+                  type="date"
+                  value={filters.hasta}
+                  onChange={(e) => setFilters({ ...filters, hasta: e.target.value })}
+                  className="form-control border-secondary border-opacity-25 text-white"
+                  style={{ backgroundColor: '#0d1117' }}
+                />
+              </div>
+              <div className="col-12 col-md-4">
+                <label className="form-label text-secondary small">Método de Pago</label>
+                <select
+                  value={filters.metodoPago}
+                  onChange={(e) => setFilters({ ...filters, metodoPago: e.target.value })}
+                  className="form-select border-secondary border-opacity-25 text-white"
+                  style={{ backgroundColor: '#0d1117' }}
+                >
+                  <option value="Todos">Todos</option>
+                  <option value="Efectivo">Efectivo</option>
+                  <option value="Transferencia">Transferencia</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="card border-0 shadow-sm" style={{ backgroundColor: '#0f1419' }}>
+          <div className="card-header bg-transparent border-bottom border-secondary border-opacity-25 py-3">
+            <h6 className="mb-0 fw-bold text-white">Lista de Egresos</h6>
+          </div>
+          <div className="card-body p-0">
+            <div className="table-responsive">
+              {loading ? (
+                <div className="text-center py-5 text-secondary">
+                  <div className="spinner-border text-primary mb-2" role="status"></div>
+                  <p className="mb-0">Cargando...</p>
+                </div>
+              ) : expenses.length === 0 ? (
+                <div className="text-center py-5 text-secondary">No hay egresos registrados</div>
+              ) : (
+                <table className="table align-middle mb-0" style={{ borderColor: '#30363d' }}>
+                  <thead style={{ backgroundColor: '#161b22' }}>
+                    <tr>
+                      <th className="ps-4 py-3 text-white border-bottom border-secondary border-opacity-25">#</th>
+                      <th className="py-3 text-white border-bottom border-secondary border-opacity-25">Concepto</th>
+                      <th className="py-3 text-white border-bottom border-secondary border-opacity-25">Monto</th>
+                      <th className="py-3 text-white border-bottom border-secondary border-opacity-25">Fecha</th>
+                      <th className="pe-4 py-3 text-end text-white border-bottom border-secondary border-opacity-25">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {expenses.map((expense) => (
+                      <tr key={expense.id} className="hover-bg-dark-lighter" style={{ transition: 'background-color 0.2s' }}>
+                        <td className="ps-4 py-3 text-white border-bottom border-secondary border-opacity-10 font-bold">#{expense.id}</td>
+                        <td className="py-3 text-secondary border-bottom border-secondary border-opacity-10">{expense.descripcion}</td>
+                        <td className="py-3 text-white border-bottom border-secondary border-opacity-10">${expense.monto.toFixed(2)}</td>
+                        <td className="py-3 text-secondary border-bottom border-secondary border-opacity-10">
+                          {new Date(expense.fecha).toLocaleDateString('es-ES')}
+                        </td>
+                        <td className="pe-4 py-3 text-end border-bottom border-secondary border-opacity-10">
+                          <div className="d-flex justify-content-end gap-2">
+                            {expense.estado !== 'Anulado' && (
+                              <>
+                                <button
+                                  onClick={() => handleEdit(expense)}
+                                  className="btn btn-sm text-primary p-0 me-2"
+                                  title="Editar"
+                                  style={{ backgroundColor: 'transparent', border: 'none' }}
+                                >
+                                  <i className="bi bi-pencil"></i>
+                                </button>
+                                <button
+                                  onClick={() => handleAnular(expense.id!)}
+                                  className="btn btn-sm text-danger p-0"
+                                  title="Anular"
+                                  style={{ backgroundColor: 'transparent', border: 'none' }}
+                                >
+                                  <i className="bi bi-x-circle"></i>
+                                </button>
+                              </>
+                            )}
+                            {expense.estado === 'Anulado' && (
+                              <span className="badge bg-danger bg-opacity-20 text-white border border-danger border-opacity-30">ANULADO</span>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

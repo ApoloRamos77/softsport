@@ -104,7 +104,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) => {
                     onClick={() => handleNavClick(item.id)}
                     title={item.name}
                   >
-                    <i className={`bi ${item.icon} nav-icon"></i>
+                    <i className={`bi ${item.icon} nav-icon`}></i>
                     <span className="nav-label">{item.name}</span>
                   </button>
                 ))}

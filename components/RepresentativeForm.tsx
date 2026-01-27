@@ -44,7 +44,7 @@ const RepresentativeForm: React.FC<RepresentativeFormProps> = ({ representative,
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Reset errors
     setErrors({ email: '' });
 
@@ -58,121 +58,134 @@ const RepresentativeForm: React.FC<RepresentativeFormProps> = ({ representative,
   };
 
   return (
-    <div className="bg-[#111827] rounded-lg shadow-xl border border-slate-800 p-8 max-w-4xl mx-auto animate-fadeIn">
-      <h2 className="text-xl font-bold mb-8 text-white">
-        {representative ? 'Editar Representante' : 'Nuevo Representante'}
-      </h2>
-      
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-slate-300">Nombre *</label>
-            <input 
-              type="text" 
-              placeholder="Ej: Juan"
-              className="bg-[#0d1117] p-3 rounded-md border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-200"
-              required
-              value={formData.nombre}
-              onChange={e => setFormData({...formData, nombre: e.target.value})}
-            />
-          </div>
 
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-slate-300">Apellido *</label>
-            <input 
-              type="text" 
-              placeholder="Ej: Pérez"
-              className="bg-[#0d1117] p-3 rounded-md border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-200"
-              required
-              value={formData.apellido}
-              onChange={e => setFormData({...formData, apellido: e.target.value})}
-            />
-          </div>
+    <div className="animate-fadeIn d-flex justify-content-center py-4">
+      <div className="card shadow-xl border-secondary border-opacity-25 w-100" style={{ maxWidth: '800px', backgroundColor: '#161b22' }}>
+        <div className="card-header bg-transparent border-bottom border-secondary border-opacity-10 py-4 px-4">
+          <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1 d-block">Gestión de Familia</label>
+          <h5 className="mb-1 fw-bold text-white tracking-tight">
+            {representative ? 'Editar Representante' : 'Nuevo Representante'}
+          </h5>
+          <p className="text-secondary small mb-0">Complete la información de contacto y vinculación legal con el alumno.</p>
         </div>
 
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-300">Documento de Identidad *</label>
-          <input 
-            type="text" 
-            placeholder="Ingrese número de documento (V-12345678)"
-            className="bg-[#0d1117] p-3 rounded-md border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 w-full transition-all duration-200"
-            required
-            value={formData.documento}
-            onChange={e => setFormData({...formData, documento: e.target.value})}
-          />
-        </div>
+        <div className="card-body p-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="p-4 rounded-lg border border-secondary border-opacity-10 bg-[#0d1117] bg-opacity-30">
+              <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-4 d-block border-bottom border-blue-900 border-opacity-50 pb-2">Datos de Identidad</label>
+              <div className="row g-3">
+                <div className="col-md-6">
+                  <label>Nombre *</label>
+                  <input
+                    type="text"
+                    placeholder="Ej: Juan"
+                    className="form-control"
+                    required
+                    value={formData.nombre}
+                    onChange={e => setFormData({ ...formData, nombre: e.target.value })}
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label>Apellido *</label>
+                  <input
+                    type="text"
+                    placeholder="Ej: Pérez"
+                    className="form-control"
+                    required
+                    value={formData.apellido}
+                    onChange={e => setFormData({ ...formData, apellido: e.target.value })}
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label>Documento de Identidad *</label>
+                  <input
+                    type="text"
+                    placeholder="V-12345678"
+                    className="form-control"
+                    required
+                    value={formData.documento}
+                    onChange={e => setFormData({ ...formData, documento: e.target.value })}
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label>Parentesco / Vínculo</label>
+                  <select
+                    className="form-select"
+                    value={formData.parentesco}
+                    onChange={e => setFormData({ ...formData, parentesco: e.target.value })}
+                  >
+                    <option value="Padre">Padre</option>
+                    <option value="Madre">Madre</option>
+                    <option value="Abuelo/a">Abuelo/a</option>
+                    <option value="Tío/a">Tío/a</option>
+                    <option value="Representante Legal">Representante Legal</option>
+                  </select>
+                </div>
+              </div>
+            </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="flex flex-col gap-2 md:col-span-1">
-            <label className="text-sm font-semibold text-slate-300">Código País</label>
-            <select className="bg-[#0d1117] p-3 rounded-md border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500">
-              <option value="+58">VE +58</option>
-              <option value="+51">PE +51</option>
-            </select>
-          </div>
+            <div className="p-4 rounded-lg border border-secondary border-opacity-10 bg-[#0d1117] bg-opacity-30">
+              <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-4 d-block border-bottom border-blue-900 border-opacity-50 pb-2">Información de Contacto</label>
+              <div className="row g-3">
+                <div className="col-md-4">
+                  <label>Cod. País</label>
+                  <select className="form-select">
+                    <option value="+58">VE +58</option>
+                    <option value="+57">CO +57</option>
+                  </select>
+                </div>
+                <div className="col-md-8">
+                  <label>Teléfono de Contacto *</label>
+                  <input
+                    type="tel"
+                    placeholder="412 1234567"
+                    className="form-control"
+                    required
+                    value={formData.telefono}
+                    onChange={e => setFormData({ ...formData, telefono: e.target.value })}
+                  />
+                </div>
+                <div className="col-12">
+                  <label>Correo Electrónico *</label>
+                  <input
+                    type="email"
+                    placeholder="correo@ejemplo.com"
+                    className={`form-control ${errors.email ? 'is-invalid' : ''}`}
+                    required
+                    value={formData.email}
+                    onChange={e => {
+                      setFormData({ ...formData, email: e.target.value });
+                      if (errors.email) setErrors({ email: '' });
+                    }}
+                  />
+                  {errors.email && (
+                    <div className="invalid-feedback text-[11px] mt-1">{errors.email}</div>
+                  )}
+                </div>
+              </div>
+            </div>
 
-          <div className="flex flex-col gap-2 md:col-span-2">
-            <label className="text-sm font-semibold text-slate-300">Teléfono *</label>
-            <input 
-              type="tel" 
-              placeholder="4241234567"
-              className="bg-[#0d1117] p-3 rounded-md border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-200"
-              required
-              value={formData.telefono}
-              onChange={e => setFormData({...formData, telefono: e.target.value})}
-            />
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-300">Email *</label>
-          <input 
-            type="email" 
-            placeholder="correo@ejemplo.com"
-            className={`bg-[#0d1117] p-3 rounded-md border text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 w-full transition-all duration-200 ${errors.email ? 'border-red-500 ring-1 ring-red-500/20' : 'border-slate-700'}`}
-            required
-            value={formData.email}
-            onChange={e => {
-              setFormData({...formData, email: e.target.value});
-              if (errors.email) setErrors({ email: '' });
-            }}
-          />
-          {errors.email && (
-            <p className="text-red-500 text-xs font-semibold animate-shake">{errors.email}</p>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-300">Parentesco</label>
-          <select 
-            className="bg-[#0d1117] p-3 rounded-md border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500"
-            value={formData.parentesco}
-            onChange={e => setFormData({...formData, parentesco: e.target.value})}
-          >
-            <option value="Padre">Padre</option>
-            <option value="Madre">Madre</option>
-            <option value="Abuelo/a">Abuelo/a</option>
-            <option value="Tío/a">Tío/a</option>
-          </select>
-        </div>
-
-        <div className="flex justify-end gap-4 mt-10 pt-4">
-          <button 
-            type="button"
-            onClick={onCancel}
-            className="px-8 py-2.5 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors font-semibold"
-          >
-            Cancelar
-          </button>
-          <button 
-            type="submit"
-            className="px-10 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-all font-semibold shadow-lg shadow-blue-500/20"
-          >
-            Guardar Representante
-          </button>
-        </div>
-      </form>
-    </div>
+            <div className="d-flex justify-content-between align-items-center mt-5 pt-4 border-top border-secondary border-opacity-25">
+              <button
+                type="button"
+                onClick={onCancel}
+                className="btn btn-sm px-4 text-secondary hover-text-white border-0 bg-transparent"
+                style={{ fontSize: '13px', fontWeight: '600' }}
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="btn btn-sm btn-primary px-5 fw-bold"
+                style={{ backgroundColor: '#1f6feb', borderColor: '#1f6feb', fontSize: '13px' }}
+              >
+                {representative ? 'Actualizar Datos' : 'Registrar Representante'}
+              </button>
+            </div >
+          </form >
+        </div >
+      </div >
+    </div >
   );
 };
 

@@ -126,7 +126,7 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
     const grupoId = grupos.find(g => g.nombre === formData.grupo)?.id || null;
     const categoriaId = categorias.find(c => c.nombre === formData.categoria)?.id || null;
     const becaId = becas.find(b => b.nombre === formData.beca || b.porcentaje === parseInt(formData.beca))?.id || null;
-    
+
     // Mapear los datos del formulario al formato esperado por la API
     const alumnoData = {
       nombre: formData.nombre,
@@ -166,7 +166,7 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
       categoriaId: categoriaId,
       becaId: becaId
     };
-    
+
     try {
       if (alumno?.id) {
         // Modo edición
@@ -190,348 +190,278 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
       case 'basica':
         return (
           <div className="space-y-6 animate-fadeIn">
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold text-slate-300 uppercase">Representante *</label>
-              <div className="flex gap-2">
-                <select 
-                  className="bg-[#0d1117] border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 p-2.5 rounded-md border flex-1 text-xs appearance-none"
-                  value={formData.representanteId}
-                  onChange={e => setFormData({...formData, representanteId: e.target.value})}
-                  disabled={loading}
-                >
-                  <option value="">{loading ? 'Cargando representantes...' : 'Selecciona un representante'}</option>
-                  {representantes.map(r => (
-                    <option key={r.id} value={r.id}>{r.nombre} {r.apellido} ({r.documento})</option>
-                  ))}
-                </select>
-                <button 
-                  type="button"
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-semibold whitespace-nowrap"
-                >
-                  Nuevo Representante
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-slate-300 uppercase">Nombre *</label>
-                <input 
-                  type="text" 
-                  className="bg-[#0d1117] border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 p-2.5 rounded-md border w-full text-xs"
-                  value={formData.nombre}
-                  onChange={e => setFormData({...formData, nombre: e.target.value})}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-slate-300 uppercase">Apellido *</label>
-                <input 
-                  type="text" 
-                  className="bg-[#0d1117] border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 p-2.5 rounded-md border w-full text-xs"
-                  value={formData.apellido}
-                  onChange={e => setFormData({...formData, apellido: e.target.value})}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-slate-300 uppercase">Documento de Identidad</label>
-                <input 
-                  type="text" 
-                  className="bg-[#0d1117] border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 p-2.5 rounded-md border w-full text-xs"
-                  value={formData.documento}
-                  onChange={e => setFormData({...formData, documento: e.target.value})}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-slate-300 uppercase">Fecha de Nacimiento</label>
-                <DatePicker 
-                  value={formData.fechaNac}
-                  onChange={(date) => setFormData({...formData, fechaNac: date})}
-                  placeholder="Seleccionar fecha"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-slate-300 uppercase">Número de Camiseta</label>
-                <input 
-                  type="number" 
-                  className="bg-[#0d1117] border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 p-2.5 rounded-md border w-full text-xs"
-                  value={formData.numeroCamiseta}
-                  onChange={e => setFormData({...formData, numeroCamiseta: e.target.value})}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-slate-300 uppercase">Sexo</label>
-                <select 
-                  className="bg-[#0d1117] border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 p-2.5 rounded-md border w-full text-xs"
-                  value={formData.sexo}
-                  onChange={e => setFormData({...formData, sexo: e.target.value})}
-                >
-                  <option value="">Selecciona sexo</option>
-                  <option value="M">Masculino</option>
-                  <option value="F">Femenino</option>
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-slate-300 uppercase">Fotografía</label>
-                <div className="relative">
-                  <input 
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    id="fotografia"
-                    onChange={(e) => setFormData({...formData, fotografia: e.target.files?.[0] || null})}
-                  />
-                  <label 
-                    htmlFor="fotografia"
-                    className="bg-[#0d1117] border-slate-700 text-slate-400 p-2.5 rounded-md border w-full text-xs flex items-center justify-between cursor-pointer hover:border-blue-500 transition-colors"
+            {/* Vínculo Familiar Section */}
+            <div className="p-4 rounded-lg border border-secondary border-opacity-10 bg-[#0d1117] bg-opacity-30">
+              <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-4 d-block border-bottom border-blue-900 border-opacity-50 pb-2">Vínculo Familiar</label>
+              <div className="row g-4 align-items-end">
+                <div className="col-md-8">
+                  <label>Representante Principal *</label>
+                  <select
+                    className="form-select"
+                    value={formData.representanteId}
+                    onChange={e => setFormData({ ...formData, representanteId: e.target.value })}
+                    disabled={loading}
                   >
-                    <span>{formData.fotografia ? formData.fotografia.name : 'Seleccionar archivo'}</span>
-                    <span className="text-xs">{formData.fotografia ? '' : 'Sin archivos seleccionados'}</span>
-                  </label>
+                    <option value="">{loading ? 'Cargando representantes...' : 'Selecciona un representante'}</option>
+                    {representantes.map(r => (
+                      <option key={r.id} value={r.id}>{r.nombre} {r.apellido} ({r.documento})</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-md-4">
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary w-full justify-content-center text-[11px] fw-bold"
+                    style={{ height: '38px' }}
+                  >
+                    <i className="bi bi-plus-circle"></i> NUEVO REPRESENTANTE
+                  </button>
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-slate-300 uppercase">Código *</label>
-                <select 
-                  className="bg-[#0d1117] border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 p-2.5 rounded-md border w-full text-xs"
-                  value={formData.codigoPais}
-                  onChange={e => setFormData({...formData, codigoPais: e.target.value})}
-                >
-                  <option value="+58">VE +58</option>
-                  <option value="+57">CO +57</option>
-                  <option value="+51">PE +51</option>
-                </select>
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <label className="text-[11px] font-bold text-slate-300 uppercase">Teléfono</label>
-                <input 
-                  type="tel" 
-                  className="bg-[#0d1117] border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 p-2.5 rounded-md border w-full text-xs"
-                  value={formData.telefono}
-                  onChange={e => setFormData({...formData, telefono: e.target.value})}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-slate-300 uppercase">Email</label>
-                <input 
-                  type="email" 
-                  className="bg-[#0d1117] border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 p-2.5 rounded-md border w-full text-xs"
-                  value={formData.email}
-                  onChange={e => setFormData({...formData, email: e.target.value})}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-slate-300 uppercase">Dirección</label>
-                <input 
-                  type="text" 
-                  className="bg-[#0d1117] border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 p-2.5 rounded-md border w-full text-xs"
-                  value={formData.direccion}
-                  onChange={e => setFormData({...formData, direccion: e.target.value})}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold text-slate-300 uppercase">Colegio</label>
-              <input 
-                type="text" 
-                placeholder="Nombre del colegio"
-                className="bg-[#0d1117] border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 p-2.5 rounded-md border w-full text-xs"
-                value={formData.colegio}
-                onChange={e => setFormData({...formData, colegio: e.target.value})}
-              />
-            </div>
-
-            <div className="border-t border-slate-700 pt-6 mt-6">
-              <h3 className="text-sm font-bold text-slate-300 mb-4">Segundo Representante (Opcional)</h3>
-              
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-bold text-slate-300 uppercase">Nombre Completo</label>
-                    <input 
-                      type="text" 
-                      placeholder="Nombre del segundo representante"
-                      className="bg-[#0d1117] border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 p-2.5 rounded-md border w-full text-xs"
-                      value={formData.segundoRepresentante.nombreCompleto}
-                      onChange={e => setFormData({...formData, segundoRepresentante: {...formData.segundoRepresentante, nombreCompleto: e.target.value}})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-bold text-slate-300 uppercase">Parentesco</label>
-                    <select 
-                      className="bg-[#0d1117] border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 p-2.5 rounded-md border w-full text-xs"
-                      value={formData.segundoRepresentante.parentesco}
-                      onChange={e => setFormData({...formData, segundoRepresentante: {...formData.segundoRepresentante, parentesco: e.target.value}})}
-                    >
-                      <option value="">Selecciona parentesco</option>
-                      <option value="Padre">Padre</option>
-                      <option value="Madre">Madre</option>
-                      <option value="Abuelo/a">Abuelo/a</option>
-                      <option value="Tío/a">Tío/a</option>
-                      <option value="Otro">Otro</option>
-                    </select>
-                  </div>
+            {/* Datos Personales Section */}
+            <div className="p-4 rounded-lg border border-secondary border-opacity-10 bg-[#0d1117] bg-opacity-30">
+              <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-4 d-block border-bottom border-blue-900 border-opacity-50 pb-2">Información Personal</label>
+              <div className="row g-3">
+                <div className="col-md-4">
+                  <label>Nombre *</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={formData.nombre}
+                    onChange={e => setFormData({ ...formData, nombre: e.target.value })}
+                  />
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-bold text-slate-300 uppercase">Código</label>
-                    <select 
-                      className="bg-[#0d1117] border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 p-2.5 rounded-md border w-full text-xs"
-                      value={formData.segundoRepresentante.codigoPais}
-                      onChange={e => setFormData({...formData, segundoRepresentante: {...formData.segundoRepresentante, codigoPais: e.target.value}})}
-                    >
-                      <option value="+58">VE +58</option>
-                      <option value="+57">CO +57</option>
-                      <option value="+51">PE +51</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="text-[11px] font-bold text-slate-300 uppercase">Teléfono</label>
-                    <input 
-                      type="tel" 
-                      className="bg-[#0d1117] border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 p-2.5 rounded-md border w-full text-xs"
-                      value={formData.segundoRepresentante.telefono}
-                      onChange={e => setFormData({...formData, segundoRepresentante: {...formData.segundoRepresentante, telefono: e.target.value}})}
-                    />
-                  </div>
+                <div className="col-md-4">
+                  <label>Apellido *</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={formData.apellido}
+                    onChange={e => setFormData({ ...formData, apellido: e.target.value })}
+                  />
                 </div>
-
-                <div className="space-y-2">
-                  <label className="text-[11px] font-bold text-slate-300 uppercase">Email</label>
-                  <input 
-                    type="email" 
-                    placeholder="correo@ejemplo.com"
-                    className="bg-[#0d1117] border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 p-2.5 rounded-md border w-full text-xs"
-                    value={formData.segundoRepresentante.email}
-                    onChange={e => setFormData({...formData, segundoRepresentante: {...formData.segundoRepresentante, email: e.target.value}})}
+                <div className="col-md-4">
+                  <label>Documento ID</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={formData.documento}
+                    onChange={e => setFormData({ ...formData, documento: e.target.value })}
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label>Fecha Nacimiento</label>
+                  <DatePicker
+                    value={formData.fechaNac}
+                    onChange={(date) => setFormData({ ...formData, fechaNac: date })}
+                    placeholder="Seleccionar"
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label>Sexo</label>
+                  <select
+                    className="form-select"
+                    value={formData.sexo}
+                    onChange={e => setFormData({ ...formData, sexo: e.target.value })}
+                  >
+                    <option value="">Seleccionar</option>
+                    <option value="M">Masculino</option>
+                    <option value="F">Femenino</option>
+                  </select>
+                </div>
+                <div className="col-md-4">
+                  <label>Nro. Camiseta</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    value={formData.numeroCamiseta}
+                    onChange={e => setFormData({ ...formData, numeroCamiseta: e.target.value })}
                   />
                 </div>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold text-slate-300 uppercase">Posición</label>
-              <select 
-                className="bg-[#0d1117] border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 p-2.5 rounded-md border w-full text-xs"
-                value={formData.posicion}
-                onChange={e => setFormData({...formData, posicion: e.target.value})}
-              >
-                <option>Portero</option>
-                <option>Defensa</option>
-                <option>Medio</option>
-                <option>Delantero</option>
-              </select>
+            {/* Contacto & Ubicación */}
+            <div className="p-4 rounded-lg border border-secondary border-opacity-10 bg-[#0d1117] bg-opacity-30">
+              <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-4 d-block border-bottom border-blue-900 border-opacity-50 pb-2">Contacto y Ubicación</label>
+              <div className="row g-3">
+                <div className="col-md-6">
+                  <label>Email del Alumno</label>
+                  <input
+                    type="email"
+                    className="form-control"
+                    value={formData.email}
+                    onChange={e => setFormData({ ...formData, email: e.target.value })}
+                  />
+                </div>
+                <div className="col-md-3">
+                  <label>Cod. Pais</label>
+                  <select
+                    className="form-select"
+                    value={formData.codigoPais}
+                    onChange={e => setFormData({ ...formData, codigoPais: e.target.value })}
+                  >
+                    <option value="+58">VE +58</option>
+                    <option value="+57">CO +57</option>
+                    <option value="+51">PE +51</option>
+                  </select>
+                </div>
+                <div className="col-md-3">
+                  <label>Teléfono</label>
+                  <input
+                    type="tel"
+                    className="form-control"
+                    value={formData.telefono}
+                    onChange={e => setFormData({ ...formData, telefono: e.target.value })}
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label>Dirección Residencial</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={formData.direccion}
+                    onChange={e => setFormData({ ...formData, direccion: e.target.value })}
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label>Colegio / Institución</label>
+                  <input
+                    type="text"
+                    placeholder="Nombre del colegio"
+                    className="form-control"
+                    value={formData.colegio}
+                    onChange={e => setFormData({ ...formData, colegio: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Segundo Representante Opcional */}
+            <div className="p-4 rounded-lg border border-warning border-opacity-10 bg-[#0d1117] bg-opacity-30">
+              <label className="text-[10px] font-bold text-warning uppercase tracking-widest mb-4 d-block border-bottom border-warning border-opacity-30 pb-2">Segundo Representante (Opcional)</label>
+              <div className="row g-3">
+                <div className="col-md-6">
+                  <label>Nombre Completo</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={formData.segundoRepresentante.nombreCompleto}
+                    onChange={e => setFormData({ ...formData, segundoRepresentante: { ...formData.segundoRepresentante, nombreCompleto: e.target.value } })}
+                  />
+                </div>
+                <div className="col-md-3">
+                  <label>Parentesco</label>
+                  <select
+                    className="form-select"
+                    value={formData.segundoRepresentante.parentesco}
+                    onChange={e => setFormData({ ...formData, segundoRepresentante: { ...formData.segundoRepresentante, parentesco: e.target.value } })}
+                  >
+                    <option value="">Seleccionar</option>
+                    <option value="Padre">Padre</option>
+                    <option value="Madre">Madre</option>
+                    <option value="Abuelo/a">Abuelo/a</option>
+                    <option value="Tío/a">Tío/a</option>
+                  </select>
+                </div>
+                <div className="col-md-3">
+                  <label>Teléfono / Email</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={formData.segundoRepresentante.email}
+                    onChange={e => setFormData({ ...formData, segundoRepresentante: { ...formData.segundoRepresentante, email: e.target.value } })}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         );
       case 'medica':
         return (
           <div className="space-y-6 animate-fadeIn">
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold text-slate-300 uppercase">Tipo de Sangre</label>
-              <select 
-                className="bg-[#0d1117] border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 p-2.5 rounded-md border w-full text-xs"
-                value={formData.tipoSangre}
-                onChange={e => setFormData({...formData, tipoSangre: e.target.value})}
-              >
-                <option value="">Selecciona tipo de sangre</option>
-                <option value="A+">A+</option>
-                <option value="A-">A-</option>
-                <option value="B+">B+</option>
-                <option value="B-">B-</option>
-                <option value="AB+">AB+</option>
-                <option value="AB-">AB-</option>
-                <option value="O+">O+</option>
-                <option value="O-">O-</option>
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold text-slate-300 uppercase">Alergias</label>
-              <select 
-                className="bg-[#0d1117] border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 p-2.5 rounded-md border w-full text-xs"
-                value={formData.alergias}
-                onChange={e => setFormData({...formData, alergias: e.target.value})}
-              >
-                <option value="">Selecciona alergia</option>
-                <option value="Ninguna">Ninguna</option>
-                <option value="Alimentaria">Alimentaria</option>
-                <option value="Medicamentos">Medicamentos</option>
-                <option value="Polen">Polen</option>
-                <option value="Polvo">Polvo</option>
-                <option value="Otra">Otra</option>
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold text-slate-300 uppercase">Condiciones Médicas</label>
-              <textarea 
-                className="bg-[#0d1117] border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 p-2.5 rounded-md border w-full text-xs resize-none"
-                rows={4}
-                placeholder="Describe cualquier condición médica relevante..."
-                value={formData.condicionesMedicas}
-                onChange={e => setFormData({...formData, condicionesMedicas: e.target.value})}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold text-slate-300 uppercase">Medicamentos</label>
-              <textarea 
-                className="bg-[#0d1117] border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 p-2.5 rounded-md border w-full text-xs resize-none"
-                rows={4}
-                placeholder="Lista de medicamentos que toma regularmente..."
-                value={formData.medicamentos}
-                onChange={e => setFormData({...formData, medicamentos: e.target.value})}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold text-slate-300 uppercase">Contacto de Emergencia</label>
-              <input 
-                type="text" 
-                className="bg-[#0d1117] border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 p-2.5 rounded-md border w-full text-xs"
-                placeholder="Nombre completo del contacto de emergencia"
-                value={formData.contactoEmergencia}
-                onChange={e => setFormData({...formData, contactoEmergencia: e.target.value})}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-slate-300 uppercase">Código</label>
-                <select 
-                  className="bg-[#0d1117] border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 p-2.5 rounded-md border w-full text-xs"
-                  value={formData.codigoPaisEmergencia}
-                  onChange={e => setFormData({...formData, codigoPaisEmergencia: e.target.value})}
-                >
-                  <option value="+58">VE +58</option>
-                  <option value="+57">CO +57</option>
-                  <option value="+51">PE +51</option>
-                </select>
+            <div className="p-4 rounded-lg border border-secondary border-opacity-10 bg-[#0d1117] bg-opacity-30">
+              <label className="text-[10px] font-bold text-red-500 uppercase tracking-widest mb-4 d-block border-bottom border-red-900 border-opacity-30 pb-2">Información de Salud</label>
+              <div className="row g-3">
+                <div className="col-md-4">
+                  <label>Tipo de Sangre</label>
+                  <select
+                    className="form-select"
+                    value={formData.tipoSangre}
+                    onChange={e => setFormData({ ...formData, tipoSangre: e.target.value })}
+                  >
+                    <option value="">Seleccionar</option>
+                    {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div className="col-md-8">
+                  <label>Alergias</label>
+                  <input
+                    type="text"
+                    placeholder="Ej: Penicilina, Mani, etc."
+                    className="form-control"
+                    value={formData.alergias}
+                    onChange={e => setFormData({ ...formData, alergias: e.target.value })}
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label>Condiciones Médicas</label>
+                  <textarea
+                    className="form-control"
+                    rows={4}
+                    placeholder="Describa condiciones relevantes..."
+                    value={formData.condicionesMedicas}
+                    onChange={e => setFormData({ ...formData, condicionesMedicas: e.target.value })}
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label>Medicamentos</label>
+                  <textarea
+                    className="form-control"
+                    rows={4}
+                    placeholder="Medicamentos de uso regular..."
+                    value={formData.medicamentos}
+                    onChange={e => setFormData({ ...formData, medicamentos: e.target.value })}
+                  />
+                </div>
               </div>
-              <div className="space-y-2 md:col-span-2">
-                <label className="text-[11px] font-bold text-slate-300 uppercase">Teléfono de Emergencia</label>
-                <input 
-                  type="tel" 
-                  className="bg-[#0d1117] border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 p-2.5 rounded-md border w-full text-xs"
-                  placeholder="Máximo 10 dígitos"
-                  maxLength={10}
-                  value={formData.telefonoEmergencia}
-                  onChange={e => setFormData({...formData, telefonoEmergencia: e.target.value})}
-                />
+            </div>
+
+            <div className="p-4 rounded-lg border border-danger border-opacity-10 bg-danger bg-opacity-5">
+              <label className="text-[10px] font-bold text-danger uppercase tracking-widest mb-4 d-block border-bottom border-danger border-opacity-20 pb-2">Emergencia</label>
+              <div className="row g-3">
+                <div className="col-md-6">
+                  <label>Nombre del Contacto</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={formData.contactoEmergencia}
+                    onChange={e => setFormData({ ...formData, contactoEmergencia: e.target.value })}
+                  />
+                </div>
+                <div className="col-md-2">
+                  <label>Cód.</label>
+                  <select
+                    className="form-select"
+                    value={formData.codigoPaisEmergencia}
+                    onChange={e => setFormData({ ...formData, codigoPaisEmergencia: e.target.value })}
+                  >
+                    <option value="+58">+58</option>
+                    <option value="+57">+57</option>
+                    <option value="+51">+51</option>
+                  </select>
+                </div>
+                <div className="col-md-4">
+                  <label>Teléfono Emergencia</label>
+                  <input
+                    type="tel"
+                    className="form-control"
+                    value={formData.telefonoEmergencia}
+                    onChange={e => setFormData({ ...formData, telefonoEmergencia: e.target.value })}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -539,57 +469,79 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
       case 'administrativa':
         return (
           <div className="space-y-6 animate-fadeIn">
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold text-slate-300 uppercase">Grupo</label>
-              <select 
-                className="bg-[#0d1117] border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 p-2.5 rounded-md border w-full text-xs"
-                value={formData.grupo}
-                onChange={e => setFormData({...formData, grupo: e.target.value})}
-              >
-                <option value="">Selecciona un grupo</option>
-                {grupos.map(g => (
-                  <option key={g.id} value={g.nombre}>{g.nombre}</option>
-                ))}
-              </select>
+            <div className="p-4 rounded-lg border border-secondary border-opacity-10 bg-[#0d1117] bg-opacity-30">
+              <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-4 d-block border-bottom border-blue-900 border-opacity-50 pb-2">Asignación de Alumno</label>
+              <div className="row g-3">
+                <div className="col-md-4">
+                  <label>Nivel / Grupo</label>
+                  <select
+                    className="form-select"
+                    value={formData.grupo}
+                    onChange={e => setFormData({ ...formData, grupo: e.target.value })}
+                  >
+                    <option value="">Seleccionar</option>
+                    {grupos.map(g => <option key={g.id} value={g.nombre}>{g.nombre}</option>)}
+                  </select>
+                </div>
+                <div className="col-md-4">
+                  <label>Categoría</label>
+                  <select
+                    className="form-select"
+                    value={formData.categoria}
+                    onChange={e => setFormData({ ...formData, categoria: e.target.value })}
+                  >
+                    <option value="">Seleccionar</option>
+                    {categorias.map(c => <option key={c.id} value={c.nombre}>{c.nombre}</option>)}
+                  </select>
+                </div>
+                <div className="col-md-4">
+                  <label>Beca Aplicada</label>
+                  <select
+                    className="form-select"
+                    value={formData.beca}
+                    onChange={e => setFormData({ ...formData, beca: e.target.value })}
+                  >
+                    <option value="">Sin Beca</option>
+                    {becas.map(b => <option key={b.id} value={b.nombre}>{b.nombre} ({b.porcentaje}%)</option>)}
+                  </select>
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold text-slate-300 uppercase">Categoría</label>
-              <select 
-                className="bg-[#0d1117] border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 p-2.5 rounded-md border w-full text-xs"
-                value={formData.categoria}
-                onChange={e => setFormData({...formData, categoria: e.target.value})}
-              >
-                <option value="">Selecciona una categoría</option>
-                {categorias.map(c => (
-                  <option key={c.id} value={c.nombre}>{c.nombre}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold text-slate-300 uppercase">Programa de Becas</label>
-              <select 
-                className="bg-[#0d1117] border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 p-2.5 rounded-md border w-full text-xs"
-                value={formData.beca}
-                onChange={e => setFormData({...formData, beca: e.target.value})}
-              >
-                <option value="">Selecciona un programa</option>
-                {becas.map(b => (
-                  <option key={b.id} value={b.nombre}>{b.nombre} ({b.porcentaje}%)</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold text-slate-300 uppercase">Notas</label>
-              <textarea 
-                className="bg-[#0d1117] border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 p-2.5 rounded-md border w-full text-xs resize-none"
-                rows={6}
-                placeholder="Notas adicionales sobre el alumno..."
-                value={formData.notas}
-                onChange={e => setFormData({...formData, notas: e.target.value})}
-              />
+            <div className="row g-4">
+              <div className="col-md-8">
+                <div className="p-4 rounded-lg border border-secondary border-opacity-10 bg-[#0d1117] bg-opacity-30 h-100">
+                  <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-3 d-block">Notas Administrativas</label>
+                  <textarea
+                    className="form-control"
+                    rows={6}
+                    placeholder="Detalles sobre pagos, comportamiento, etc."
+                    value={formData.notas}
+                    onChange={e => setFormData({ ...formData, notas: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="col-md-4">
+                <div className="p-4 rounded-lg border border-success border-opacity-10 bg-success bg-opacity-5 h-100">
+                  <label className="text-[10px] font-bold text-success uppercase tracking-widest mb-4 d-block">Estado de Matrícula</label>
+                  <div className="form-check form-switch mb-3">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      role="switch"
+                      checked={formData.estado === 'Activo'}
+                      onChange={() => setFormData({ ...formData, estado: formData.estado === 'Activo' ? 'Inactivo' : 'Activo' })}
+                    />
+                    <label className="form-check-label ms-2 text-white fw-bold">Alumno Activo</label>
+                  </div>
+                  <div className="p-3 rounded bg-black bg-opacity-30 border border-success border-opacity-10">
+                    <p className="text-[11px] text-slate-400 mb-0 leading-relaxed italic">
+                      <i className="bi bi-info-circle me-1"></i>
+                      Un alumno inactivo no aparecerá en las listas de asistencia ni convocatorias, pero conservará su historial contable.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         );
@@ -597,54 +549,66 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
   };
 
   return (
-    <div className="bg-[#111827] rounded-lg shadow-xl border border-slate-800 p-8 max-w-4xl mx-auto animate-fadeIn mb-10">
-      <h2 className="text-xl font-bold mb-6 text-white tracking-tight">
-        {alumno ? 'Edición de Alumno' : 'Nuevo Alumno'}
-      </h2>
-      
-      <div className="flex bg-[#0d1117] border border-slate-700 rounded-lg p-1.5 mb-8 gap-1">
+
+    <div className="rounded-lg shadow-xl border border-secondary border-opacity-25 p-4 md:p-8 max-w-4xl mx-auto animate-fadeIn mb-10" style={{ backgroundColor: '#161b22' }}>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2 className="text-xl font-bold text-white tracking-tight mb-0">
+          {alumno ? 'Edición de Alumno' : 'Nuevo Alumno'}
+        </h2>
+        <button onClick={onCancel} className="btn-close btn-close-white"></button>
+      </div>
+
+      <div className="d-flex p-1 rounded mb-4" style={{ backgroundColor: '#0d1117', gap: '4px' }}>
         {['basica', 'medica', 'administrativa'].map((tab) => (
-          <button 
+          <button
             key={tab}
             type="button"
             onClick={() => setActiveTab(tab as Tab)}
-            className={`flex-1 py-3 px-4 text-xs font-bold rounded-md transition-all uppercase tracking-wide ${
-              activeTab === tab 
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' 
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
-            }`}
+            className={`flex-fill btn border-0 py-2 px-3 rounded transition-all fw-bold text-uppercase tracking-wide`}
+            style={{
+              backgroundColor: activeTab === tab ? '#1f6feb' : 'transparent',
+              color: activeTab === tab ? '#ffffff' : '#8b949e',
+              fontSize: '11px'
+            }}
           >
             {tab === 'basica' ? 'Información Básica' : tab === 'medica' ? 'Información Médica' : 'Administrativa'}
           </button>
         ))}
       </div>
 
-      <div className="min-h-[300px]">
+      <div className="min-h-[300px]" style={{ color: '#c9d1d9' }}>
         {renderTabContent()}
       </div>
 
-      <div className="flex justify-between items-center mt-10 pt-6">
-        <button type="button" onClick={onCancel} className="px-6 py-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors font-semibold text-xs">
+      <div className="d-flex justify-content-between align-items-center mt-5 pt-4 border-top border-secondary border-opacity-25">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="btn btn-sm px-4 text-secondary hover-text-white border-0 bg-transparent"
+          style={{ fontSize: '13px', fontWeight: '600' }}
+        >
           Cancelar
         </button>
-        
-        <div className="flex gap-4">
+
+        <div className="d-flex gap-3">
           {activeTab !== 'basica' && (
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={() => setActiveTab(activeTab === 'administrativa' ? 'medica' : 'basica')}
-              className="px-6 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white hover:bg-slate-700 font-semibold text-xs"
+              className="btn btn-sm px-4 btn-outline-secondary text-white border-secondary border-opacity-50"
+              style={{ fontSize: '13px', fontWeight: '600' }}
             >
               Anterior
             </button>
           )}
-          <button 
+          <button
             type="button"
-            className="px-8 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-all font-bold text-xs shadow-lg shadow-blue-500/20"
+            className="btn btn-sm px-5 btn-primary fw-bold"
+            style={{ backgroundColor: '#1f6feb', borderColor: '#1f6feb', fontSize: '13px' }}
             onClick={() => {
-               if (activeTab === 'basica') setActiveTab('medica');
-               else if (activeTab === 'medica') setActiveTab('administrativa');
-               else handleSave();
+              if (activeTab === 'basica') setActiveTab('medica');
+              else if (activeTab === 'medica') setActiveTab('administrativa');
+              else handleSave();
             }}
           >
             {activeTab === 'administrativa' ? (alumno ? 'Guardar Cambios' : 'Guardar Alumno') : 'Siguiente'}

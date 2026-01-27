@@ -19,16 +19,16 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
     try {
       const user = await apiService.login(username, password);
-      
+
       // Guardar datos del usuario en localStorage
       localStorage.setItem('user', JSON.stringify(user));
       localStorage.setItem('userRole', user.role || 'User');
       localStorage.setItem('userName', user.nombre || username);
-      
+
       if (rememberMe) {
         localStorage.setItem('rememberMe', 'true');
       }
-      
+
       onLoginSuccess();
     } catch (err: any) {
       const errorMessage = err.message || 'Error de conexión. Por favor, intenta nuevamente.';
@@ -118,8 +118,8 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
               </div>
 
               <div className="d-grid">
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="btn-login"
                   disabled={loading}
                 >

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 
 const CalendarManagement: React.FC = () => {
   const [viewType, setViewType] = useState<'Mes' | 'Semana' | 'Día' | 'Agenda'>('Mes');
-  
+
   const stats = [
     { label: 'Total Eventos', value: '0', sub: 'Entrenamientos y juegos', icon: 'fa-calendar' },
     { label: 'Próximos Entrenamientos', value: '0', sub: 'Programados', icon: 'fa-running' },
@@ -11,7 +11,7 @@ const CalendarManagement: React.FC = () => {
   ];
 
   const daysOfWeek = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-  
+
   // Simulated grid for January 2026
   const calendarGrid = [
     [28, 29, 30, 31, 1, 2, 3],
@@ -22,95 +22,123 @@ const CalendarManagement: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-6 animate-fadeIn">
-      <div className="flex flex-col gap-1">
-        <h2 className="text-2xl font-bold">Calendario</h2>
-        <p className="text-sm text-slate-400">Vista de entrenamientos y juegos programados</p>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {stats.map((stat, i) => (
-          <div key={i} className="bg-[#111827] border border-slate-800 p-5 rounded-lg relative overflow-hidden">
-            <div className="flex flex-col">
-              <p className="text-[10px] text-slate-400 font-bold mb-1 uppercase tracking-tight">{stat.label}</p>
-              <h3 className="text-2xl font-bold">{stat.value}</h3>
-              <p className="text-[10px] text-slate-500 mt-1">{stat.sub}</p>
-            </div>
-            <i className={`fas ${stat.icon} absolute right-4 top-4 text-slate-700/30 text-xl`}></i>
-          </div>
-        ))}
-      </div>
-
-      {/* Legend */}
-      <div className="bg-[#111827] border border-slate-800 rounded-lg p-5">
-        <h4 className="text-xs font-bold text-slate-400 uppercase mb-3">Leyenda</h4>
-        <div className="flex gap-6">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-emerald-500"></div>
-            <span className="text-xs font-semibold text-slate-300">Entrenamientos</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-orange-500"></div>
-            <span className="text-xs font-semibold text-slate-300">Juegos</span>
+    <div className="animate-fadeIn" style={{ backgroundColor: '#0d1117', minHeight: '80vh' }}>
+      <div className="max-w-7xl mx-auto px-4 py-4 d-flex flex-column gap-4">
+        <div className="d-flex justify-content-between align-items-end mb-2">
+          <div>
+            <h2 className="mb-1 text-white fw-bold h4">Calendario de Actividades</h2>
+            <p className="text-secondary mb-0 small">Visualización mensual de entrenamientos y encuentros deportivos</p>
           </div>
         </div>
-      </div>
 
-      {/* Calendar View */}
-      <div className="bg-[#111827] border border-slate-800 rounded-lg overflow-hidden shadow-2xl">
-        <div className="p-5 border-b border-slate-800 bg-slate-900/30">
-          <h3 className="text-sm font-bold">Calendario de Eventos</h3>
-          <p className="text-[10px] text-slate-500 mt-1">Haz clic en un evento para ver sus detalles</p>
+        {/* Stats Cards */}
+        <div className="row g-3 mb-4">
+          {stats.map((stat, i) => (
+            <div key={i} className="col-12 col-md-4">
+              <div className="card h-100 border-0 shadow-sm" style={{ backgroundColor: '#161b22' }}>
+                <div className="card-body d-flex justify-content-between align-items-start p-3">
+                  <div>
+                    <p className="text-secondary small fw-bold mb-1 text-uppercase" style={{ fontSize: '10px' }}>{stat.label}</p>
+                    <h4 className="fw-bold mb-0 text-white font-monospace">{stat.value}</h4>
+                    <small className="text-secondary opacity-50" style={{ fontSize: '10px' }}>{stat.sub}</small>
+                  </div>
+                  <div className="p-2 bg-primary bg-opacity-10 rounded text-primary border border-primary border-opacity-10">
+                    <i className={`fas ${stat.icon} fs-6`}></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
 
-        <div className="p-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-            <div className="flex items-center gap-1">
-              <button className="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1 text-[11px] font-bold rounded border border-slate-700">Hoy</button>
-              <button className="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1 text-[11px] font-bold rounded border border-slate-700">Anterior</button>
-              <button className="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1 text-[11px] font-bold rounded border border-slate-700">Siguiente</button>
+        {/* Legend & Controls */}
+        <div className="card mb-4 border-0" style={{ backgroundColor: '#161b22' }}>
+          <div className="card-body p-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div className="d-flex gap-4">
+              <div className="d-flex align-items-center gap-2">
+                <div className="rounded-circle" style={{ width: '8px', height: '8px', backgroundColor: '#10b981' }}></div>
+                <span className="text-secondary fw-bold" style={{ fontSize: '11px' }}>Entrenamientos</span>
+              </div>
+              <div className="d-flex align-items-center gap-2">
+                <div className="rounded-circle" style={{ width: '8px', height: '8px', backgroundColor: '#f59e0b' }}></div>
+                <span className="text-secondary fw-bold" style={{ fontSize: '11px' }}>Juegos</span>
+              </div>
             </div>
-            
-            <h4 className="text-base font-bold">Enero 2026</h4>
 
-            <div className="flex items-center bg-slate-900 border border-slate-700 rounded p-1">
+            <div className="btn-group btn-group-sm bg-[#0d1117] p-1 rounded border border-secondary border-opacity-25">
               {['Mes', 'Semana', 'Día', 'Agenda'].map(type => (
-                <button 
+                <button
                   key={type}
                   onClick={() => setViewType(type as any)}
-                  className={`px-4 py-1 text-[11px] font-bold rounded transition-all ${viewType === type ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-white'}`}
+                  className={`btn btn-sm border-0 px-3 fw-bold ${viewType === type ? 'btn-primary shadow-sm' : 'btn-link text-secondary text-decoration-none'}`}
+                  style={viewType === type ? { backgroundColor: '#1f6feb' } : {}}
                 >
                   {type}
                 </button>
               ))}
             </div>
           </div>
+        </div>
 
-          <div className="border border-slate-800 rounded overflow-hidden">
-            {/* Header Days */}
-            <div className="grid grid-cols-7 bg-slate-900/50 border-b border-slate-800">
-              {daysOfWeek.map(day => (
-                <div key={day} className="py-2 text-center text-[11px] font-bold text-slate-400 border-r border-slate-800 last:border-0">
-                  {day}
+        {/* Calendar View */}
+        <div className="card border-0 shadow-lg overflow-hidden" style={{ backgroundColor: '#0f1419' }}>
+          <div className="card-header bg-transparent border-bottom border-secondary border-opacity-25 p-4 py-3">
+            <div className="d-flex justify-content-between align-items-center">
+              <div className="d-flex align-items-center gap-3">
+                <h5 className="mb-0 text-white fw-bold fs-6">Enero 2026</h5>
+                <div className="btn-group btn-group-sm">
+                  <button className="btn btn-outline-secondary border-opacity-25 px-2 py-0"><i className="bi bi-chevron-left"></i></button>
+                  <button className="btn btn-outline-secondary border-opacity-25 px-3 py-0 small fw-bold" style={{ fontSize: '11px' }}>Hoy</button>
+                  <button className="btn btn-outline-secondary border-opacity-25 px-2 py-0"><i className="bi bi-chevron-right"></i></button>
                 </div>
-              ))}
-            </div>
-            {/* Calendar Cells */}
-            {calendarGrid.map((week, weekIdx) => (
-              <div key={weekIdx} className="grid grid-cols-7 border-b border-slate-800 last:border-0 min-h-[100px]">
-                {week.map((day, dayIdx) => (
-                  <div 
-                    key={dayIdx} 
-                    className={`p-2 border-r border-slate-800 last:border-0 relative hover:bg-slate-800/20 transition-colors ${day === 21 ? 'bg-blue-900/30' : ''}`}
-                  >
-                    <span className={`text-[10px] font-bold float-right ${dayIdx === 0 || dayIdx === 6 ? 'text-slate-500' : 'text-slate-300'} ${day === 21 ? 'text-blue-400 underline underline-offset-4' : ''}`}>
-                      {day < 10 ? `0${day}` : day}
-                    </span>
-                  </div>
-                ))}
               </div>
-            ))}
+              <span className="text-secondary opacity-75 small" style={{ fontSize: '11px' }}>Vista de {viewType}</span>
+            </div>
+          </div>
+
+          <div className="card-body p-0">
+            <div className="table-responsive">
+              <table className="table table-bordered border-secondary border-opacity-10 mb-0 align-top">
+                <thead style={{ backgroundColor: '#161b22' }}>
+                  <tr>
+                    {daysOfWeek.map(day => (
+                      <th key={day} className="text-center py-2 text-secondary fw-bold border-bottom border-secondary border-opacity-25" style={{ fontSize: '11px', width: '14.28%' }}>
+                        {day}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {calendarGrid.map((week, weekIdx) => (
+                    <tr key={weekIdx} style={{ height: '100px' }}>
+                      {week.map((day, dayIdx) => (
+                        <td
+                          key={dayIdx}
+                          className={`p-2 transition-all hover-bg-dark-lighter border-secondary border-opacity-10 ${day === 21 ? 'bg-primary bg-opacity-5' : ''}`}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          <div className="d-flex justify-content-between align-items-start mb-2">
+                            <span className={`${dayIdx === 0 || dayIdx === 6 ? 'text-secondary opacity-50' : 'text-white'} fw-bold`} style={{ fontSize: '12px' }}>
+                              {day}
+                            </span>
+                          </div>
+                          {day === 21 && (
+                            <div className="d-flex flex-column gap-1">
+                              <div className="badge w-100 text-start bg-success bg-opacity-10 text-success border border-success border-opacity-25 p-1" style={{ fontSize: '9px', fontWeight: 'normal' }}>
+                                <i className="bi bi-person-arms-up me-1"></i> Entren. Sub-15
+                              </div>
+                              <div className="badge w-100 text-start bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 p-1" style={{ fontSize: '9px', fontWeight: 'normal' }}>
+                                <i className="bi bi-trophy me-1"></i> Juego vs Elite
+                              </div>
+                            </div>
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>

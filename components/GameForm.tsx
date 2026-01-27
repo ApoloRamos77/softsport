@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DatePicker from './DatePicker';
+import { apiService, Alumno } from '../services/api';
 
 interface GameFormProps {
   onCancel: () => void;
@@ -13,12 +14,7 @@ interface Categoria {
   nombre: string;
 }
 
-interface Alumno {
-  id: number;
-  nombre: string;
-  apellido: string;
-  categoriaId?: number;
-}
+// Alumno interface is now imported from ../services/api
 
 const GameForm: React.FC<GameFormProps> = ({ onCancel, onSubmit, initialData, isEditing = false }) => {
   const [isHomeGame, setIsHomeGame] = useState(true);
@@ -39,17 +35,20 @@ const GameForm: React.FC<GameFormProps> = ({ onCancel, onSubmit, initialData, is
   const [showAlumnoSelector, setShowAlumnoSelector] = useState(false);
 
   useEffect(() => {
-    // Cargar categorías
-    fetch('http://localhost:5081/api/categorias')
-      .then(res => res.json())
-      .then(data => setCategorias(data))
-      .catch(err => console.error('Error cargando categorías:', err));
-
-    // Cargar alumnos
-    fetch('http://localhost:5081/api/alumnos')
-      .then(res => res.json())
-      .then(data => setAlumnos(data))
-      .catch(err => console.error('Error cargando alumnos:', err));
+    // Cargar categorías y alumnos usando apiService
+    const loadData = async () => {
+      try {
+        const [catsData, alumnosData] = await Promise.all([
+          apiService.getAll<Categoria>('categorias'),
+          apiService.getAll<Alumno>('alumnos')
+        ]);
+        setCategorias(catsData);
+        setAlumnos(alumnosData);
+      } catch (err) {
+        console.error('Error cargando datos para el formulario:', err);
+      }
+    };
+    loadData();
 
     // Si hay datos iniciales (edición), cargarlos
     if (initialData) {
@@ -81,7 +80,7 @@ const GameForm: React.FC<GameFormProps> = ({ onCancel, onSubmit, initialData, is
       filtered = filtered.filter(a => a.categoriaId === categoriaId);
     }
     if (searchTerm) {
-      filtered = filtered.filter(a => 
+      filtered = filtered.filter(a =>
         `${a.nombre} ${a.apellido}`.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
@@ -110,7 +109,7 @@ const GameForm: React.FC<GameFormProps> = ({ onCancel, onSubmit, initialData, is
     let hours = parseInt(hour);
     if (period === 'PM' && hours !== 12) hours += 12;
     if (period === 'AM' && hours === 12) hours = 0;
-    
+
     const gameDateTime = new Date(gameDate);
     gameDateTime.setHours(hours, parseInt(minute), 0);
 
@@ -139,239 +138,241 @@ const GameForm: React.FC<GameFormProps> = ({ onCancel, onSubmit, initialData, is
 
   const getAlumnoNombre = (alumnoId: number) => {
     const alumno = alumnos.find(a => a.id === alumnoId);
-    return alumno ? `${alumno.nombre} ${alumno.apellido}` : '';
+    if (!alumno) return '';
+    const nombre = (alumno as any).Nombre || alumno.nombre;
+    const apellido = (alumno as any).Apellido || alumno.apellido;
+    return `${nombre} ${apellido}`;
   };
 
   return (
-    <div className="max-w-2xl mx-auto bg-[#0d1117] rounded-lg shadow-2xl border border-slate-800 overflow-hidden animate-fadeIn">
-      <div className="p-8 space-y-6">
-        <div>
-          <h2 className="text-xl font-bold text-white">{isEditing ? 'Editar Juego' : 'Crear Nuevo Juego'}</h2>
-          <p className="text-[11px] text-slate-500 mt-1">Completa la información del juego programado</p>
-        </div>
+    <div className="animate-fadeIn" style={{ backgroundColor: '#0d1117', minHeight: '80vh', padding: '20px 0' }}>
+      <div className="max-w-2xl mx-auto bg-[#161b22] rounded-xl shadow-2xl border border-secondary border-opacity-10 overflow-hidden">
+        <div className="p-5 p-md-5 space-y-6">
+          <div>
+            <h2 className="text-xl font-bold text-white mb-1">{isEditing ? 'Editar Juego' : 'Crear Nuevo Juego'}</h2>
+            <p className="text-[11px] text-secondary">Completa la información del juego programado</p>
+          </div>
 
-        <form className="space-y-5" onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-[13px] font-bold text-slate-300">Fecha</label>
-              <DatePicker 
-                value={gameDate}
-                onChange={setGameDate}
-                placeholder="Seleccionar fecha"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-[13px] font-bold text-slate-300">Hora</label>
-              <div className="flex items-center gap-2">
-                <select 
-                  className="form-input-dark p-2.5 rounded-md border border-slate-800 text-white text-sm bg-[#111827] flex-1"
-                  value={hour}
-                  onChange={(e) => setHour(e.target.value)}
-                >
-                  <option>--</option>
-                  {[...Array(12)].map((_, i) => <option key={i} value={i + 1}>{i + 1}</option>)}
-                </select>
-                <span className="text-slate-500 self-center">:</span>
-                <select 
-                  className="form-input-dark p-2.5 rounded-md border border-slate-800 text-white text-sm bg-[#111827] flex-1"
-                  value={minute}
-                  onChange={(e) => setMinute(e.target.value)}
-                >
-                  <option>--</option>
-                  {['00', '15', '30', '45'].map(m => <option key={m} value={m}>{m}</option>)}
-                </select>
-                <select 
-                  className="form-input-dark p-2.5 rounded-md border border-slate-800 text-white text-sm bg-[#111827] w-20"
-                  value={period}
-                  onChange={(e) => setPeriod(e.target.value)}
-                >
-                  <option>AM</option>
-                  <option>PM</option>
-                </select>
+          <form className="space-y-5" onSubmit={handleSubmit}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-secondary small fw-bold mb-0 d-block text-uppercase" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Fecha</label>
+                <DatePicker
+                  value={gameDate}
+                  onChange={setGameDate}
+                  placeholder="Seleccionar fecha"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-secondary small fw-bold mb-0 d-block text-uppercase" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Hora</label>
+                <div className="flex items-center gap-2">
+                  <select
+                    className="form-input-dark p-2.5 rounded-md border border-slate-800 text-white text-sm bg-[#111827] flex-1"
+                    value={hour}
+                    onChange={(e) => setHour(e.target.value)}
+                  >
+                    <option>--</option>
+                    {[...Array(12)].map((_, i) => <option key={i} value={i + 1}>{i + 1}</option>)}
+                  </select>
+                  <span className="text-slate-500 self-center">:</span>
+                  <select
+                    className="form-input-dark p-2.5 rounded-md border border-slate-800 text-white text-sm bg-[#111827] flex-1"
+                    value={minute}
+                    onChange={(e) => setMinute(e.target.value)}
+                  >
+                    <option>--</option>
+                    {['00', '15', '30', '45'].map(m => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                  <select
+                    className="form-input-dark p-2.5 rounded-md border border-slate-800 text-white text-sm bg-[#111827] w-20"
+                    value={period}
+                    onChange={(e) => setPeriod(e.target.value)}
+                  >
+                    <option>AM</option>
+                    <option>PM</option>
+                  </select>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-slate-300">Categoría</label>
-            <select 
-              className="form-input-dark p-2.5 rounded-md border border-slate-800 text-slate-400 w-full text-sm appearance-none bg-[#111827]"
-              value={categoriaId || ''}
-              onChange={(e) => setCategoriaId(e.target.value ? parseInt(e.target.value) : null)}
-            >
-              <option value="">Selecciona una categoría</option>
-              {categorias.map(cat => (
-                <option key={cat.id} value={cat.id} className="text-white">{cat.nombre}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="bg-[#111827] border border-slate-800 rounded-lg p-4 flex items-center justify-between">
-            <div className="space-y-0.5">
-              <p className="text-sm font-bold text-white">Juego de Local</p>
-              <p className="text-[11px] text-slate-500">¿Este juego es en casa?</p>
-            </div>
-            <button 
-              type="button"
-              onClick={() => setIsHomeGame(!isHomeGame)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${isHomeGame ? 'bg-blue-600' : 'bg-slate-700'}`}
-            >
-              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isHomeGame ? 'translate-x-6' : 'translate-x-1'}`} />
-            </button>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-slate-300">Equipo Local</label>
-            <input
-              type="text"
-              className="form-input-dark p-2.5 rounded-md border border-slate-800 text-white w-full text-sm bg-[#111827]"
-              value={equipoLocal}
-              onChange={(e) => setEquipoLocal(e.target.value)}
-              placeholder="ADHSOFT SPORT"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-slate-300">Equipo Visitante</label>
-            <input
-              type="text"
-              className="form-input-dark p-2.5 rounded-md border border-slate-800 text-white w-full text-sm bg-[#111827] placeholder:text-slate-500"
-              value={equipoVisitante}
-              onChange={(e) => setEquipoVisitante(e.target.value)}
-              placeholder="Nombre del equipo visitante"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-slate-300">Ubicación</label>
-            <div className="relative">
-              <svg 
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
+            <div className="space-y-2">
+              <label className="text-secondary small fw-bold mb-0 d-block text-uppercase" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Categoría</label>
+              <select
+                className="form-select border-secondary border-opacity-25 text-white w-full text-sm bg-[#0d1117] p-2.5"
+                value={categoriaId || ''}
+                onChange={(e) => setCategoriaId(e.target.value ? parseInt(e.target.value) : null)}
+                style={{ backgroundColor: '#0d1117', color: 'white' }}
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
+                <option value="" style={{ backgroundColor: '#0d1117' }}>Selecciona una categoría</option>
+                {categorias.map(cat => (
+                  <option key={cat.id} value={cat.id} style={{ backgroundColor: '#0d1117' }}>{cat.nombre}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="bg-[#0d1117] border border-secondary border-opacity-25 rounded-lg p-3 flex items-center justify-between">
+              <div className="space-y-0.5">
+                <p className="text-sm font-bold text-white mb-0">Juego de Local</p>
+                <p className="text-[11px] text-secondary mb-0">¿Este juego es en casa?</p>
+              </div>
+              <div className="form-check form-switch m-0">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  role="switch"
+                  checked={isHomeGame}
+                  onChange={() => setIsHomeGame(!isHomeGame)}
+                  style={{ cursor: 'pointer' }}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-secondary small fw-bold mb-0 d-block text-uppercase" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Equipo Local</label>
               <input
                 type="text"
-                className="form-input-dark p-2.5 pl-10 rounded-md border border-slate-800 text-white w-full text-sm bg-[#111827] placeholder:text-slate-500"
-                value={ubicacion}
-                onChange={(e) => setUbicacion(e.target.value)}
-                placeholder="Nombre del lugar del juego"
+                className="form-control border-secondary border-opacity-25 text-white w-full text-sm bg-[#0d1117]"
+                value={equipoLocal}
+                onChange={(e) => setEquipoLocal(e.target.value)}
+                placeholder="ADHSOFT SPORT"
               />
             </div>
-          </div>
 
-          <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-slate-300">Observaciones</label>
-            <textarea
-              className="form-input-dark p-2.5 rounded-md border border-slate-800 text-white w-full text-sm bg-[#111827] placeholder:text-slate-500 min-h-[100px]"
-              value={observaciones}
-              onChange={(e) => setObservaciones(e.target.value)}
-              placeholder="Observaciones adicionales del juego"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-[13px] font-bold text-slate-300">
-                Convocatoria <span className="text-red-500">*</span>
-              </label>
-              <button
-                type="button"
-                onClick={() => setShowAlumnoSelector(!showAlumnoSelector)}
-                className="text-xs text-blue-400 hover:text-blue-300"
-              >
-                {showAlumnoSelector ? 'Ocultar selección' : 'Seleccionar alumnos'}
-              </button>
+            <div className="space-y-2">
+              <label className="text-secondary small fw-bold mb-0 d-block text-uppercase" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Equipo Visitante</label>
+              <input
+                type="text"
+                className="form-control border-secondary border-opacity-25 text-white w-full text-sm bg-[#0d1117] placeholder-secondary"
+                value={equipoVisitante}
+                onChange={(e) => setEquipoVisitante(e.target.value)}
+                placeholder="Nombre del equipo visitante"
+              />
             </div>
-            <p className="text-[11px] text-slate-500">Selecciona al menos un alumno convocado para este juego</p>
-            
-            {selectedAlumnos.length === 0 && (
-              <div className="flex items-center gap-2 text-red-500 text-sm bg-red-500/10 border border-red-500/30 rounded-md p-3">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                Debes convocar al menos un alumno
-              </div>
-            )}
 
-            {showAlumnoSelector && (
-              <div className="bg-[#111827] border border-slate-800 rounded-lg p-4 space-y-3">
+            <div className="space-y-2">
+              <label className="text-secondary small fw-bold mb-0 d-block text-uppercase" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Ubicación</label>
+              <div className="position-relative">
+                <i className="bi bi-geo-alt position-absolute text-secondary" style={{ left: '0.75rem', top: '50%', transform: 'translateY(-50%)' }}></i>
                 <input
                   type="text"
-                  placeholder="Buscar alumno..."
-                  className="form-input-dark p-2 rounded-md border border-slate-800 text-white w-full text-sm bg-[#0d1117]"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="form-control border-secondary border-opacity-25 text-white w-full text-sm bg-[#0d1117] placeholder-secondary"
+                  style={{ paddingLeft: '2.5rem' }}
+                  value={ubicacion}
+                  onChange={(e) => setUbicacion(e.target.value)}
+                  placeholder="Nombre del lugar del juego"
                 />
-                <div className="max-h-60 overflow-y-auto space-y-2">
-                  {filteredAlumnos.length === 0 ? (
-                    <p className="text-sm text-slate-500 text-center py-4">
-                      {categoriaId ? 'No hay alumnos en esta categoría' : 'Selecciona una categoría primero'}
-                    </p>
-                  ) : (
-                    filteredAlumnos.map(alumno => (
-                      <label
-                        key={alumno.id}
-                        className="flex items-center gap-3 p-2 hover:bg-slate-800/50 rounded cursor-pointer"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedAlumnos.includes(alumno.id)}
-                          onChange={() => toggleAlumno(alumno.id)}
-                          className="w-4 h-4 rounded border-slate-600 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 bg-slate-700"
-                        />
-                        <span className="text-sm text-white">{alumno.nombre} {alumno.apellido}</span>
-                      </label>
-                    ))
-                  )}
-                </div>
               </div>
-            )}
+            </div>
 
-            {selectedAlumnos.length > 0 && (
-              <div className="bg-[#111827] border border-slate-800 rounded-lg p-4">
-                <p className="text-xs text-slate-400 mb-2">{selectedAlumnos.length} alumno(s) seleccionado(s):</p>
-                <div className="flex flex-wrap gap-2">
-                  {selectedAlumnos.map(alumnoId => (
-                    <span
-                      key={alumnoId}
-                      className="inline-flex items-center gap-1 px-2 py-1 bg-blue-600/20 border border-blue-500/30 rounded text-xs text-blue-300"
-                    >
-                      {getAlumnoNombre(alumnoId)}
-                      <button
-                        type="button"
-                        onClick={() => toggleAlumno(alumnoId)}
-                        className="hover:text-blue-100"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
+            <div className="space-y-2">
+              <label className="text-secondary small fw-bold mb-0 d-block text-uppercase" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Observaciones</label>
+              <textarea
+                className="form-control border-secondary border-opacity-25 text-white w-full text-sm bg-[#0d1117] placeholder-secondary min-h-[80px]"
+                value={observaciones}
+                onChange={(e) => setObservaciones(e.target.value)}
+                placeholder="Notas adicionales..."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-[13px] font-bold text-slate-300">
+                  Convocatoria <span className="text-red-500">*</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowAlumnoSelector(!showAlumnoSelector)}
+                  className="text-xs text-blue-400 hover:text-blue-300"
+                >
+                  {showAlumnoSelector ? 'Ocultar selección' : 'Seleccionar alumnos'}
+                </button>
               </div>
-            )}
-          </div>
+              <p className="text-[11px] text-slate-500">Selecciona al menos un alumno convocado para este juego</p>
 
-          <div className="flex justify-end items-center gap-4 pt-4">
-            <button 
-              type="button" 
-              onClick={onCancel}
-              className="px-6 py-2 text-sm font-bold text-white hover:bg-slate-800 border border-slate-800 rounded-md transition-colors"
-            >
-              Cancelar
-            </button>
-            <button 
-              type="submit" 
-              className="px-8 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-all font-bold text-sm"
-            >
-              {isEditing ? 'Guardar Cambios' : 'Crear Juego'}
-            </button>
-          </div>
-        </form>
+              {selectedAlumnos.length === 0 && (
+                <div className="flex items-center gap-2 text-red-500 text-sm bg-red-500/10 border border-red-500/30 rounded-md p-3">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  Debes convocar al menos un alumno
+                </div>
+              )}
+
+              {showAlumnoSelector && (
+                <div className="bg-[#111827] border border-slate-800 rounded-lg p-4 space-y-3">
+                  <input
+                    type="text"
+                    placeholder="Buscar alumno..."
+                    className="form-input-dark p-2 rounded-md border border-slate-800 text-white w-full text-sm bg-[#0d1117]"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  <div className="max-h-60 overflow-y-auto space-y-2">
+                    {filteredAlumnos.length === 0 ? (
+                      <p className="text-sm text-slate-500 text-center py-4">
+                        {categoriaId ? 'No hay alumnos en esta categoría' : 'Selecciona una categoría primero'}
+                      </p>
+                    ) : (
+                      filteredAlumnos.map(alumno => (
+                        <label
+                          key={alumno.id}
+                          className="flex items-center gap-3 p-2 hover:bg-slate-800/50 rounded cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedAlumnos.includes(alumno.id)}
+                            onChange={() => toggleAlumno(alumno.id)}
+                            className="w-4 h-4 rounded border-secondary border-opacity-30 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 bg-[#0d1117]"
+                          />
+                          <span className="text-sm text-white">{(alumno as any).Nombre || alumno.nombre} {(alumno as any).Apellido || alumno.apellido}</span>
+                        </label>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {selectedAlumnos.length > 0 && (
+                <div className="bg-[#111827] border border-slate-800 rounded-lg p-4">
+                  <p className="text-xs text-slate-400 mb-2">{selectedAlumnos.length} alumno(s) seleccionado(s):</p>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedAlumnos.map(alumnoId => (
+                      <span
+                        key={alumnoId}
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-blue-600/20 border border-blue-500/30 rounded text-xs text-blue-300"
+                      >
+                        {getAlumnoNombre(alumnoId)}
+                        <button
+                          type="button"
+                          onClick={() => toggleAlumno(alumnoId)}
+                          className="hover:text-blue-100"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end items-center gap-4 pt-4">
+              <button
+                type="button"
+                onClick={onCancel}
+                className="px-6 py-2 text-sm font-bold text-white hover:bg-slate-800 border border-slate-800 rounded-md transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="px-8 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-all font-bold text-sm"
+              >
+                {isEditing ? 'Guardar Cambios' : 'Crear Juego'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

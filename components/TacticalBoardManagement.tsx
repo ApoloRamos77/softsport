@@ -62,129 +62,160 @@ const TacticalBoardManagement: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 animate-fadeIn bg-[#1a1f2e] min-h-screen p-6">
-      {/* Header */}
-      <div className="flex flex-col gap-2">
-        <div className="flex justify-between items-center">
+    <div className="animate-fadeIn" style={{ backgroundColor: '#0d1117', minHeight: '80vh' }}>
+      <div className="max-w-7xl mx-auto px-4 py-4 d-flex flex-column gap-4">
+        <div className="d-flex justify-content-between align-items-end mb-2">
           <div>
-            <h2 className="text-2xl font-bold text-white">Tablero Táctico</h2>
-            <p className="text-sm text-slate-400 mt-1">Gestiona tus jugadas y ejercicios tácticos</p>
+            <h2 className="mb-1 text-white fw-bold h4">Tablero Táctico</h2>
+            <p className="text-secondary mb-0 small">Gestiona tus jugadas y ejercicios tácticos</p>
           </div>
-          <div className="flex gap-3">
-             <button className="bg-[#0d1117] border border-slate-800/50 text-slate-300 px-4 py-2.5 rounded-lg flex items-center gap-2 text-sm font-semibold hover:bg-slate-800/30 transition-all">
-               <i className="fas fa-sync-alt"></i> Regenerar Thumbnails
-             </button>
-             <button 
-               onClick={handleCreate}
-               className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg flex items-center gap-2 text-sm font-semibold transition-all shadow-lg shadow-blue-500/20"
-             >
-               <i className="fas fa-plus"></i> Crear Jugada
-             </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Search and Filters */}
-      <div className="flex gap-4">
-        <div className="relative flex-1">
-          <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
-          <input 
-            type="text" 
-            placeholder="Buscar por nombre..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-[#0d1117] border border-slate-800/50 text-white placeholder-slate-500 pl-11 pr-4 py-3 rounded-lg text-sm focus:outline-none focus:border-blue-500/50 transition-all"
-          />
-        </div>
-        <select className="bg-[#0d1117] border border-slate-800/50 text-white px-4 py-3 rounded-lg text-sm min-w-[220px] focus:outline-none focus:border-blue-500/50 transition-all cursor-pointer">
-          <option>Todas las categorías</option>
-        </select>
-      </div>
-
-      {loading ? (
-        <div className="py-32 flex justify-center">
-          <div className="text-slate-400 text-sm flex items-center gap-3">
-            <i className="fas fa-spinner fa-spin"></i>
-            Cargando jugadas...
-          </div>
-        </div>
-      ) : filteredBoards.length === 0 ? (
-        <div className="py-32 flex flex-col items-center justify-center text-center space-y-5">
-          <div className="w-16 h-16 bg-[#0d1117] border border-slate-800/50 rounded-full flex items-center justify-center">
-            <i className="fas fa-futbol text-slate-600 text-2xl"></i>
-          </div>
-          <div className="space-y-2">
-            <p className="text-slate-400 text-base font-medium">
-              {searchTerm ? 'No se encontraron jugadas con ese nombre' : 'No hay jugadas creadas aún'}
-            </p>
-            {!searchTerm && (
-              <p className="text-slate-600 text-sm">
-                Comienza creando tu primera jugada táctica
-              </p>
-            )}
-          </div>
-          {!searchTerm && (
-            <button 
-              onClick={handleCreate}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 text-sm font-semibold transition-all shadow-lg shadow-blue-500/20 mt-2"
+          <div className="d-flex gap-2">
+            <button
+              className="btn btn-sm d-flex align-items-center gap-2 text-white border-secondary border-opacity-50"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid #30363d' }}
             >
-              <i className="fas fa-plus"></i> Crear primera jugada
+              <i className="bi bi-arrow-clockwise"></i> Regenerar Thumbnails
             </button>
-          )}
+            <button
+              onClick={handleCreate}
+              className="btn btn-primary d-flex align-items-center gap-2 px-3"
+              style={{ backgroundColor: '#1f6feb', borderColor: '#1f6feb', fontWeight: '600' }}
+            >
+              <i className="bi bi-plus-lg"></i> Crear Jugada
+            </button>
+          </div>
         </div>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
-          {filteredBoards.map((board) => {
-            const data = board.data ? JSON.parse(board.data) : null;
-            const thumbnail = data?.thumbnail || data?.steps?.[0];
-            
-            return (
-              <div 
-                key={board.id} 
-                className="bg-[#0d1117] border border-slate-800/50 rounded-xl overflow-hidden hover:border-blue-500/40 transition-all group cursor-pointer shadow-lg hover:shadow-xl"
-              >
-                <div className="aspect-video bg-gradient-to-br from-emerald-600 to-emerald-700 flex items-center justify-center relative overflow-hidden">
-                  {thumbnail ? (
-                    <img src={thumbnail} alt={board.nombre} className="w-full h-full object-cover" />
-                  ) : (
-                    <i className="fas fa-futbol text-emerald-400/20 text-5xl"></i>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center gap-3">
+
+        {/* Search and Filters */}
+        <div className="card border-0 shadow-sm mb-4" style={{ backgroundColor: '#161b22' }}>
+          <div className="card-body p-3">
+            <div className="d-flex gap-3 flex-wrap">
+              <div className="flex-grow-1 position-relative">
+                <i className="bi bi-search position-absolute text-secondary" style={{ left: '12px', top: '50%', transform: 'translateY(-50%)' }}></i>
+                <input
+                  type="text"
+                  placeholder="Buscar por nombre..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="form-control border-secondary border-opacity-25 text-white placeholder-secondary ps-5"
+                  style={{ backgroundColor: '#0d1117' }}
+                />
+              </div>
+              <select className="form-select border-secondary border-opacity-25 text-white" style={{ backgroundColor: '#0d1117', maxWidth: '250px' }}>
+                <option>Todas las categorías</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="d-flex justify-content-center py-5">
+            <div className="spinner-border text-primary me-2" role="status"></div>
+            <span className="text-secondary align-self-center">Cargando jugadas...</span>
+          </div>
+        ) : filteredBoards.length === 0 ? (
+          <div className="text-center py-5 card border-0" style={{ backgroundColor: '#161b22' }}>
+            <div className="card-body">
+              <div className="d-flex flex-column align-items-center">
+                <i className="bi bi-heptagon text-secondary display-4 mb-3"></i>
+                <p className="text-secondary fw-medium mb-1">
+                  {searchTerm ? 'No se encontraron jugadas con ese nombre' : 'No hay jugadas creadas aún'}
+                </p>
+                {!searchTerm && (
+                  <>
+                    <p className="text-muted small mb-3">Comienza creando tu primera jugada táctica</p>
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEdit(board);
-                      }}
-                      className="bg-blue-600 hover:bg-blue-700 text-white w-10 h-10 rounded-lg flex items-center justify-center transition-all transform hover:scale-110 shadow-lg"
+                      onClick={handleCreate}
+                      className="btn btn-primary btn-sm"
+                      style={{ backgroundColor: '#1f6feb' }}
                     >
-                      <i className="fas fa-edit text-sm"></i>
+                      Crear primera jugada
                     </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        board.id && handleDelete(board.id);
-                      }}
-                      className="bg-red-600 hover:bg-red-700 text-white w-10 h-10 rounded-lg flex items-center justify-center transition-all transform hover:scale-110 shadow-lg"
-                    >
-                      <i className="fas fa-trash text-sm"></i>
-                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="row g-4">
+            {filteredBoards.map((board) => {
+              const data = board.data ? JSON.parse(board.data) : null;
+              const thumbnail = data?.thumbnail || data?.steps?.[0];
+
+              return (
+                <div key={board.id} className="col-12 col-sm-6 col-lg-4 col-xl-3">
+                  <div
+                    className="card h-100 border-secondary border-opacity-25 overflow-hidden shadow-sm hover-shadow transition-all"
+                    style={{ backgroundColor: '#0d1117', cursor: 'pointer' }}
+                    onClick={() => handleEdit(board)}
+                  >
+                    <div className="ratio ratio-16x9 position-relative overflow-hidden" style={{ backgroundColor: '#10b981' }}>
+                      {thumbnail ? (
+                        <img src={thumbnail} alt={board.nombre} className="w-100 h-100 object-fit-cover" />
+                      ) : (
+                        <div className="d-flex align-items-center justify-content-center w-100 h-100 bg-success bg-gradient">
+                          <i className="bi bi-card-image text-white display-4 opacity-50"></i>
+                        </div>
+                      )}
+
+                      {/* Hover Actions Overlay */}
+                      <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center gap-2 opacity-0 hover-opacity-100 transition-opacity" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                        {/* Note: The hover effect needs CSS support or we rely on always visible buttons if hover fails. 
+                           For reliability, we can make this 'group-hover' equivalent via CSS or just have buttons visible on card footer.
+                           Let's put actions in the footer for better mobile support too.
+                       */}
+                      </div>
+                    </div>
+
+                    <div className="card-body p-3 d-flex justify-content-between align-items-start">
+                      <div className="overflow-hidden me-2">
+                        <h5 className="card-title text-white h6 mb-1 text-truncate">{board.nombre}</h5>
+                        <p className="card-text text-secondary small mb-0">
+                          {board.createdAt ? new Date(board.createdAt).toLocaleDateString('es-ES', {
+                            day: 'numeric', month: 'short', year: 'numeric'
+                          }) : 'Sin fecha'}
+                        </p>
+                      </div>
+                      <div className="dropdown" onClick={(e) => e.stopPropagation()}>
+                        <button className="btn btn-link text-secondary p-0" type="button" data-bs-toggle="dropdown">
+                          <i className="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul className="dropdown-menu dropdown-menu-dark">
+                          <li><button className="dropdown-item" onClick={() => handleEdit(board)}><i className="bi bi-pencil me-2"></i>Editar</button></li>
+                          <li><button className="dropdown-item text-danger" onClick={() => board.id && handleDelete(board.id)}><i className="bi bi-trash me-2"></i>Eliminar</button></li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    <div className="card-footer p-2 bg-transparent border-top border-secondary border-opacity-10 d-flex justify-content-end gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(board);
+                        }}
+                        className="btn btn-sm btn-outline-primary border-0"
+                        title="Editar"
+                      >
+                        <i className="bi bi-pencil"></i>
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          board.id && handleDelete(board.id);
+                        }}
+                        className="btn btn-sm btn-outline-danger border-0"
+                        title="Eliminar"
+                      >
+                        <i className="bi bi-trash"></i>
+                      </button>
+                    </div>
                   </div>
                 </div>
-                <div className="p-4">
-                  <h3 className="text-sm font-semibold text-white truncate mb-1">{board.nombre}</h3>
-                  <p className="text-xs text-slate-500">
-                    {board.createdAt ? new Date(board.createdAt).toLocaleDateString('es-ES', { 
-                      day: 'numeric', 
-                      month: 'short', 
-                      year: 'numeric' 
-                    }) : 'Sin fecha'}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

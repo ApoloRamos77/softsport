@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { apiService } from '../services/api';
 
 interface ReceiptFormProps {
   recibo?: any;
@@ -49,7 +50,7 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
   useEffect(() => {
     const initializeForm = async () => {
       await Promise.all([loadAlumnos(), loadServicios(), loadProductos()]);
-      
+
       // Si estamos editando, cargar los datos del recibo
       if (recibo && recibo.items) {
         setDestType(recibo.destinatarioType || 'alumnos');
@@ -57,7 +58,7 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
         setDescuentoManual(recibo.descuento || 0);
       }
     };
-    
+
     initializeForm();
   }, []);
 
@@ -67,7 +68,7 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
       const reciboItems: ReciboItem[] = recibo.items.map((item: any) => {
         let nombre = item.nombre || item.descripcion || 'Item';
         let precio = item.precioUnitario || 0;
-        
+
         // Buscar el nombre y precio real del servicio o producto
         if (item.tipo === 'servicio') {
           const servicio = servicios.find(s => s.id === item.itemId);
@@ -88,10 +89,10 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
             }
           }
         }
-        
+
         const cantidad = item.cantidad || 1;
         const subtotal = precio * cantidad;
-        
+
         return {
           tipo: item.tipo,
           itemId: item.itemId,
@@ -107,8 +108,7 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
 
   const loadAlumnos = async () => {
     try {
-      const response = await fetch('http://localhost:5081/api/alumnos');
-      const data = await response.json();
+      const data = await apiService.getAlumnos();
       setAlumnos(data);
     } catch (error) {
       console.error('Error cargando alumnos:', error);
@@ -117,8 +117,7 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
 
   const loadServicios = async () => {
     try {
-      const response = await fetch('http://localhost:5081/api/servicios');
-      const data = await response.json();
+      const data = await apiService.getServicios();
       setServicios(data);
     } catch (error) {
       console.error('Error cargando servicios:', error);
@@ -127,8 +126,7 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
 
   const loadProductos = async () => {
     try {
-      const response = await fetch('http://localhost:5081/api/productos');
-      const data = await response.json();
+      const data = await apiService.getProductos();
       setProductos(data);
     } catch (error) {
       console.error('Error cargando productos:', error);
@@ -214,21 +212,10 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
         reciboData.id = recibo.id;
       }
 
-      const url = isEditMode 
-        ? `http://localhost:5081/api/recibos/${recibo.id}`
-        : 'http://localhost:5081/api/recibos';
-
-      const response = await fetch(url, {
-        method: isEditMode ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(reciboData),
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || `Error al ${isEditMode ? 'actualizar' : 'crear'} el recibo`);
+      if (isEditMode && recibo?.id) {
+        await apiService.updateRecibo(recibo.id, reciboData);
+      } else {
+        await apiService.createRecibo(reciboData);
       }
 
       alert(`Recibo ${isEditMode ? 'actualizado' : 'creado'} exitosamente`);
@@ -240,241 +227,234 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="bg-[#1a2332] rounded-lg shadow-xl border border-slate-700 p-6">
-        <h2 className="text-xl font-bold mb-1 text-white">
-          {isEditMode ? 'Editar Recibo' : 'Crear Nuevo Recibo'}
-        </h2>
-        <p className="text-sm text-slate-400 mb-6">
-          {isEditMode 
-            ? 'Modifica los datos del recibo' 
-            : 'Selecciona destinatarios, agrega servicios/productos y crea recibos individuales'}
-        </p>
-        
-        <form className="space-y-6" onSubmit={handleSubmit}>
-          {/* Destinatarios */}
-          <div className="space-y-3">
-            <label className="text-sm font-bold text-white">Destinatarios</label>
-            <div className="flex flex-col gap-3">
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <div className="relative flex items-center">
-                  <input 
-                    type="radio" 
-                    name="dest" 
-                    checked={destType === 'alumnos'}
-                    onChange={() => setDestType('alumnos')}
-                    className="w-4 h-4 appearance-none border-2 border-blue-500 rounded-full checked:bg-blue-500 checked:border-blue-500 focus:outline-none cursor-pointer"
-                  />
-                  {destType === 'alumnos' && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
-                    </div>
-                  )}
-                </div>
-                <span className="text-sm text-slate-300 group-hover:text-white transition-colors">Alumnos</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <div className="relative flex items-center">
-                  <input 
-                    type="radio" 
-                    name="dest" 
-                    checked={destType === 'grupos'}
-                    onChange={() => setDestType('grupos')}
-                    className="w-4 h-4 appearance-none border-2 border-blue-500 rounded-full checked:bg-blue-500 checked:border-blue-500 focus:outline-none cursor-pointer"
-                  />
-                  {destType === 'grupos' && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
-                    </div>
-                  )}
-                </div>
-                <span className="text-sm text-slate-300 group-hover:text-white transition-colors">Grupos</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <div className="relative flex items-center">
-                  <input 
-                    type="radio" 
-                    name="dest" 
-                    checked={destType === 'categorias'}
-                    onChange={() => setDestType('categorias')}
-                    className="w-4 h-4 appearance-none border-2 border-blue-500 rounded-full checked:bg-blue-500 checked:border-blue-500 focus:outline-none cursor-pointer"
-                  />
-                  {destType === 'categorias' && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
-                    </div>
-                  )}
-                </div>
-                <span className="text-sm text-slate-300 group-hover:text-white transition-colors">Categorías</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <div className="relative flex items-center">
-                  <input 
-                    type="radio" 
-                    name="dest" 
-                    checked={destType === 'todos'}
-                    onChange={() => setDestType('todos')}
-                    className="w-4 h-4 appearance-none border-2 border-blue-500 rounded-full checked:bg-blue-500 checked:border-blue-500 focus:outline-none cursor-pointer"
-                  />
-                  {destType === 'todos' && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
-                    </div>
-                  )}
-                </div>
-                <span className="text-sm text-slate-300 group-hover:text-white transition-colors">Todos los alumnos activos</span>
-              </label>
-            </div>
-            <select 
-              value={selectedAlumnoId}
-              onChange={(e) => setSelectedAlumnoId(e.target.value)}
-              className="bg-[#0f1419] p-3 rounded-md border border-slate-700 text-slate-400 w-full focus:outline-none focus:border-blue-500"
-            >
-              <option value="">Selecciona alumnos</option>
-              {alumnos.map((alumno) => (
-                <option key={alumno.id} value={alumno.id} className="text-white">
-                  {alumno.nombre} {alumno.apellido}
-                </option>
-              ))}
-            </select>
+    <div className="max-w-6xl mx-auto animate-fadeIn mb-10 pb-5">
+      <div className="card shadow-xl border-secondary border-opacity-25 w-100" style={{ backgroundColor: '#161b22' }}>
+        <div className="card-header bg-transparent border-bottom border-secondary border-opacity-10 py-4 px-4 d-flex justify-content-between align-items-center">
+          <div>
+            <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1 d-block">Módulo de Ingresos</label>
+            <h5 className="mb-0 fw-bold text-white tracking-tight">
+              {isEditMode ? 'Editar Comprobante' : 'Nuevo Recibo / Facturador'}
+            </h5>
+            <p className="text-secondary small mb-0">Gestione la emisión de documentos legales y control de caja.</p>
           </div>
+          <button onClick={onCancel} className="btn-close btn-close-white opacity-50 hover-opacity-100"></button>
+        </div>
 
-          {/* Items del Recibo */}
-          <div className="space-y-3">
-            <label className="text-sm font-bold text-white">Ítems del Recibo</label>
-            <div className="grid grid-cols-12 gap-3">
-              <div className="col-span-3">
-                <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Tipo</label>
-                <select 
-                  value={itemType}
-                  onChange={(e) => setItemType(e.target.value)}
-                  className="bg-[#0f1419] p-2.5 rounded-md border border-slate-700 text-white w-full text-sm focus:outline-none focus:border-blue-500"
-                >
-                  <option value="servicio">Servicio</option>
-                  <option value="producto">Producto</option>
-                </select>
-              </div>
-              <div className="col-span-5">
-                <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Ítem</label>
-                <select 
-                  value={selectedItemId}
-                  onChange={(e) => setSelectedItemId(e.target.value)}
-                  className="bg-[#0f1419] p-2.5 rounded-md border border-slate-700 text-slate-400 w-full text-sm focus:outline-none focus:border-blue-500"
-                >
-                  <option value="">
-                    {itemType === 'servicio' ? 'Selecciona servicio' : 'Selecciona producto'}
-                  </option>
-                  {itemType === 'servicio' 
-                    ? servicios.map((servicio) => (
-                        <option key={servicio.id} value={servicio.id} className="text-white">
-                          {servicio.nombre} - ${servicio.precio.toFixed(2)}
-                        </option>
-                      ))
-                    : productos.map((producto) => (
-                        <option key={producto.id} value={producto.id} className="text-white">
-                          {producto.nombre} - ${producto.precio.toFixed(2)}
-                        </option>
-                      ))
-                  }
-                </select>
-              </div>
-              <div className="col-span-2">
-                <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Cantidad</label>
-                <input 
-                  type="number" 
-                  min="1"
-                  value={cantidad}
-                  onChange={(e) => setCantidad(parseInt(e.target.value) || 1)}
-                  className="bg-[#0f1419] p-2.5 rounded-md border border-slate-700 text-white w-full text-sm focus:outline-none focus:border-blue-500"
-                />
-              </div>
-              <div className="col-span-2 flex items-end">
-                <button 
-                  type="button"
-                  onClick={handleAgregarItem}
-                  className="w-full p-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors text-sm font-semibold flex items-center justify-center gap-1.5"
-                >
-                  <i className="fas fa-plus text-xs"></i> Agregar
-                </button>
-              </div>
-            </div>
+        <div className="card-body p-4">
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            {/* Main Info Row */}
+            <div className="row g-4">
+              {/* Left Column: Destinatarios */}
+              <div className="col-lg-5">
+                <div className="p-4 rounded-lg border border-secondary border-opacity-10 bg-[#0d1117] bg-opacity-30 h-100">
+                  <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-4 d-block border-bottom border-blue-900 border-opacity-50 pb-2">Destinatario</label>
 
-            {/* Lista de items agregados */}
-            {items.length > 0 && (
-              <div className="mt-4 bg-[#0f1419] border border-slate-700 rounded-md p-3 space-y-2">
-                {items.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between text-sm bg-slate-800/50 p-2 rounded">
-                    <div className="flex-1">
-                      <span className="text-white font-medium">{item.nombre}</span>
-                      <span className="text-slate-400 ml-2">x{item.cantidad}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-white font-semibold">${item.subtotal.toFixed(2)}</span>
-                      <button
-                        type="button"
-                        onClick={() => handleEliminarItem(index)}
-                        className="text-red-400 hover:text-red-300 transition-colors"
+                  <div className="d-flex flex-wrap gap-4 mb-4">
+                    {['alumnos', 'grupos', 'categorias', 'todos'].map((type) => (
+                      <label key={type} className="d-flex align-items-center gap-2 cursor-pointer group">
+                        <input
+                          type="radio"
+                          name="dest"
+                          checked={destType === type}
+                          onChange={() => setDestType(type)}
+                          className="form-check-input bg-transparent border-secondary border-opacity-50 mt-0"
+                        />
+                        <span className="text-[13px] text-secondary group-hover:text-white transition-colors text-capitalize">
+                          {type === 'todos' ? 'Todos' : type}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="text-[11px] font-bold text-slate-400 uppercase mb-2">Selección Específica</label>
+                    <select
+                      value={selectedAlumnoId}
+                      onChange={(e) => setSelectedAlumnoId(e.target.value)}
+                      className="form-select"
+                      disabled={destType === 'todos' || isEditMode}
+                    >
+                      <option value="">{destType === 'alumnos' ? 'Seleccionar alumno...' : 'Seleccionar grupo/cat...'}</option>
+                      {alumnos.map((alumno) => (
+                        <option key={alumno.id} value={alumno.id}>
+                          {alumno.nombre} {alumno.apellido}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-[10px] text-secondary opacity-60 italic mt-2 px-1">
+                      <i className="bi bi-info-circle me-1"></i>
+                      {destType === 'todos' ? 'Se generará un recibo por cada alumno activo.' : 'Elige a quién va dirigido este comprobante.'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Agregar Items */}
+              <div className="col-lg-7">
+                <div className="p-4 rounded-lg border border-secondary border-opacity-10 bg-[#0d1117] bg-opacity-30 h-100">
+                  <label className="text-[10px] font-bold text-green-400 uppercase tracking-widest mb-4 d-block border-bottom border-green-900 border-opacity-30 pb-2">Agregar Conceptos</label>
+
+                  <div className="row g-3 mb-4">
+                    <div className="col-md-3">
+                      <label>Tipo</label>
+                      <select
+                        value={itemType}
+                        onChange={(e) => setItemType(e.target.value)}
+                        className="form-select"
                       >
-                        <i className="fas fa-trash text-xs"></i>
-                      </button>
+                        <option value="servicio">Servicio</option>
+                        <option value="producto">Producto</option>
+                      </select>
+                    </div>
+                    <div className="col-md-6">
+                      <label>Concepto</label>
+                      <select
+                        value={selectedItemId}
+                        onChange={(e) => setSelectedItemId(e.target.value)}
+                        className="form-select"
+                      >
+                        <option value="">{itemType === 'servicio' ? 'Elegir servicio...' : 'Elegir producto...'}</option>
+                        {(itemType === 'servicio' ? servicios : productos).map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.nombre} - ${item.precio.toFixed(2)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="col-md-3">
+                      <label>Cantidad</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={cantidad}
+                        onChange={(e) => setCantidad(parseInt(e.target.value) || 1)}
+                        className="form-control"
+                      />
                     </div>
                   </div>
-                ))}
+
+                  <button
+                    type="button"
+                    onClick={handleAgregarItem}
+                    className="btn btn-primary w-100 fw-bold text-[12px] py-2"
+                    style={{ backgroundColor: '#238636', borderColor: '#2ea043' }}
+                  >
+                    <i className="bi bi-plus-circle me-1"></i> AÑADIR AL RECIBO
+                  </button>
+                </div>
               </div>
-            )}
-          </div>
+            </div>
 
-          {/* Descuento Manual */}
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-white">Descuento Manual (opcional)</label>
-            <input 
-              type="number" 
-              min="0"
-              step="0.01"
-              value={descuentoManual}
-              onChange={(e) => setDescuentoManual(parseFloat(e.target.value) || 0)}
-              className="bg-[#0f1419] p-3 rounded-md border border-slate-700 text-white w-full focus:outline-none focus:border-blue-500"
-            />
-          </div>
+            {/* Table and Summary Row */}
+            <div className="row g-4">
+              {/* Items List Table */}
+              <div className="col-lg-8">
+                <div className="border border-secondary border-opacity-10 rounded-lg overflow-hidden bg-[#0d1117] bg-opacity-20">
+                  <table className="table align-middle mb-0" style={{ fontSize: '13px', borderColor: '#30363d' }}>
+                    <thead style={{ backgroundColor: '#161b22' }}>
+                      <tr>
+                        <th className="ps-4 py-3 text-white border-bottom border-secondary border-opacity-25">Descripción</th>
+                        <th className="py-3 text-white border-bottom border-secondary border-opacity-25">Cant.</th>
+                        <th className="py-3 text-white border-bottom border-secondary border-opacity-25">Precio</th>
+                        <th className="py-3 text-white border-bottom border-secondary border-opacity-25">Subtotal</th>
+                        <th className="text-end pe-4 py-3 text-white border-bottom border-secondary border-opacity-25"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {items.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="text-center py-5 text-secondary">
+                            <i className="bi bi-cart3 d-block h3 opacity-20 mb-2"></i>
+                            No has agregado ítems todavía
+                          </td>
+                        </tr>
+                      ) : (
+                        items.map((item, index) => (
+                          <tr key={index} className="hover-bg-dark-lighter">
+                            <td className="ps-4 border-bottom border-secondary border-opacity-10 py-3">
+                              <span className="fw-bold text-white">{item.nombre}</span>
+                              <br /><small className="text-secondary text-uppercase" style={{ fontSize: '10px' }}>{item.tipo}</small>
+                            </td>
+                            <td className="text-secondary border-bottom border-secondary border-opacity-10 py-3">{item.cantidad}</td>
+                            <td className="text-secondary border-bottom border-secondary border-opacity-10 py-3">${item.precio.toFixed(2)}</td>
+                            <td className="fw-bold text-blue-400 border-bottom border-secondary border-opacity-10 py-3">${item.subtotal.toFixed(2)}</td>
+                            <td className="text-end pe-4 border-bottom border-secondary border-opacity-10 py-3">
+                              <button
+                                type="button"
+                                onClick={() => handleEliminarItem(index)}
+                                className="btn btn-sm text-danger p-0"
+                              >
+                                <i className="bi bi-trash"></i>
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
 
-          {/* Resumen */}
-          <div className="bg-[#0f1419] border border-slate-700 rounded-lg p-5 space-y-2.5">
-            <h3 className="text-base font-bold text-white mb-3">Resumen</h3>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-slate-400">• Ítems: <span className="font-semibold">{items.length}</span></span>
-            </div>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-slate-400">• Subtotal:</span>
-              <span className="text-white font-semibold">${calcularSubtotal().toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-slate-400">• Descuento manual:</span>
-              <span className="text-white font-semibold">${descuentoManual.toFixed(2)}</span>
-            </div>
-            <div className="pt-3 border-t border-slate-700 flex justify-between items-center">
-              <span className="text-base font-bold text-white">Total por recibo:</span>
-              <span className="text-xl font-bold text-white">${calcularTotal().toFixed(2)}</span>
-            </div>
-            <p className="text-xs text-slate-500 italic mt-3">* Las becas se aplicarán automáticamente sobre servicios</p>
-          </div>
+              {/* Financial Summary */}
+              <div className="col-lg-4">
+                <div className="p-4 rounded-lg bg-blue-600 bg-opacity-10 border border-blue-500 border-opacity-20 h-100 flex-column d-flex">
+                  <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-4 d-block border-bottom border-blue-900 border-opacity-30 pb-2">Resumen Financiero</label>
 
-          {/* Botones */}
-          <div className="flex justify-end gap-3 pt-4">
-            <button 
-              type="button"
-              onClick={onCancel}
-              className="px-6 py-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors font-medium text-sm"
-            >
-              Cancelar
-            </button>
-            <button 
-              type="submit"
-              className="px-6 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white transition-all font-medium text-sm shadow-lg shadow-blue-500/20"
-            >
-              {isEditMode ? 'Actualizar Recibo' : 'Crear Recibo(s)'}
-            </button>
-          </div>
-        </form>
+                  <div className="space-y-4 flex-grow-1">
+                    <div className="d-flex justify-content-between align-items-center border-bottom border-secondary border-opacity-10 pb-2">
+                      <span className="text-secondary text-sm">Subtotal Bruto:</span>
+                      <span className="text-white fw-bold">${calcularSubtotal().toFixed(2)}</span>
+                    </div>
+
+                    <div className="space-y-2 mt-4">
+                      <label className="text-[11px] font-bold text-slate-400 uppercase mb-2">Descuento Manual / Ajuste</label>
+                      <div className="input-group input-group-sm">
+                        <span className="input-group-text bg-[#0d1117] border-secondary border-opacity-25 text-secondary">$</span>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={descuentoManual}
+                          onChange={(e) => setDescuentoManual(parseFloat(e.target.value) || 0)}
+                          className="form-control"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 mt-5 border-top border-secondary border-opacity-20">
+                    <div className="d-flex justify-content-between align-items-end">
+                      <span className="text-secondary font-bold text-xs uppercase tracking-tighter h5 mb-0">TOTAL FINAL</span>
+                      <span className="text-white font-bold h2 mb-0 tracking-tighter">${calcularTotal().toFixed(2)}</span>
+                    </div>
+                    <p className="text-[10px] text-blue-400 mt-3 italic text-end mb-0">
+                      <i className="bi bi-exclamation-triangle me-1"></i>
+                      Las becas correspondientes se aplicarán individualmente al procesar el pago.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="d-flex justify-content-between align-items-center mt-5 pt-4 border-top border-secondary border-opacity-25">
+              <button
+                type="button"
+                onClick={onCancel}
+                className="btn btn-sm px-4 text-secondary hover-text-white border-0 bg-transparent"
+                style={{ fontSize: '13px', fontWeight: '600' }}
+              >
+                Cancelar Operación
+              </button>
+              <button
+                type="submit"
+                className="btn btn-sm btn-primary px-5 fw-bold"
+                style={{ backgroundColor: '#1f6feb', borderColor: '#1f6feb', fontSize: '13px', borderBottom: '2px solid #005cc5' }}
+              >
+                {isEditMode ? 'Guardar Cambios' : 'Confirmar y Emitir Recibo(s)'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

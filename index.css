@@ -110,6 +110,23 @@ body {
   }
 }
 
+/* ===== CONTENT CENTERING ===== */
+.main-container {
+  width: 100%;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .main-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
 /* ===== SIDEBAR ===== */
 
 .sidebar {
@@ -137,11 +154,9 @@ body {
   width: var(--sidebar-narrow-width);
 }
 
-/* Desktop: Always visible */
+/* Desktop: Always visible only if class present */
 @media (min-width: 992px) {
-  .sidebar {
-    transform: translateX(0);
-  }
+  /* Don't force translateX(0) here! rely on visible class */
 }
 
 /* Sidebar Brand */
@@ -624,30 +639,39 @@ tbody td {
 input,
 select,
 textarea {
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 0.625rem 1rem;
-  font-size: 0.9375rem;
-  color: var(--text-primary);
-  transition: all 0.2s;
+  background-color: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  color: #c9d1d9;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .form-control:focus,
 input:focus,
 select:focus,
 textarea:focus {
-  background-color: var(--bg-secondary);
-  border-color: var(--primary);
+  background-color: #0d1117;
+  border-color: #58a6ff;
   outline: none;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+  color: #ffffff;
 }
 
-.form-label {
-  font-weight: 500;
-  font-size: 0.875rem;
-  color: var(--text-primary);
-  margin-bottom: 0.5rem;
+.form-control::placeholder,
+input::placeholder {
+  color: #484f58;
+}
+
+.form-label,
+label:not(.btn) {
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: #8b949e;
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 /* ===== BUTTONS ===== */
@@ -924,4 +948,73 @@ textarea:focus {
   50% {
     opacity: 0.5;
   }
+}
+
+/* ===== APP LAYOUT & SIDEBAR TOGGLE FIXED ===== */
+
+/* Base Layout wrapper */
+.app-wrapper {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Main Container - sibling of sidebar */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+  min-height: 100vh;
+  margin-left: 0;
+  /* Default: 0 margin */
+  transition: margin-left 0.3s ease;
+  position: relative;
+  background-color: var(--bg-primary);
+}
+
+/* Sidebar behavior */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  height: 100vh;
+  z-index: 1030;
+  /* Other styles already defined above */
+}
+
+/* Desktop Logic (>= 992px) */
+@media (min-width: 992px) {
+
+  /* If sidebar is visible, push content */
+  .sidebar.sidebar-visible~.app-container {
+    margin-left: var(--sidebar-width);
+  }
+
+  /* If sidebar is narrow, push less */
+  .sidebar.sidebar-visible.sidebar-narrow~.app-container {
+    margin-left: var(--sidebar-narrow-width);
+  }
+
+  /* Use explicit margin-left: 0 when NOT visible, just to be safe */
+  .sidebar:not(.sidebar-visible)~.app-container {
+    margin-left: 0;
+  }
+}
+
+/* Header Styles inside app-container */
+.app-header.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1020;
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  width: 100%;
+  min-height: 64px;
+  padding: 0 1.5rem;
+  display: flex;
+  align-items: center;
 }

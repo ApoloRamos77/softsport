@@ -44,6 +44,8 @@ export interface Alumno {
   telefonoEmergencia?: string;
   // Campos administrativos
   notas?: string;
+  fechaAnulacion?: string;
+  usuarioAnulacion?: string;
 }
 
 export interface Representante {
@@ -99,18 +101,27 @@ export interface Servicio {
 export interface Producto {
   id?: number;
   nombre: string;
-  sku?: string;
   descripcion?: string;
   precio: number;
-  cantidad: number;
+  stock: number;
+  imagen?: string;
+  activo: boolean;
 }
 
-export interface PaymentMethod {
+export interface Game {
   id?: number;
-  nombre: string;
-  descripcion?: string;
-  currency?: string;
-  activo: boolean;
+  titulo?: string;
+  fecha?: string;
+  categoriaId?: number;
+  categoriaNombre?: string;
+  esLocal: boolean;
+  equipoLocal?: string;
+  equipoVisitante?: string;
+  ubicacion?: string;
+  observaciones?: string;
+  scoreLocal?: number;
+  scoreVisitante?: number;
+  alumnosConvocados?: any[];
 }
 
 export interface User {
@@ -138,6 +149,62 @@ export interface Season {
   usuarioModificacion?: string;
   fechaAnulacion?: string;
   usuarioAnulacion?: string;
+}
+
+export interface Role {
+  id?: number;
+  nombre: string;
+  descripcion: string;
+  tipo: string;
+  academia?: string;
+  permissions?: Permission[];
+}
+
+export interface PaymentMethod {
+  id?: number;
+  nombre: string;
+  descripcion: string;
+  moneda: string;
+  estado: string;
+}
+
+export interface Permission {
+  moduloId: number;
+  moduloNombre: string;
+  ver: boolean;
+  crear: boolean;
+  modificar: boolean;
+  eliminar: boolean;
+}
+
+export interface Abono {
+  id?: number;
+  reciboId: number;
+  monto: number;
+  fecha: string;
+  paymentMethodId: number;
+  referencia: string;
+  recibo?: {
+    id: number;
+    alumno?: {
+      nombre: string;
+      apellido: string;
+    };
+    items?: Array<{
+      nombre?: string;
+      descripcion?: string;
+    }>;
+  };
+}
+
+export interface Expense {
+  id?: number;
+  descripcion: string;
+  monto: number;
+  fecha: string;
+  categoria?: string;
+  referencia?: string;
+  estado?: string;
 }
 
 export interface TacticalBoard {
@@ -257,6 +324,31 @@ class ApiService {
   updateUser(id: number, data: User) { return this.update<User>('users', id, data); }
   deleteUser(id: number) { return this.delete('users', id); }
 
+  getRoles() { return this.getAll<Role>('roles'); }
+  getRole(id: number) { return this.getById<Role>('roles', id); }
+  createRole(data: Role) { return this.create<Role>('roles', data); }
+  updateRole(id: number, data: Role) { return this.update<Role>('roles', id, data); }
+  deleteRole(id: number) { return this.delete('roles', id); }
+  getRolePermissions(id: number) { return this.getAll<Permission>(`roles/${id}/permissions`); }
+
+  getAbonos() { return this.getAll<Abono>('abonos'); }
+  getAbono(id: number) { return this.getById<Abono>('abonos', id); }
+  createAbono(data: Abono) { return this.create<Abono>('abonos', data); }
+  updateAbono(id: number, data: Abono) { return this.update<Abono>('abonos', id, data); }
+  deleteAbono(id: number) { return this.delete('abonos', id); }
+
+  getRecibos() { return this.getAll<any>('recibos'); }
+  getRecibo(id: number) { return this.getById<any>('recibos', id); }
+  createRecibo(data: any) { return this.create<any>('recibos', data); }
+  updateRecibo(id: number, data: any) { return this.update<any>('recibos', id, data); }
+  deleteRecibo(id: number) { return this.delete('recibos', id); }
+
+  getExpenses() { return this.getAll<Expense>('expenses'); }
+  getExpense(id: number) { return this.getById<Expense>('expenses', id); }
+  createExpense(data: Expense) { return this.create<Expense>('expenses', data); }
+  updateExpense(id: number, data: Expense) { return this.update<Expense>('expenses', id, data); }
+  deleteExpense(id: number) { return this.delete('expenses', id); }
+
   getSeasons() { return this.getAll<Season>('seasons'); }
   getSeason(id: number) { return this.getById<Season>('seasons', id); }
   createSeason(data: Season) { return this.create<Season>('seasons', data); }
@@ -271,7 +363,7 @@ class ApiService {
 
   // Dashboard endpoints
   async getDashboardStats(seasonId?: number): Promise<any> {
-    const url = seasonId 
+    const url = seasonId
       ? `${API_BASE_URL}/dashboard/stats?seasonId=${seasonId}`
       : `${API_BASE_URL}/dashboard/stats`;
     const response = await fetch(url);
@@ -280,7 +372,7 @@ class ApiService {
   }
 
   async getFinancialChart(seasonId?: number): Promise<any> {
-    const url = seasonId 
+    const url = seasonId
       ? `${API_BASE_URL}/dashboard/financial-chart?seasonId=${seasonId}`
       : `${API_BASE_URL}/dashboard/financial-chart`;
     const response = await fetch(url);
@@ -342,7 +434,7 @@ class ApiService {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
-    
+
     if (!response.ok) {
       let errorMessage = 'Error al iniciar sesión';
       try {
@@ -353,7 +445,7 @@ class ApiService {
       }
       throw new Error(errorMessage);
     }
-    
+
     return response.json();
   }
 }

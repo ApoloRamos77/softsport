@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { apiService } from '../services/api';
 
 interface RealizarPagoProps {
   recibo: any;
@@ -28,11 +29,8 @@ const RealizarPago: React.FC<RealizarPagoProps> = ({ recibo, onClose, onSuccess 
 
   const loadPaymentMethods = async () => {
     try {
-      const response = await fetch('http://localhost:5081/api/paymentmethods');
-      if (response.ok) {
-        const data = await response.json();
-        setPaymentMethods(data);
-      }
+      const data = await apiService.getPaymentMethods();
+      setPaymentMethods(data);
     } catch (error) {
       console.error('Error al cargar métodos de pago:', error);
     }
@@ -54,40 +52,24 @@ const RealizarPago: React.FC<RealizarPagoProps> = ({ recibo, onClose, onSuccess 
 
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5081/api/abonos', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          reciboId: recibo.id,
-          monto: montoNumero,
-          paymentMethodId: parseInt(metodoPago),
-          fecha: new Date().toISOString(),
-          referencia: referencia || null
-        }),
+      await apiService.createAbono({
+        reciboId: recibo.id,
+        monto: montoNumero,
+        paymentMethodId: parseInt(metodoPago),
+        fecha: new Date().toISOString(),
+        referencia: referencia || null
       });
 
-      if (response.ok) {
-        // Actualizar estado del recibo si se pagó completo
-        if (montoNumero >= saldoPendiente) {
-          await fetch(`http://localhost:5081/api/recibos/${recibo.id}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              ...recibo,
-              estado: 'Pagado'
-            }),
-          });
-        }
-        
-        alert('Pago registrado exitosamente');
-        onSuccess();
-      } else {
-        alert('Error al registrar el pago');
+      // Actualizar estado del recibo si se pagó completo
+      if (montoNumero >= saldoPendiente) {
+        await apiService.updateRecibo(recibo.id, {
+          ...recibo,
+          estado: 'Pagado'
+        });
       }
+
+      alert('Pago registrado exitosamente');
+      onSuccess();
     } catch (error) {
       console.error('Error:', error);
       alert('Error al registrar el pago');

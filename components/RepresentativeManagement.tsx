@@ -73,128 +73,145 @@ const RepresentativeManagement: React.FC = () => {
     setEditingRepresentative(null);
   };
 
-  const filteredData = representatives.filter(r => 
+  const filteredData = representatives.filter(r =>
     !r.fechaAnulacion && // Excluir registros anulados
     (`${r.nombre} ${r.apellido}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (r.documento && r.documento.includes(searchTerm)))
+      (r.documento && r.documento.includes(searchTerm)))
   );
 
   if (showForm) {
     return (
-      <RepresentativeForm 
-        representative={editingRepresentative} 
-        onCancel={handleCancelForm} 
-        onSave={handleSave} 
+      <RepresentativeForm
+        representative={editingRepresentative}
+        onCancel={handleCancelForm}
+        onSave={handleSave}
       />
     );
   }
 
   return (
-    <div className="space-y-6 animate-fadeIn">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-xl font-bold">Representantes</h2>
-          <p className="text-sm text-slate-400">Gestiona los representantes y sus alumnos</p>
+    <div className="animate-fadeIn" style={{ backgroundColor: '#0d1117', minHeight: '80vh' }}>
+      <div className="max-w-7xl mx-auto px-4 py-4 d-flex flex-column gap-4">
+        {/* Header Section */}
+        <div className="d-flex justify-content-between align-items-end mb-2">
+          <div>
+            <h2 className="mb-1 text-white fw-bold h4">Gestión de Representantes</h2>
+            <p className="text-secondary mb-0 small">Administra los acudientes y contactos de los alumnos</p>
+          </div>
+          <div className="d-flex gap-2">
+            <button
+              className="btn btn-sm d-flex align-items-center gap-2 text-white border-secondary border-opacity-50"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid #30363d' }}
+            >
+              <i className="bi bi-file-pdf"></i> Exportar PDF
+            </button>
+            <button
+              onClick={() => setShowForm(true)}
+              className="btn btn-primary d-flex align-items-center gap-2 px-3"
+              style={{ backgroundColor: '#1f6feb', borderColor: '#1f6feb', fontWeight: '600' }}
+            >
+              <i className="bi bi-plus-lg"></i> Nuevo Representante
+            </button>
+          </div>
         </div>
-        <button 
-          onClick={() => setShowForm(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-semibold transition-colors shadow-lg shadow-blue-500/20"
-        >
-          <i className="fas fa-plus"></i> Nuevo Representante
-        </button>
-      </div>
 
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-md">
-          <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-          <input 
-            type="text" 
-            placeholder="Buscar por nombre, email, teléfono o documento..." 
-            className="form-input-dark p-2 pl-9 rounded-md border text-xs w-full"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <div className="card mb-4 border-0" style={{ backgroundColor: '#161b22' }}>
+          <div className="card-body p-3">
+            <div className="d-flex align-items-center" style={{ maxWidth: '450px' }}>
+              <div className="position-relative w-100">
+                <i className="bi bi-search position-absolute text-secondary" style={{ left: '0.8rem', top: '50%', transform: 'translateY(-50%)', fontSize: '0.9rem' }}></i>
+                <input
+                  type="text"
+                  placeholder="Buscar por nombre, email, teléfono o documento..."
+                  className="form-control form-control-sm border-secondary border-opacity-25 text-white placeholder-secondary"
+                  style={{ paddingLeft: '2.5rem', backgroundColor: '#0d1117' }}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div className="bg-[#111827] border border-slate-800 rounded-lg overflow-hidden shadow-2xl">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-[11px]">
-            <thead className="text-slate-500 uppercase bg-slate-900/30 border-b border-slate-800">
-              <tr>
-                <th className="px-5 py-4 font-semibold">Representante</th>
-                <th className="px-5 py-4 font-semibold">Documento</th>
-                <th className="px-5 py-4 font-semibold">Contacto</th>
-                <th className="px-5 py-4 font-semibold">Parentesco</th>
-                <th className="px-5 py-4 font-semibold text-center">Alumnos</th>
-                <th className="px-5 py-4 font-semibold">Fecha Creación</th>
-                <th className="px-5 py-4 font-semibold text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800">
-              {loading ? (
+        <div className="card border-0 shadow-sm" style={{ backgroundColor: '#0f1419' }}>
+          <div className="table-responsive">
+            <table className="table align-middle mb-0" style={{ borderColor: '#30363d' }}>
+              <thead style={{ backgroundColor: '#161b22' }}>
                 <tr>
-                  <td colSpan={7} className="px-5 py-20 text-center text-slate-400">
-                    <i className="fas fa-spinner fa-spin text-2xl"></i>
-                    <p className="mt-3">Cargando representantes...</p>
-                  </td>
+                  <th className="ps-4 text-white border-bottom border-secondary border-opacity-25 py-3">Representante</th>
+                  <th className="text-white border-bottom border-secondary border-opacity-25 py-3">Documento</th>
+                  <th className="text-white border-bottom border-secondary border-opacity-25 py-3">Contacto</th>
+                  <th className="text-white border-bottom border-secondary border-opacity-25 py-3">Parentesco</th>
+                  <th className="text-center text-white border-bottom border-secondary border-opacity-25 py-3">Alumnos</th>
+                  <th className="text-white border-bottom border-secondary border-opacity-25 py-3">Fecha Registro</th>
+                  <th className="text-end pe-4 text-white border-bottom border-secondary border-opacity-25 py-3">Acciones</th>
                 </tr>
-              ) : filteredData.length > 0 ? filteredData.map(r => (
-                <tr key={r.id} className="hover:bg-slate-800/40 transition-colors">
-                  <td className="px-5 py-4">
-                    <div className="flex flex-col">
-                      <span className="font-bold text-white">{r.nombre} {r.apellido}</span>
-                      <span className="text-slate-500">{r.email}</span>
-                    </div>
-                  </td>
-                  <td className="px-5 py-4 text-slate-300">{r.documento}</td>
-                  <td className="px-5 py-4 text-slate-300">{r.telefono}</td>
-                  <td className="px-5 py-4">
-                    <span className="bg-slate-800 px-2 py-0.5 rounded text-slate-400">{r.parentesco}</span>
-                  </td>
-                  <td className="px-5 py-4 text-center">
-                    <span className="bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded-full font-bold">
-                      {alumnos.filter(a => a.representanteId === r.id).length}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4 text-slate-400 text-xs">
-                    {r.fechaCreacion ? new Date(r.fechaCreacion).toLocaleDateString('es-ES', { 
-                      year: 'numeric', 
-                      month: 'short', 
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    }) : '-'}
-                    {r.usuarioCreacion && <div className="text-slate-500 text-[10px]">por {r.usuarioCreacion}</div>}
-                  </td>
-                  <td className="px-5 py-4 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button 
-                        onClick={() => handleEdit(r)} 
-                        className="text-blue-400 hover:text-blue-300 transition-colors"
-                        title="Editar representante"
-                      >
-                        <i className="fas fa-edit"></i>
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(r.id!)} 
-                        classNa7e="text-red-400 hover:text-red-300 transition-colors"
-                        title="Anular representante"
-                      >
-                        <i className="fas fa-ban"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              )) : (
-                <tr>
-                  <td colSpan={6} className="px-5 py-20 text-center text-slate-500 italic">
-                    No se encontraron representantes registrados
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={7} className="text-center py-5 text-secondary">
+                      <div className="spinner-border text-primary mb-2" role="status">
+                        <span className="visually-hidden">Cargando...</span>
+                      </div>
+                      <p className="mb-0">Cargando representantes...</p>
+                    </td>
+                  </tr>
+                ) : filteredData.length > 0 ? filteredData.map(r => (
+                  <tr key={r.id} className="hover-bg-dark-lighter" style={{ transition: 'background-color 0.2s' }}>
+                    <td className="ps-4 border-bottom border-secondary border-opacity-10 py-3">
+                      <div className="d-flex flex-column">
+                        <span className="fw-bold text-white">{r.nombre} {r.apellido}</span>
+                        <small className="text-secondary" style={{ fontSize: '11px' }}>{r.email}</small>
+                      </div>
+                    </td>
+                    <td className="text-secondary border-bottom border-secondary border-opacity-10 py-3">{r.documento || '-'}</td>
+                    <td className="text-secondary border-bottom border-secondary border-opacity-10 py-3">{r.telefono || '-'}</td>
+                    <td className="border-bottom border-secondary border-opacity-10 py-3">
+                      <span className="badge bg-secondary bg-opacity-20 text-white border border-secondary border-opacity-30 px-2 py-1">{r.parentesco}</span>
+                    </td>
+                    <td className="text-center border-bottom border-secondary border-opacity-10 py-3">
+                      <span className="badge bg-primary bg-opacity-20 text-white rounded-pill px-3 border border-primary border-opacity-30">
+                        {alumnos.filter(a => a.representanteId === r.id).length}
+                      </span>
+                    </td>
+                    <td className="text-secondary small border-bottom border-secondary border-opacity-10 py-3">
+                      {r.fechaCreacion ? new Date(r.fechaCreacion).toLocaleDateString('es-ES') : '-'}
+                    </td>
+                    <td className="text-end pe-4 border-bottom border-secondary border-opacity-10 py-3">
+                      <div className="d-flex justify-content-end gap-2">
+                        <button
+                          onClick={() => handleEdit(r)}
+                          className="btn btn-sm text-primary p-0 me-2"
+                          title="Editar"
+                          style={{ backgroundColor: 'transparent', border: 'none' }}
+                        >
+                          <i className="bi bi-pencil"></i>
+                        </button>
+                        <button
+                          onClick={() => handleDelete(r.id!)}
+                          className="btn btn-sm text-danger p-0"
+                          title="Anular"
+                          style={{ backgroundColor: 'transparent', border: 'none' }}
+                        >
+                          <i className="bi bi-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan={7} className="text-center py-5">
+                      <div className="d-flex flex-column align-items-center">
+                        <i className="bi bi-person-badge text-secondary display-4 mb-3"></i>
+                        <p className="text-muted fw-medium mb-0">No se encontraron representantes</p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

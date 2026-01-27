@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReceiptForm from './ReceiptForm';
 import DetalleRecibo from './DetalleRecibo';
 import RealizarPago from './RealizarPago';
+import { apiService } from '../services/api';
 
 interface Recibo {
   id: number;
@@ -35,8 +36,8 @@ const AccountingManagement: React.FC = () => {
 
   const loadRecibos = async () => {
     try {
-      const response = await fetch('http://localhost:5081/api/recibos');
-      const data = await response.json();
+      setLoading(true);
+      const data = await apiService.getAll<Recibo>('recibos');
       setRecibos(data);
     } catch (error) {
       console.error('Error cargando recibos:', error);
@@ -50,11 +51,10 @@ const AccountingManagement: React.FC = () => {
       alert('No se puede editar un recibo que ya está pagado');
       return;
     }
-    
+
     // Cargar el recibo completo con todos sus detalles
     try {
-      const response = await fetch(`http://localhost:5081/api/recibos/${recibo.id}`);
-      const data = await response.json();
+      const data = await apiService.getById<Recibo>('recibos', recibo.id);
       setEditingRecibo(data);
       setShowForm(true);
     } catch (error) {
@@ -69,33 +69,21 @@ const AccountingManagement: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5081/api/recibos/${recibo.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...recibo,
-          estado: 'Anulado'
-        }),
+      await apiService.update('recibos', recibo.id, {
+        ...recibo,
+        estado: 'Anulado'
       });
-
-      if (response.ok) {
-        alert('Recibo anulado exitosamente');
-        loadRecibos();
-      } else {
-        alert('Error al anular el recibo');
-      }
-    } catch (error) {
+      alert('Recibo anulado exitosamente');
+      loadRecibos();
+    } catch (error: any) {
       console.error('Error:', error);
-      alert('Error al anular el recibo');
+      alert(error.message || 'Error al anular el recibo');
     }
   };
 
   const handleVerDetalles = async (recibo: Recibo) => {
     try {
-      const response = await fetch(`http://localhost:5081/api/recibos/${recibo.id}`);
-      const data = await response.json();
+      const data = await apiService.getById<Recibo>('recibos', recibo.id);
       setSelectedRecibo(data);
       setShowDetalles(true);
     } catch (error) {
@@ -141,218 +129,259 @@ const AccountingManagement: React.FC = () => {
   };
 
   const stats = calcularEstadisticas();
-
   return (
-    <div className="space-y-6">
-      <div className="flex justify-end items-start">
-        <div className="flex gap-2">
-          <button className="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-semibold transition-colors">
-            <i className="fas fa-file-pdf"></i> Exportar PDF
-          </button>
-          <button 
-            onClick={() => setShowForm(true)}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-semibold transition-colors"
-          >
-            <i className="fas fa-plus"></i> Nuevo Recibo
-          </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-[#1a2332] border border-slate-700 p-5 rounded-lg">
-          <p className="text-xs text-slate-400 font-semibold mb-2">Monto Facturado</p>
-          <h3 className="text-3xl font-bold text-white mb-1">${stats.montoFacturado.toFixed(2)}</h3>
-          <p className="text-xs text-slate-500">En el rango de fechas</p>
-        </div>
-        <div className="bg-[#1a2332] border border-slate-700 p-5 rounded-lg">
-          <p className="text-xs text-slate-400 font-semibold mb-2">Monto Recaudado</p>
-          <h3 className="text-3xl font-bold text-green-400 mb-1">${stats.montoRecaudado.toFixed(2)}</h3>
-          <p className="text-xs text-slate-500">Pagos confirmados</p>
-        </div>
-        <div className="bg-[#1a2332] border border-slate-700 p-5 rounded-lg">
-          <p className="text-xs text-slate-400 font-semibold mb-2">Monto Exonerado</p>
-          <h3 className="text-3xl font-bold text-white mb-1">${stats.montoExonerado.toFixed(2)}</h3>
-          <p className="text-xs text-slate-500">Por becas aplicadas</p>
-        </div>
-        <div className="bg-[#1a2332] border border-slate-700 p-5 rounded-lg">
-          <p className="text-xs text-slate-400 font-semibold mb-2">Monto por Recaudar</p>
-          <h3 className="text-3xl font-bold text-red-400 mb-1">${stats.montoPorRecaudar.toFixed(2)}</h3>
-          <p className="text-xs text-slate-500">Saldo pendiente</p>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[280px]">
-          <input 
-            type="text" 
-            placeholder="Buscar por ID, alumno o concepto..." 
-            className="bg-[#0f1419] p-2.5 pl-4 rounded-md border border-slate-700 text-sm w-full text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
-          />
-        </div>
-        <select className="bg-[#0f1419] p-2.5 rounded-md border border-slate-700 text-sm text-white focus:outline-none focus:border-blue-500">
-          <option>Todos</option>
-        </select>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 bg-[#0f1419] border border-slate-700 rounded-md px-3 py-2">
-            <i className="fas fa-calendar text-slate-400 text-sm"></i>
-            <span className="text-xs text-slate-400 font-medium">Desde:</span>
-            <input 
-              type="text"
-              value={filters.desde}
-              onChange={(e) => setFilters({...filters, desde: e.target.value})}
-              className="bg-transparent text-white text-sm w-24 focus:outline-none"
-            />
+    <div className="animate-fadeIn" style={{ backgroundColor: '#0d1117', minHeight: '80vh' }}>
+      <div className="max-w-7xl mx-auto px-4 py-4 d-flex flex-column gap-4">
+        <div className="d-flex justify-content-between align-items-end mb-2">
+          <div>
+            <h2 className="mb-1 text-white fw-bold h4">Contabilidad y Finanzas</h2>
+            <p className="text-secondary mb-0 small">Control de ingresos, facturación y recibos</p>
           </div>
-          <div className="flex items-center gap-2 bg-[#0f1419] border border-slate-700 rounded-md px-3 py-2">
-            <i className="fas fa-calendar text-slate-400 text-sm"></i>
-            <span className="text-xs text-slate-400 font-medium">Hasta:</span>
-            <input 
-              type="text"
-              value={filters.hasta}
-              onChange={(e) => setFilters({...filters, hasta: e.target.value})}
-              className="bg-transparent text-white text-sm w-24 focus:outline-none"
-            />
+          <div className="d-flex gap-2">
+            <button
+              className="btn btn-sm d-flex align-items-center gap-2 text-white border-secondary border-opacity-50"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid #30363d' }}
+            >
+              <i className="bi bi-file-earmark-pdf"></i> Exportar
+            </button>
+            <button
+              onClick={() => setShowForm(true)}
+              className="btn btn-primary d-flex align-items-center gap-2 px-3"
+              style={{ backgroundColor: '#1f6feb', borderColor: '#1f6feb', fontWeight: '600' }}
+            >
+              <i className="bi bi-plus-lg"></i> Nuevo Recibo
+            </button>
           </div>
         </div>
-      </div>
 
-      <div className="bg-[#1a2332] border border-slate-700 rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="text-slate-400 bg-[#0f1419] border-b border-slate-700">
-              <tr>
-                <th className="px-6 py-3 font-semibold text-xs">ID Recibo</th>
-                <th className="px-6 py-3 font-semibold text-xs">Alumno</th>
-                <th className="px-6 py-3 font-semibold text-xs">Concepto</th>
-                <th className="px-6 py-3 font-semibold text-xs">Total Servicio</th>
-                <th className="px-6 py-3 font-semibold text-xs">Exonerado</th>
-                <th className="px-6 py-3 font-semibold text-xs">Abonado</th>
-                <th className="px-6 py-3 font-semibold text-xs">Por Pagar</th>
-                <th className="px-6 py-3 font-semibold text-xs">Fecha</th>
-                <th className="px-6 py-3 font-semibold text-xs">Estado</th>
-                <th className="px-6 py-3 font-semibold text-xs text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
+        <div className="row g-3 mb-4">
+          <div className="col-12 col-md-3">
+            <div className="card h-100 border-0 shadow-sm" style={{ backgroundColor: '#161b22' }}>
+              <div className="card-body p-3">
+                <p className="text-secondary small fw-bold mb-1 text-uppercase" style={{ fontSize: '10px' }}>Monto Facturado</p>
+                <h3 className="fw-bold mb-0 text-white font-monospace">${stats.montoFacturado.toFixed(2)}</h3>
+                <small className="text-secondary opacity-50" style={{ fontSize: '10px' }}>Total histórico</small>
+              </div>
+            </div>
+          </div>
+          <div className="col-12 col-md-3">
+            <div className="card h-100 border-0 shadow-sm" style={{ backgroundColor: '#161b22' }}>
+              <div className="card-body p-3">
+                <p className="text-secondary small fw-bold mb-1 text-uppercase" style={{ fontSize: '10px' }}>Recaudado</p>
+                <h3 className="fw-bold mb-0 text-success font-monospace">${stats.montoRecaudado.toFixed(2)}</h3>
+                <small className="text-secondary opacity-50" style={{ fontSize: '10px' }}>Ingresos netos</small>
+              </div>
+            </div>
+          </div>
+          <div className="col-12 col-md-3">
+            <div className="card h-100 border-0 shadow-sm" style={{ backgroundColor: '#161b22' }}>
+              <div className="card-body p-3">
+                <p className="text-secondary small fw-bold mb-1 text-uppercase" style={{ fontSize: '10px' }}>Exonerado</p>
+                <h3 className="fw-bold mb-0 text-white font-monospace">${stats.montoExonerado.toFixed(2)}</h3>
+                <small className="text-secondary opacity-50" style={{ fontSize: '10px' }}>Descuentos y becas</small>
+              </div>
+            </div>
+          </div>
+          <div className="col-12 col-md-3">
+            <div className="card h-100 border-0 shadow-sm" style={{ backgroundColor: '#161b22' }}>
+              <div className="card-body p-3">
+                <p className="text-secondary small fw-bold mb-1 text-uppercase" style={{ fontSize: '10px' }}>Por Recaudar</p>
+                <h3 className="fw-bold mb-0 text-danger font-monospace">${stats.montoPorRecaudar.toFixed(2)}</h3>
+                <small className="text-secondary opacity-50" style={{ fontSize: '10px' }}>Saldo pendiente</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="card border-0 mb-4" style={{ backgroundColor: '#161b22' }}>
+          <div className="card-body p-3 d-flex align-items-center gap-3">
+            <div className="input-group input-group-sm" style={{ maxWidth: '400px' }}>
+              <span className="input-group-text bg-[#0d1117] border-secondary border-opacity-25 text-secondary">
+                <i className="bi bi-search"></i>
+              </span>
+              <input
+                type="text"
+                className="form-control bg-[#0d1117] border-secondary border-opacity-25 text-white placeholder-secondary"
+                placeholder="Buscar recibos..."
+              />
+            </div>
+
+            <div className="d-flex align-items-center gap-2 ms-auto">
+              <div className="d-flex align-items-center gap-2 bg-[#0d1117] border border-secondary border-opacity-10 rounded px-2 py-1">
+                <i className="bi bi-calendar-range text-secondary small"></i>
+                <span className="text-secondary small fw-bold" style={{ fontSize: '10px' }}>Desde:</span>
+                <input
+                  type="text"
+                  value={filters.desde}
+                  onChange={(e) => setFilters({ ...filters, desde: e.target.value })}
+                  className="bg-transparent border-0 text-white small focus-none"
+                  style={{ width: '80px', fontSize: '11px' }}
+                />
+              </div>
+              <div className="d-flex align-items-center gap-2 bg-[#0d1117] border border-secondary border-opacity-10 rounded px-2 py-1">
+                <i className="bi bi-calendar-range text-secondary small"></i>
+                <span className="text-secondary small fw-bold" style={{ fontSize: '10px' }}>Hasta:</span>
+                <input
+                  type="text"
+                  value={filters.hasta}
+                  onChange={(e) => setFilters({ ...filters, hasta: e.target.value })}
+                  className="bg-transparent border-0 text-white small focus-none"
+                  style={{ width: '80px', fontSize: '11px' }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="card border-0 shadow-sm" style={{ backgroundColor: '#0f1419' }}>
+          <div className="table-responsive">
+            <table className="table align-middle mb-0" style={{ borderColor: '#30363d' }}>
+              <thead style={{ backgroundColor: '#161b22' }}>
                 <tr>
-                  <td colSpan={10} className="px-6 py-20 text-center text-slate-400">
-                    Cargando...
-                  </td>
+                  <th className="ps-4 text-white border-bottom border-secondary border-opacity-25 py-3 small fw-bold">ID Recibo</th>
+                  <th className="text-white border-bottom border-secondary border-opacity-25 py-3 small fw-bold">Alumno</th>
+                  <th className="text-white border-bottom border-secondary border-opacity-25 py-3 small fw-bold">Concepto</th>
+                  <th className="text-white border-bottom border-secondary border-opacity-25 py-3 small fw-bold">Subtotal</th>
+                  <th className="text-white border-bottom border-secondary border-opacity-25 py-3 small fw-bold">Descuento</th>
+                  <th className="text-white border-bottom border-secondary border-opacity-25 py-3 small fw-bold text-center">Abonado</th>
+                  <th className="text-white border-bottom border-secondary border-opacity-25 py-3 small fw-bold text-center">Total</th>
+                  <th className="text-white border-bottom border-secondary border-opacity-25 py-3 small fw-bold">Fecha</th>
+                  <th className="text-white border-bottom border-secondary border-opacity-25 py-3 small fw-bold">Estado</th>
+                  <th className="text-end pe-4 text-white border-bottom border-secondary border-opacity-25 py-3 small fw-bold">Acciones</th>
                 </tr>
-              ) : recibos.length === 0 ? (
-                <tr>
-                  <td colSpan={10} className="px-6 py-20 text-center">
-                    <div className="flex flex-col items-center gap-3 text-slate-500">
-                      <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      <p className="text-sm font-medium">No se encontraron recibos</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                recibos.map((recibo) => (
-                  <tr key={recibo.id} className="border-b border-slate-800 hover:bg-slate-800/30 transition-colors">
-                    <td className="px-6 py-4 text-white font-medium">#{recibo.id}</td>
-                    <td className="px-6 py-4 text-slate-300">{recibo.AlumnoNombre || recibo.alumnoNombre || '-'}</td>
-                    <td className="px-6 py-4 text-slate-300">
-                      {recibo.items && recibo.items.length > 0 
-                        ? recibo.items.map((i: any) => i.nombre || i.Nombre || i.descripcion || 'Item').join(', ') 
-                        : 'Sin items'}
-                    </td>
-                    <td className="px-6 py-4 text-slate-300">${recibo.subtotal.toFixed(2)}</td>
-                    <td className="px-6 py-4 text-slate-300">${recibo.descuento.toFixed(2)}</td>
-                    <td className="px-6 py-4 text-slate-300">
-                      ${recibo.abonos ? recibo.abonos.reduce((sum: number, a: any) => sum + a.monto, 0).toFixed(2) : '0.00'}
-                    </td>
-                    <td className="px-6 py-4 text-slate-300 font-semibold">${recibo.total.toFixed(2)}</td>
-                    <td className="px-6 py-4 text-slate-300">
-                      {new Date(recibo.fecha).toLocaleDateString('es-ES')}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                        recibo.estado === 'Pagado' 
-                          ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                          : recibo.estado === 'Pendiente'
-                          ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
-                          : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                      }`}>
-                        {recibo.estado}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => handleVerDetalles(recibo)}
-                          className="text-blue-400 hover:text-blue-300 transition-colors"
-                          title="Ver detalles"
-                        >
-                          <i className="fas fa-eye text-sm"></i>
-                        </button>
-                        {recibo.estado !== 'Anulado' && (
-                          <>
-                            <button
-                              onClick={() => handleRealizarPago(recibo)}
-                              className="text-green-400 hover:text-green-300 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                              title="Registrar pago"
-                              disabled={recibo.estado === 'Pagado'}
-                            >
-                              <i className="fas fa-dollar-sign text-sm"></i>
-                            </button>
-                            <button
-                              onClick={() => handleEdit(recibo)}
-                              className="text-yellow-400 hover:text-yellow-300 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                              title={recibo.estado === 'Pagado' ? 'No se puede editar un recibo pagado' : 'Editar recibo'}
-                              disabled={recibo.estado === 'Pagado'}
-                            >
-                              <i className="fas fa-edit text-sm"></i>
-                            </button>
-                            <button
-                              onClick={() => handleAnular(recibo)}
-                              className="text-red-400 hover:text-red-300 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                              title={recibo.estado === 'Pagado' ? 'No se puede anular un recibo pagado' : 'Anular recibo'}
-                              disabled={recibo.estado === 'Pagado'}
-                            >
-                              <i className="fas fa-ban text-sm"></i>
-                            </button>
-                          </>
-                        )}
-                      </div>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={10} className="text-center py-5 text-secondary">
+                      <div className="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
+                      <p className="mb-0 small">Cargando...</p>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : recibos.length === 0 ? (
+                  <tr>
+                    <td colSpan={10} className="text-center py-5">
+                      <p className="text-muted mb-0 small">No se encontraron recibos</p>
+                    </td>
+                  </tr>
+                ) : (
+                  recibos.map((recibo) => (
+                    <tr key={recibo.id} className="hover-bg-dark-lighter" style={{ transition: 'background-color 0.2s' }}>
+                      <td className="ps-4 fw-bold text-white border-bottom border-secondary border-opacity-10 py-3">
+                        #{recibo.id}
+                      </td>
+                      <td className="text-secondary border-bottom border-secondary border-opacity-10 py-3">
+                        {recibo.AlumnoNombre || recibo.alumnoNombre || '-'}
+                      </td>
+                      <td className="text-secondary border-bottom border-secondary border-opacity-10 py-3">
+                        <div className="text-truncate" style={{ maxWidth: '150px' }} title={recibo.items?.map((i: any) => i.nombre || i.Nombre || i.descripcion).join(', ')}>
+                          {recibo.items && recibo.items.length > 0
+                            ? recibo.items.map((i: any) => i.nombre || i.Nombre || i.descripcion || 'Item').join(', ')
+                            : 'Sin items'}
+                        </div>
+                      </td>
+                      <td className="text-secondary border-bottom border-secondary border-opacity-10 py-3 font-monospace">
+                        ${recibo.subtotal.toFixed(2)}
+                      </td>
+                      <td className="text-secondary border-bottom border-secondary border-opacity-10 py-3 font-monospace">
+                        ${recibo.descuento.toFixed(2)}
+                      </td>
+                      <td className="text-center text-secondary border-bottom border-secondary border-opacity-10 py-3 font-monospace">
+                        ${recibo.abonos ? recibo.abonos.reduce((sum: number, a: any) => sum + a.monto, 0).toFixed(2) : '0.00'}
+                      </td>
+                      <td className="text-center fw-bold text-white border-bottom border-secondary border-opacity-10 py-3 font-monospace">
+                        ${recibo.total.toFixed(2)}
+                      </td>
+                      <td className="text-secondary border-bottom border-secondary border-opacity-10 py-3 small">
+                        {new Date(recibo.fecha).toLocaleDateString('es-ES')}
+                      </td>
+                      <td className="border-bottom border-secondary border-opacity-10 py-3">
+                        <span className={`badge border border-opacity-30 text-white ${recibo.estado === 'Pagado'
+                          ? 'bg-success bg-opacity-20 border-success'
+                          : recibo.estado === 'Pendiente'
+                            ? 'bg-warning bg-opacity-20 border-warning'
+                            : 'bg-danger bg-opacity-20 border-danger'
+                          }`} style={{ fontSize: '10px' }}>
+                          {recibo.estado}
+                        </span>
+                      </td>
+                      <td className="text-end pe-4 border-bottom border-secondary border-opacity-10 py-3">
+                        <div className="d-flex justify-content-end gap-2">
+                          <button
+                            onClick={() => handleVerDetalles(recibo)}
+                            className="btn btn-sm text-info p-0"
+                            title="Ver detalles"
+                            style={{ background: 'transparent', border: 'none' }}
+                          >
+                            <i className="bi bi-eye"></i>
+                          </button>
+                          {recibo.estado !== 'Anulado' && (
+                            <>
+                              <button
+                                onClick={() => handleRealizarPago(recibo)}
+                                className="btn btn-sm text-success p-0"
+                                title="Registrar pago"
+                                disabled={recibo.estado === 'Pagado'}
+                                style={{ background: 'transparent', border: 'none' }}
+                              >
+                                <i className="bi bi-cash-stack"></i>
+                              </button>
+                              <button
+                                onClick={() => handleEdit(recibo)}
+                                className="btn btn-sm text-primary p-0"
+                                title="Editar"
+                                disabled={recibo.estado === 'Pagado'}
+                                style={{ background: 'transparent', border: 'none' }}
+                              >
+                                <i className="bi bi-pencil"></i>
+                              </button>
+                              <button
+                                onClick={() => handleAnular(recibo)}
+                                className="btn btn-sm text-danger p-0"
+                                title="Anular"
+                                disabled={recibo.estado === 'Pagado'}
+                                style={{ background: 'transparent', border: 'none' }}
+                              >
+                                <i className="bi bi-slash-circle"></i>
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
+
+        {showDetalles && selectedRecibo && (
+          <DetalleRecibo
+            recibo={selectedRecibo}
+            onClose={() => {
+              setShowDetalles(false);
+              setSelectedRecibo(null);
+            }}
+          />
+        )}
+
+        {showPago && selectedRecibo && (
+          <RealizarPago
+            recibo={selectedRecibo}
+            onClose={() => {
+              setShowPago(false);
+              setSelectedRecibo(null);
+            }}
+            onSuccess={() => {
+              setShowPago(false);
+              setSelectedRecibo(null);
+              loadRecibos();
+            }}
+          />
+        )}
       </div>
-
-      {showDetalles && selectedRecibo && (
-        <DetalleRecibo
-          recibo={selectedRecibo}
-          onClose={() => {
-            setShowDetalles(false);
-            setSelectedRecibo(null);
-          }}
-        />
-      )}
-
-      {showPago && selectedRecibo && (
-        <RealizarPago
-          recibo={selectedRecibo}
-          onClose={() => {
-            setShowPago(false);
-            setSelectedRecibo(null);
-          }}
-          onSuccess={() => {
-            setShowPago(false);
-            setSelectedRecibo(null);
-            loadRecibos();
-          }}
-        />
-      )}
-    </div>
+    </div >
   );
 };
 

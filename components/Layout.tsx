@@ -37,12 +37,9 @@ const Layout: React.FC<LayoutProps> = ({
         </header>
         <main className="app-main">
           <div className="app-content-header">
-            <div className="container-fluid">
+            <div className="main-container">
               <div className="row">
-                <div className="col-sm-6">
-                  <h3 className="mb-0">{getTitle()}</h3>
-                </div>
-                <div className="col-sm-6">
+                <div className="col-12">
                   <ol className="breadcrumb float-sm-end">
                     <li className="breadcrumb-item"><a href="#">Home</a></li>
                     <li className="breadcrumb-item active" aria-current="page">
@@ -54,7 +51,7 @@ const Layout: React.FC<LayoutProps> = ({
             </div>
           </div>
           <div className="app-content">
-            <div className="container-fluid">{children}</div>
+            <div className="main-container">{children}</div>
           </div>
         </main>
       </div>

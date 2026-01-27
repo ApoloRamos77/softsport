@@ -13,7 +13,7 @@ const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, placeholder = 
   const containerRef = useRef<HTMLDivElement>(null);
   const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
   const [showYearSelect, setShowYearSelect] = useState(false);
-  
+
   const initialDate = value ? new Date(value + 'T00:00:00') : new Date();
   const [viewDate, setViewDate] = useState(new Date(initialDate.getFullYear(), initialDate.getMonth(), 1));
 
@@ -42,7 +42,7 @@ const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, placeholder = 
       const rect = containerRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
       const calendarHeight = 300;
-      
+
       setCoords({
         top: spaceBelow < calendarHeight ? rect.top - calendarHeight - 8 : rect.bottom + 8,
         left: rect.left,
@@ -84,25 +84,43 @@ const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, placeholder = 
     const calendarDays = [];
 
     for (let i = 0; i < startDay; i++) {
-      calendarDays.push(<div key={`empty-${i}`} className="p-2"></div>);
+      calendarDays.push(<div key={`empty-${i}`} style={{ padding: '0.5rem' }}></div>);
     }
 
     for (let d = 1; d <= totalDays; d++) {
       const isSelected = value === new Date(viewDate.getFullYear(), viewDate.getMonth(), d).toISOString().split('T')[0];
       const isToday = new Date().toDateString() === new Date(viewDate.getFullYear(), viewDate.getMonth(), d).toDateString();
-      
+
       calendarDays.push(
         <button
           key={d}
           type="button"
           onClick={() => selectDate(d)}
-          className={`p-2 text-[11px] rounded-md transition-all ${
-            isSelected 
-              ? 'bg-blue-600 text-white font-bold' 
-              : isToday 
-                ? 'border border-blue-500/50 text-blue-400' 
-                : 'hover:bg-slate-700 text-slate-300'
-          }`}
+          style={{
+            padding: '0.5rem',
+            fontSize: '11px',
+            borderRadius: '0.375rem',
+            transition: 'all 0.2s',
+            border: isToday ? '1px solid rgba(59, 130, 246, 0.5)' : 'none',
+            backgroundColor: isSelected ? '#1f6feb' : 'transparent',
+            color: isSelected ? '#fff' : (isToday ? '#3b82f6' : '#94a3b8'),
+            cursor: 'pointer',
+            fontWeight: isSelected ? '700' : '400',
+            textAlign: 'center'
+          }}
+          className="calendar-day-btn"
+          onMouseEnter={(e) => {
+            if (!isSelected) {
+              e.currentTarget.style.backgroundColor = '#1c212a';
+              e.currentTarget.style.color = '#fff';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isSelected) {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.color = isToday ? '#3b82f6' : '#94a3b8';
+            }
+          }}
         >
           {d}
         </button>
@@ -119,12 +137,30 @@ const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, placeholder = 
       years.push(i);
     }
     return (
-      <div className="grid grid-cols-3 gap-1 overflow-y-auto max-h-48 custom-scrollbar p-2">
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: '0.25rem',
+        overflowY: 'auto',
+        maxHeight: '12rem',
+        padding: '0.5rem'
+      }}>
         {years.map(y => (
           <button
             key={y}
             onClick={(e) => { e.stopPropagation(); selectYear(y); }}
-            className={`py-1.5 text-[10px] rounded hover:bg-slate-700 ${viewDate.getFullYear() === y ? 'text-blue-400 font-bold' : 'text-slate-300'}`}
+            style={{
+              padding: '0.375rem',
+              fontSize: '10px',
+              borderRadius: '0.25rem',
+              backgroundColor: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              color: viewDate.getFullYear() === y ? '#3b82f6' : '#94a3b8',
+              fontWeight: viewDate.getFullYear() === y ? '700' : '400'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1c212a'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
             {y}
           </button>
@@ -136,72 +172,127 @@ const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, placeholder = 
   const formattedValue = value ? value.split('-').reverse().join('/') : '';
 
   return (
-    <div className={`relative ${className}`} ref={containerRef}>
-      <div 
+    <div className={`datepicker-container ${className}`} ref={containerRef} style={{ position: 'relative' }}>
+      <div
         onClick={() => setIsOpen(!isOpen)}
-        className="form-input-dark p-2.5 pl-10 rounded-md border text-white w-full text-xs cursor-pointer flex items-center relative transition-all duration-200 hover:border-blue-500/50"
+        className="form-control"
+        style={{
+          backgroundColor: '#0d1117',
+          borderColor: '#1c212a',
+          color: value ? '#fff' : '#94a3b8',
+          padding: '0.625rem 1rem 0.625rem 2.5rem',
+          fontSize: '0.875rem',
+          cursor: 'pointer',
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center'
+        }}
       >
-        <i className="far fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-        <span className={value ? "text-white" : "text-slate-500"}>
-          {formattedValue || placeholder}
-        </span>
+        <i className="far fa-calendar" style={{ position: 'absolute', left: '1rem', color: '#94a3b8' }}></i>
+        <span>{formattedValue || placeholder}</span>
       </div>
 
       {isOpen && (
-        <div 
-          className="fixed z-[9999] w-64 bg-[#1e293b] border border-slate-700 rounded-lg shadow-2xl overflow-hidden animate-fadeIn"
-          style={{ top: coords.top, left: coords.left }}
+        <div
+          style={{
+            position: 'fixed',
+            zIndex: 9999,
+            width: '18rem',
+            backgroundColor: '#161b22',
+            border: '1px solid #1c212a',
+            borderRadius: '0.5rem',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+            overflow: 'hidden',
+            top: coords.top,
+            left: coords.left
+          }}
           onMouseDown={(e) => e.stopPropagation()}
         >
-          <div className="p-4">
-            <div className="flex justify-between items-center mb-4">
-              <button type="button" onClick={handlePrevMonth} className="p-1.5 hover:bg-slate-700 rounded text-slate-400 transition-colors">
-                <i className="fas fa-chevron-left text-[10px]"></i>
+          <div style={{ padding: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <button
+                type="button"
+                onClick={handlePrevMonth}
+                style={{ background: 'none', border: 'none', padding: '0.4rem', cursor: 'pointer', color: '#94a3b8', borderRadius: '0.25rem' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1c212a'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              >
+                <i className="fas fa-chevron-left" style={{ fontSize: '10px' }}></i>
               </button>
-              
-              <div className="flex flex-col items-center">
-                <button 
+
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <button
                   onClick={() => setShowYearSelect(!showYearSelect)}
-                  className="text-[11px] font-bold text-white uppercase tracking-wider hover:text-blue-400 flex items-center gap-1"
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '11px',
+                    fontWeight: '700',
+                    color: '#fff',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.25rem'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#3b82f6'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#fff'}
                 >
                   {monthNames[viewDate.getMonth()]} {viewDate.getFullYear()}
-                  <i className={`fas fa-caret-down text-[8px] transition-transform ${showYearSelect ? 'rotate-180' : ''}`}></i>
+                  <i className={`fas fa-caret-down`} style={{ fontSize: '8px', transition: 'transform 0.2s', transform: showYearSelect ? 'rotate(180deg)' : 'none' }}></i>
                 </button>
               </div>
 
-              <button type="button" onClick={handleNextMonth} className="p-1.5 hover:bg-slate-700 rounded text-slate-400 transition-colors">
-                <i className="fas fa-chevron-right text-[10px]"></i>
+              <button
+                type="button"
+                onClick={handleNextMonth}
+                style={{ background: 'none', border: 'none', padding: '0.4rem', cursor: 'pointer', color: '#94a3b8', borderRadius: '0.25rem' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1c212a'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              >
+                <i className="fas fa-chevron-right" style={{ fontSize: '10px' }}></i>
               </button>
             </div>
-            
+
             {showYearSelect ? renderYearSelector() : (
               <>
-                <div className="grid grid-cols-7 gap-1 text-center mb-2">
-                  {days.map(d => <span key={d} className="text-[9px] font-bold text-slate-500 uppercase">{d}</span>)}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', textAlign: 'center', marginBottom: '0.5rem' }}>
+                  {days.map(d => <span key={d} style={{ fontSize: '9px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase' }}>{d}</span>)}
                 </div>
-                
-                <div className="grid grid-cols-7 gap-1">
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.25rem' }}>
                   {renderCalendar()}
                 </div>
               </>
             )}
           </div>
-          
+
           {!showYearSelect && (
-            <div className="p-2 border-t border-slate-700/50 bg-slate-900/30 flex justify-between">
-              <button 
+            <div style={{
+              padding: '0.5rem',
+              borderTop: '1px solid #1c212a',
+              backgroundColor: 'rgba(0,0,0,0.2)',
+              display: 'flex',
+              justifyContent: 'space-between'
+            }}>
+              <button
                 onClick={() => { onChange(''); setIsOpen(false); }}
-                className="text-[9px] text-red-400 hover:text-red-300 font-bold uppercase px-2"
+                style={{ background: 'none', border: 'none', fontSize: '9px', color: '#ef4444', fontWeight: '700', textTransform: 'uppercase', padding: '0 0.5rem', cursor: 'pointer' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#f87171'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#ef4444'}
               >
                 Limpiar
               </button>
-              <button 
-                onClick={() => { 
+              <button
+                onClick={() => {
                   const today = new Date().toISOString().split('T')[0];
-                  onChange(today); 
-                  setIsOpen(false); 
+                  onChange(today);
+                  setIsOpen(false);
                 }}
-                className="text-[9px] text-blue-400 hover:text-blue-300 font-bold uppercase px-2"
+                style={{ background: 'none', border: 'none', fontSize: '9px', color: '#3b82f6', fontWeight: '700', textTransform: 'uppercase', padding: '0 0.5rem', cursor: 'pointer' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#60a5fa'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#3b82f6'}
               >
                 Hoy
               </button>
