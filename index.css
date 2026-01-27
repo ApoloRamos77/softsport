@@ -240,9 +240,9 @@ input[type="checkbox"]:checked {
   --bs-border-color: #E2E8F0 !important;
 }
 
-/* ===== SIDEBAR LAYOUT - SOLUCIÓN DEFINITIVA ===== */
+/* ===== SIDEBAR LAYOUT - DESKTOP Y MÓVIL ===== */
 
-/* Sidebar siempre fijo a la izquierda */
+/* Elementos principales siempre fijos */
 .app-sidebar {
   position: fixed !important;
   top: 0 !important;
@@ -255,38 +255,23 @@ input[type="checkbox"]:checked {
   overflow-y: auto !important;
 }
 
-/* Navbar siempre arriba */
 .app-header {
   position: fixed !important;
   top: 0 !important;
   right: 0 !important;
   z-index: 1030 !important;
-  transition: left 0.3s ease-in-out, width 0.3s ease-in-out !important;
+  transition: left 0.3s ease-in-out !important;
 }
 
-/* Contenido principal */
 .app-main {
   padding-top: 60px !important;
   transition: margin-left 0.3s ease-in-out !important;
   min-height: 100vh !important;
 }
 
-/* ===== DESKTOP (≥992px) ===== */
+/* ===== DESKTOP (≥992px) - Sidebar empuja el contenido ===== */
 @media (min-width: 992px) {
-  /* Sidebar abierto: navbar y contenido desplazados */
-  body.sidebar-open .app-sidebar {
-    transform: translateX(0) !important;
-  }
-  
-  body.sidebar-open .app-header {
-    left: 250px !important;
-  }
-  
-  body.sidebar-open .app-main {
-    margin-left: 250px !important;
-  }
-
-  /* Sidebar cerrado: navbar y contenido ocupan todo el ancho */
+  /* Estado por defecto: Sidebar CERRADO */
   body.sidebar-collapse .app-sidebar {
     transform: translateX(-250px) !important;
   }
@@ -298,23 +283,30 @@ input[type="checkbox"]:checked {
   body.sidebar-collapse .app-main {
     margin-left: 0 !important;
   }
+
+  /* Estado abierto: Sidebar VISIBLE */
+  body.sidebar-open .app-sidebar {
+    transform: translateX(0) !important;
+  }
+  
+  body.sidebar-open .app-header {
+    left: 250px !important;
+  }
+  
+  body.sidebar-open .app-main {
+    margin-left: 250px !important;
+  }
 }
 
-/* ===== MÓVIL (<992px) ===== */
+/* ===== MÓVIL (<992px) - Sidebar como overlay ===== */
 @media (max-width: 991px) {
-  /* Sidebar siempre fuera de pantalla por defecto */
+  /* Estado por defecto: Sidebar OCULTO */
   .app-sidebar {
     transform: translateX(-250px) !important;
     z-index: 1050 !important;
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15) !important;
   }
 
-  /* Cuando se abre, el sidebar aparece encima */
-  body.sidebar-open .app-sidebar {
-    transform: translateX(0) !important;
-  }
-
-  /* Navbar y contenido siempre ocupan todo el ancho */
   .app-header {
     left: 0 !important;
   }
@@ -323,7 +315,12 @@ input[type="checkbox"]:checked {
     margin-left: 0 !important;
   }
 
-  /* Overlay oscuro cuando sidebar está abierto */
+  /* Estado abierto: Sidebar VISIBLE como overlay */
+  body.sidebar-open .app-sidebar {
+    transform: translateX(0) !important;
+  }
+
+  /* Overlay oscuro cuando sidebar está abierto en móvil */
   body.sidebar-open::before {
     content: "";
     position: fixed;
