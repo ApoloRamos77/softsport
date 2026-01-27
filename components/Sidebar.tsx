@@ -33,11 +33,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, currentView, onViewChange }) 
     <aside className="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
       <div className="sidebar-brand">
         <a href="#" className="brand-link" onClick={(e) => e.preventDefault()}>
-          <img src="/images/logo.png" alt="ADHSOFT SPORT" className="brand-image" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
-          <div className="brand-text-wrapper">
-            <span className="brand-text fw-bold">ADHSOFT SPORT</span>
-            <small className="brand-subtitle d-block text-muted">Gestión Deportiva</small>
-          </div>
+          <img src="/images/logo.png" alt="ADHSOFT SPORT" className="brand-image" />
         </a>
       </div>
 

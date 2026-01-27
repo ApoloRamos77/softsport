@@ -251,8 +251,9 @@ input[type="checkbox"]:checked {
   width: 250px !important;
   z-index: 1040 !important;
   transition: width 0.3s ease-in-out, transform 0.3s ease-in-out !important;
-  overflow-x: hidden !important;
-  overflow-y: auto !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
 .app-header {
@@ -290,12 +291,6 @@ input[type="checkbox"]:checked {
     margin-left: 250px !important;
   }
 
-  body.sidebar-open .brand-text-wrapper {
-    opacity: 1 !important;
-    visibility: visible !important;
-    width: auto !important;
-  }
-
   body.sidebar-open .nav-link p {
     opacity: 1 !important;
     visibility: visible !important;
@@ -320,10 +315,9 @@ input[type="checkbox"]:checked {
     margin-left: 60px !important;
   }
 
-  body.sidebar-collapse .brand-text-wrapper {
-    opacity: 0 !important;
-    visibility: hidden !important;
-    width: 0 !important;
+  body.sidebar-collapse .brand-image {
+    width: 40px !important;
+    height: 40px !important;
   }
 
   body.sidebar-collapse .nav-link p {
@@ -331,10 +325,6 @@ input[type="checkbox"]:checked {
     visibility: hidden !important;
     width: 0 !important;
     margin-left: 0 !important;
-  }
-
-  body.sidebar-collapse .brand-link {
-    justify-content: center !important;
   }
 
   body.sidebar-collapse .nav-link {
@@ -387,55 +377,35 @@ input[type="checkbox"]:checked {
 
 /* ===== Estilos adicionales del sidebar ===== */
 .sidebar-brand {
-  padding: 0.8125rem 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0 !important;
+  padding: 1rem !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 70px !important;
 }
 
 .sidebar-brand .brand-link {
   display: flex !important;
   align-items: center !important;
+  justify-content: center !important;
   text-decoration: none !important;
   transition: all 0.3s ease-in-out !important;
-  gap: 0.5rem !important;
 }
 
 .brand-image {
-  flex-shrink: 0 !important;
-  width: 40px !important;
-  height: 40px !important;
+  width: 50px !important;
+  height: 50px !important;
+  object-fit: contain !important;
+  transition: width 0.3s ease-in-out, height 0.3s ease-in-out !important;
 }
 
-.brand-text-wrapper {
-  display: flex !important;
-  flex-direction: column !important;
-  transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out, width 0.3s ease-in-out !important;
-  overflow: hidden !important;
-}
-
-.brand-text {
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  font-size: 1.1rem !important;
-  line-height: 1.2 !important;
-}
-
-.brand-subtitle {
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  font-size: 0.75rem !important;
-  opacity: 0.7 !important;
-  margin-top: -2px !important;
-}
-
-/* Ocultar texto del brand en sidebar colapsado */
-body.sidebar-collapse .brand-text-wrapper {
-  opacity: 0 !important;
-  visibility: hidden !important;
-  width: 0 !important;
-}
-
-body.sidebar-collapse .brand-link {
-  justify-content: center !important;
+/* Sidebar wrapper con scroll */
+.sidebar-wrapper {
+  flex: 1 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
 }
 
 .nav-link {
