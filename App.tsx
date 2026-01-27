@@ -81,10 +81,22 @@ const App: React.FC = () => {
   useEffect(() => {
     // Update body classes based on authentication status
     if (isAuthenticated) {
-      if (isSidebarOpen) {
-        document.body.className = 'layout-fixed sidebar-open bg-body-tertiary';
+      const isMobile = window.innerWidth < 992;
+      
+      if (isMobile) {
+        // En móvil: sidebar-open cuando está visible, sin clase cuando está oculto
+        if (isSidebarOpen) {
+          document.body.className = 'layout-fixed sidebar-open bg-body-tertiary';
+        } else {
+          document.body.className = 'layout-fixed bg-body-tertiary';
+        }
       } else {
-        document.body.className = 'layout-fixed sidebar-collapse bg-body-tertiary';
+        // En desktop: sidebar-open para expandido, sidebar-collapse para colapsado
+        if (isSidebarOpen) {
+          document.body.className = 'layout-fixed sidebar-open bg-body-tertiary';
+        } else {
+          document.body.className = 'layout-fixed sidebar-collapse bg-body-tertiary';
+        }
       }
     } else {
       document.body.className = 'hold-transition login-page';
@@ -104,6 +116,22 @@ const App: React.FC = () => {
 
     document.addEventListener('click', handleOverlayClick);
     return () => document.removeEventListener('click', handleOverlayClick);
+  }, [isAuthenticated, isSidebarOpen]);
+
+  // Responsive: Ajustar estado del sidebar al redimensionar
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const handleResize = () => {
+      const isMobile = window.innerWidth < 992;
+      if (!isMobile && !isSidebarOpen) {
+        // En desktop, si el sidebar está cerrado, abrirlo al cambiar de móvil a desktop
+        setIsSidebarOpen(true);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [isAuthenticated, isSidebarOpen]);
 
   useEffect(() => {

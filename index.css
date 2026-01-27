@@ -242,7 +242,7 @@ input[type="checkbox"]:checked {
 
 /* ===== SIDEBAR COLAPSABLE CON ICONOS ===== */
 
-/* Sidebar siempre visible */
+/* Sidebar base */
 .app-sidebar {
   position: fixed !important;
   top: 0 !important;
@@ -250,7 +250,7 @@ input[type="checkbox"]:checked {
   bottom: 0 !important;
   width: 250px !important;
   z-index: 1040 !important;
-  transition: width 0.3s ease-in-out !important;
+  transition: width 0.3s ease-in-out, transform 0.3s ease-in-out !important;
   overflow-x: hidden !important;
   overflow-y: auto !important;
 }
@@ -269,9 +269,15 @@ input[type="checkbox"]:checked {
   min-height: 100vh !important;
 }
 
-/* ===== DESKTOP (≥992px) - Sidebar colapsable ===== */
+/* ===== DESKTOP (≥992px) - Sidebar colapsable con iconos ===== */
 @media (min-width: 992px) {
-  /* Estado expandido (por defecto) */
+  /* Por defecto: sidebar visible */
+  .app-sidebar {
+    width: 250px !important;
+    transform: translateX(0) !important;
+  }
+
+  /* Estado EXPANDIDO (sidebar-open) */
   body.sidebar-open .app-sidebar {
     width: 250px !important;
   }
@@ -284,13 +290,24 @@ input[type="checkbox"]:checked {
     margin-left: 250px !important;
   }
 
-  body.sidebar-open .brand-text,
-  body.sidebar-open .nav-link p {
+  body.sidebar-open .brand-text {
     opacity: 1 !important;
-    display: inline !important;
+    visibility: visible !important;
+    width: auto !important;
   }
 
-  /* Estado colapsado - Solo iconos */
+  body.sidebar-open .nav-link p {
+    opacity: 1 !important;
+    visibility: visible !important;
+    width: auto !important;
+    margin-left: 0.5rem !important;
+  }
+
+  body.sidebar-open .nav-link {
+    padding-left: 1rem !important;
+  }
+
+  /* Estado COLAPSADO (sidebar-collapse) - Solo iconos */
   body.sidebar-collapse .app-sidebar {
     width: 60px !important;
   }
@@ -303,10 +320,17 @@ input[type="checkbox"]:checked {
     margin-left: 60px !important;
   }
 
-  body.sidebar-collapse .brand-text,
+  body.sidebar-collapse .brand-text {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    width: 0 !important;
+  }
+
   body.sidebar-collapse .nav-link p {
     opacity: 0 !important;
-    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    margin-left: 0 !important;
   }
 
   body.sidebar-collapse .brand-link {
@@ -326,8 +350,9 @@ input[type="checkbox"]:checked {
 
 /* ===== MÓVIL (<992px) - Sidebar como overlay ===== */
 @media (max-width: 991px) {
-  /* Estado oculto (por defecto en móvil) */
+  /* Por defecto: sidebar oculto */
   .app-sidebar {
+    width: 250px !important;
     transform: translateX(-250px) !important;
     z-index: 1050 !important;
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15) !important;
@@ -360,16 +385,27 @@ input[type="checkbox"]:checked {
   }
 }
 
-/* Estilos adicionales del sidebar */
+/* ===== Estilos adicionales del sidebar ===== */
+.sidebar-brand {
+  padding: 0.8125rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 .sidebar-brand .brand-link {
   display: flex !important;
   align-items: center !important;
+  text-decoration: none !important;
   transition: all 0.3s ease-in-out !important;
 }
 
+.brand-image {
+  flex-shrink: 0 !important;
+}
+
 .brand-text {
-  transition: opacity 0.3s ease-in-out !important;
+  transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out, width 0.3s ease-in-out !important;
   white-space: nowrap !important;
+  overflow: hidden !important;
 }
 
 .nav-link {
@@ -380,13 +416,14 @@ input[type="checkbox"]:checked {
 
 .nav-link p {
   margin: 0 !important;
-  margin-left: 0.5rem !important;
-  transition: opacity 0.3s ease-in-out !important;
+  transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out, width 0.3s ease-in-out, margin 0.3s ease-in-out !important;
   white-space: nowrap !important;
+  overflow: hidden !important;
 }
 
 .nav-icon {
   font-size: 1.1rem !important;
+  flex-shrink: 0 !important;
   transition: margin 0.3s ease-in-out !important;
 }
 
