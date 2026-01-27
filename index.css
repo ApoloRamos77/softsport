@@ -240,58 +240,121 @@ input[type="checkbox"]:checked {
   --bs-border-color: #E2E8F0 !important;
 }
 
-/* Sidebar Collapse Functionality */
-.app-sidebar {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  bottom: 0 !important;
-  width: 250px !important;
-  z-index: 1000 !important;
-  transition: transform 0.3s ease-in-out !important;
-  overflow-x: hidden !important;
-  transform: translateX(0) !important;
+/* Sidebar Collapse Functionality - Responsive Design */
+
+/* Desktop: Sidebar visible por defecto */
+@media (min-width: 992px) {
+  .app-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 250px !important;
+    z-index: 1040 !important;
+    transition: all 0.3s ease-in-out !important;
+    overflow-x: hidden !important;
+    transform: translateX(0) !important;
+  }
+
+  body.sidebar-collapse .app-sidebar {
+    transform: translateX(-250px) !important;
+  }
+
+  body.sidebar-open .app-sidebar {
+    transform: translateX(0) !important;
+  }
+
+  .app-main {
+    margin-left: 250px !important;
+    padding-top: 60px !important;
+    transition: all 0.3s ease-in-out !important;
+    min-height: 100vh !important;
+    width: calc(100% - 250px) !important;
+  }
+
+  body.sidebar-collapse .app-main {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  body.sidebar-open .app-main {
+    margin-left: 250px !important;
+    width: calc(100% - 250px) !important;
+  }
+
+  .app-header {
+    position: fixed !important;
+    top: 0 !important;
+    left: 250px !important;
+    right: 0 !important;
+    z-index: 1030 !important;
+    transition: all 0.3s ease-in-out !important;
+    width: calc(100% - 250px) !important;
+  }
+
+  body.sidebar-collapse .app-header {
+    left: 0 !important;
+    width: 100% !important;
+  }
+
+  body.sidebar-open .app-header {
+    left: 250px !important;
+    width: calc(100% - 250px) !important;
+  }
 }
 
-body.sidebar-collapse .app-sidebar {
-  transform: translateX(-250px) !important;
-}
+/* Tablet y Mobile: Sidebar oculto por defecto, overlay cuando está abierto */
+@media (max-width: 991px) {
+  .app-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 250px !important;
+    z-index: 1050 !important;
+    transition: all 0.3s ease-in-out !important;
+    overflow-x: hidden !important;
+    transform: translateX(-250px) !important;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+  }
 
-body.sidebar-open .app-sidebar {
-  transform: translateX(0) !important;
-}
+  body.sidebar-open .app-sidebar {
+    transform: translateX(0) !important;
+  }
 
-.app-main {
-  margin-left: 250px !important;
-  padding-top: 60px !important;
-  transition: margin-left 0.3s ease-in-out !important;
-  min-height: 100vh !important;
-}
+  body.sidebar-collapse .app-sidebar {
+    transform: translateX(-250px) !important;
+  }
 
-body.sidebar-collapse .app-main {
-  margin-left: 0 !important;
-}
+  .app-main {
+    margin-left: 0 !important;
+    padding-top: 60px !important;
+    transition: all 0.3s ease-in-out !important;
+    min-height: 100vh !important;
+    width: 100% !important;
+  }
 
-body.sidebar-open .app-main {
-  margin-left: 250px !important;
-}
+  .app-header {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 1040 !important;
+    width: 100% !important;
+  }
 
-/* Navbar adjustments */
-.app-header {
-  position: fixed !important;
-  top: 0 !important;
-  left: 250px !important;
-  right: 0 !important;
-  z-index: 999 !important;
-  transition: left 0.3s ease-in-out !important;
-}
-
-body.sidebar-collapse .app-header {
-  left: 0 !important;
-}
-
-body.sidebar-open .app-header {
-  left: 250px !important;
+  /* Overlay oscuro cuando sidebar está abierto en móvil */
+  body.sidebar-open::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1045;
+    animation: fadeIn 0.3s ease-in-out;
+  }
 }
 
 /* Sidebar brand text transition */
@@ -301,22 +364,6 @@ body.sidebar-open .app-header {
 
 body.sidebar-collapse .sidebar-brand .brand-text {
   opacity: 0;
-}
-
-/* Mobile responsive */
-@media (max-width: 768px) {
-  .app-sidebar {
-    margin-left: -250px;
-  }
-  
-  body.sidebar-open .app-sidebar {
-    margin-left: 0;
-  }
-  
-  .app-main,
-  .app-header {
-    margin-left: 0 !important;
-  }
 }
 
 /* Login Page Overrides - Asegurar contraste correcto */
