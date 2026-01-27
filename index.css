@@ -240,9 +240,9 @@ input[type="checkbox"]:checked {
   --bs-border-color: #E2E8F0 !important;
 }
 
-/* ===== SIDEBAR LAYOUT - DESKTOP Y MÓVIL ===== */
+/* ===== SIDEBAR COLAPSABLE CON ICONOS ===== */
 
-/* Elementos principales siempre fijos */
+/* Sidebar siempre visible */
 .app-sidebar {
   position: fixed !important;
   top: 0 !important;
@@ -250,7 +250,7 @@ input[type="checkbox"]:checked {
   bottom: 0 !important;
   width: 250px !important;
   z-index: 1040 !important;
-  transition: transform 0.3s ease-in-out !important;
+  transition: width 0.3s ease-in-out !important;
   overflow-x: hidden !important;
   overflow-y: auto !important;
 }
@@ -269,24 +269,11 @@ input[type="checkbox"]:checked {
   min-height: 100vh !important;
 }
 
-/* ===== DESKTOP (≥992px) - Sidebar empuja el contenido ===== */
+/* ===== DESKTOP (≥992px) - Sidebar colapsable ===== */
 @media (min-width: 992px) {
-  /* Estado por defecto: Sidebar CERRADO */
-  body.sidebar-collapse .app-sidebar {
-    transform: translateX(-250px) !important;
-  }
-  
-  body.sidebar-collapse .app-header {
-    left: 0 !important;
-  }
-  
-  body.sidebar-collapse .app-main {
-    margin-left: 0 !important;
-  }
-
-  /* Estado abierto: Sidebar VISIBLE */
+  /* Estado expandido (por defecto) */
   body.sidebar-open .app-sidebar {
-    transform: translateX(0) !important;
+    width: 250px !important;
   }
   
   body.sidebar-open .app-header {
@@ -296,11 +283,50 @@ input[type="checkbox"]:checked {
   body.sidebar-open .app-main {
     margin-left: 250px !important;
   }
+
+  body.sidebar-open .brand-text,
+  body.sidebar-open .nav-link p {
+    opacity: 1 !important;
+    display: inline !important;
+  }
+
+  /* Estado colapsado - Solo iconos */
+  body.sidebar-collapse .app-sidebar {
+    width: 60px !important;
+  }
+  
+  body.sidebar-collapse .app-header {
+    left: 60px !important;
+  }
+  
+  body.sidebar-collapse .app-main {
+    margin-left: 60px !important;
+  }
+
+  body.sidebar-collapse .brand-text,
+  body.sidebar-collapse .nav-link p {
+    opacity: 0 !important;
+    display: none !important;
+  }
+
+  body.sidebar-collapse .brand-link {
+    justify-content: center !important;
+  }
+
+  body.sidebar-collapse .nav-link {
+    justify-content: center !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  body.sidebar-collapse .nav-icon {
+    margin-right: 0 !important;
+  }
 }
 
 /* ===== MÓVIL (<992px) - Sidebar como overlay ===== */
 @media (max-width: 991px) {
-  /* Estado por defecto: Sidebar OCULTO */
+  /* Estado oculto (por defecto en móvil) */
   .app-sidebar {
     transform: translateX(-250px) !important;
     z-index: 1050 !important;
@@ -315,12 +341,12 @@ input[type="checkbox"]:checked {
     margin-left: 0 !important;
   }
 
-  /* Estado abierto: Sidebar VISIBLE como overlay */
+  /* Estado abierto - Sidebar visible como overlay */
   body.sidebar-open .app-sidebar {
     transform: translateX(0) !important;
   }
 
-  /* Overlay oscuro cuando sidebar está abierto en móvil */
+  /* Overlay oscuro */
   body.sidebar-open::before {
     content: "";
     position: fixed;
@@ -332,6 +358,36 @@ input[type="checkbox"]:checked {
     z-index: 1045;
     animation: fadeIn 0.3s ease-in-out;
   }
+}
+
+/* Estilos adicionales del sidebar */
+.sidebar-brand .brand-link {
+  display: flex !important;
+  align-items: center !important;
+  transition: all 0.3s ease-in-out !important;
+}
+
+.brand-text {
+  transition: opacity 0.3s ease-in-out !important;
+  white-space: nowrap !important;
+}
+
+.nav-link {
+  display: flex !important;
+  align-items: center !important;
+  transition: all 0.3s ease-in-out !important;
+}
+
+.nav-link p {
+  margin: 0 !important;
+  margin-left: 0.5rem !important;
+  transition: opacity 0.3s ease-in-out !important;
+  white-space: nowrap !important;
+}
+
+.nav-icon {
+  font-size: 1.1rem !important;
+  transition: margin 0.3s ease-in-out !important;
 }
 
 /* Login Page Overrides - Asegurar contraste correcto */

@@ -29,10 +29,8 @@ type View = 'representantes' | 'servicios' | 'grupos' | 'categorias' | 'atletas'
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  // Inicializar sidebar según tamaño de pantalla
-  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
-    return window.innerWidth >= 992;
-  });
+  // Inicializar sidebar abierto siempre
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('theme');
@@ -93,14 +91,13 @@ const App: React.FC = () => {
     }
   }, [isAuthenticated, isSidebarOpen]);
 
-  // Cerrar sidebar al hacer clic en el overlay (móviles)
+  // Cerrar sidebar al hacer clic en el overlay (solo móviles)
   useEffect(() => {
-    if (!isAuthenticated || !isSidebarOpen || window.innerWidth >= 992) return;
+    if (!isAuthenticated || window.innerWidth >= 992) return;
 
     const handleOverlayClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (target === document.body.querySelector('body::before') || 
-          (!target.closest('.app-sidebar') && window.innerWidth < 992)) {
+      if (isSidebarOpen && !target.closest('.app-sidebar') && !target.closest('[data-lte-toggle="sidebar"]')) {
         setIsSidebarOpen(false);
       }
     };
@@ -108,20 +105,6 @@ const App: React.FC = () => {
     document.addEventListener('click', handleOverlayClick);
     return () => document.removeEventListener('click', handleOverlayClick);
   }, [isAuthenticated, isSidebarOpen]);
-
-  // Responsive: Ajustar sidebar al cambiar tamaño de ventana
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 992) {
-        setIsSidebarOpen(true);
-      } else {
-        setIsSidebarOpen(false);
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   useEffect(() => {
     if (darkMode) {
