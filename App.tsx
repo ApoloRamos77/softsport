@@ -109,7 +109,7 @@ const App: React.FC = () => {
 
     const handleOverlayClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (isSidebarOpen && !target.closest('.app-sidebar') && !target.closest('[data-lte-toggle="sidebar"]')) {
+      if (isSidebarOpen && !target.closest('.sidebar-modern') && !target.closest('[data-lte-toggle="sidebar"]')) {
         setIsSidebarOpen(false);
       }
     };
@@ -129,11 +129,11 @@ const App: React.FC = () => {
       if (window.innerWidth >= 992) {
         // Desktop
         if (isSidebarOpen) {
-          header.style.left = '250px';
-          main.style.marginLeft = '250px';
+          header.style.left = '260px';
+          main.style.marginLeft = '260px';
         } else {
-          header.style.left = '60px';
-          main.style.marginLeft = '60px';
+          header.style.left = '70px';
+          main.style.marginLeft = '70px';
         }
       } else {
         // Móvil
