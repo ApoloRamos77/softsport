@@ -80,11 +80,12 @@ const App: React.FC = () => {
   useEffect(() => {
     // Update body classes based on authentication status
     if (isAuthenticated) {
-      document.body.className = 'layout-fixed sidebar-expand-lg bg-body-tertiary';
+      const sidebarClass = isSidebarOpen ? 'sidebar-open' : 'sidebar-collapse';
+      document.body.className = `layout-fixed ${sidebarClass} bg-body-tertiary`;
     } else {
       document.body.className = 'hold-transition login-page';
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isSidebarOpen]);
 
   useEffect(() => {
     if (darkMode) {

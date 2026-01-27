@@ -239,3 +239,75 @@ input[type="checkbox"]:checked {
   --bs-body-color: #1E293B !important;
   --bs-border-color: #E2E8F0 !important;
 }
+
+/* Sidebar Collapse Functionality */
+.app-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 250px;
+  z-index: 1000;
+  transition: margin-left 0.3s ease-in-out, width 0.3s ease-in-out;
+  overflow-x: hidden;
+}
+
+body.sidebar-collapse .app-sidebar {
+  margin-left: -250px;
+}
+
+body.sidebar-open .app-sidebar {
+  margin-left: 0;
+}
+
+.app-main {
+  margin-left: 250px;
+  transition: margin-left 0.3s ease-in-out;
+}
+
+body.sidebar-collapse .app-main {
+  margin-left: 0;
+}
+
+body.sidebar-open .app-main {
+  margin-left: 250px;
+}
+
+/* Navbar adjustments */
+.app-header {
+  margin-left: 250px;
+  transition: margin-left 0.3s ease-in-out;
+}
+
+body.sidebar-collapse .app-header {
+  margin-left: 0;
+}
+
+body.sidebar-open .app-header {
+  margin-left: 250px;
+}
+
+/* Sidebar brand text transition */
+.sidebar-brand .brand-text {
+  transition: opacity 0.3s ease-in-out;
+}
+
+body.sidebar-collapse .sidebar-brand .brand-text {
+  opacity: 0;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .app-sidebar {
+    margin-left: -250px;
+  }
+  
+  body.sidebar-open .app-sidebar {
+    margin-left: 0;
+  }
+  
+  .app-main,
+  .app-header {
+    margin-left: 0 !important;
+  }
+}
