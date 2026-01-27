@@ -248,21 +248,23 @@ input[type="checkbox"]:checked {
   bottom: 0 !important;
   width: 250px !important;
   z-index: 1000 !important;
-  transition: margin-left 0.3s ease-in-out !important;
+  transition: transform 0.3s ease-in-out !important;
   overflow-x: hidden !important;
+  transform: translateX(0) !important;
 }
 
 body.sidebar-collapse .app-sidebar {
-  margin-left: -250px !important;
+  transform: translateX(-250px) !important;
 }
 
 body.sidebar-open .app-sidebar {
-  margin-left: 0 !important;
+  transform: translateX(0) !important;
 }
 
 .app-main {
   margin-left: 250px !important;
   transition: margin-left 0.3s ease-in-out !important;
+  min-height: 100vh !important;
 }
 
 body.sidebar-collapse .app-main {
@@ -275,16 +277,20 @@ body.sidebar-open .app-main {
 
 /* Navbar adjustments */
 .app-header {
-  margin-left: 250px !important;
-  transition: margin-left 0.3s ease-in-out !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 250px !important;
+  right: 0 !important;
+  z-index: 999 !important;
+  transition: left 0.3s ease-in-out !important;
 }
 
 body.sidebar-collapse .app-header {
-  margin-left: 0 !important;
+  left: 0 !important;
 }
 
 body.sidebar-open .app-header {
-  margin-left: 250px !important;
+  left: 250px !important;
 }
 
 /* Sidebar brand text transition */
@@ -310,4 +316,53 @@ body.sidebar-collapse .sidebar-brand .brand-text {
   .app-header {
     margin-left: 0 !important;
   }
+}
+
+/* Login Page Overrides - Asegurar contraste correcto */
+.login-page {
+  background: linear-gradient(135deg, #27BBF5 0%, #4DC7F7 25%, #73D3F9 50%, #A3E0FB 75%, #D1EEFD 100%) !important;
+}
+
+.login-page .card-header-illustration {
+  background: #27BBF5 !important;
+}
+
+.login-page .text-white,
+.login-page h3,
+.login-page .illustration-content h3 {
+  color: white !important;
+}
+
+.login-page .text-white-50 {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.login-page .form-control-custom {
+  background: #F5FAFF !important;
+  border: 2px solid #E3F2FD !important;
+  color: #1E293B !important;
+}
+
+.login-page .form-control-custom::placeholder {
+  color: #9CA3AF !important;
+}
+
+.login-page .input-icon {
+  color: #2196F3 !important;
+}
+
+.login-page .form-check-label {
+  color: #64748B !important;
+}
+
+.login-page .text-primary {
+  color: #2196F3 !important;
+}
+
+.login-page .text-muted {
+  color: #64748B !important;
+}
+
+.login-page .card-footer small {
+  color: #64748B !important;
 }
