@@ -22,7 +22,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--bg-primary) !important;
-  color: var(--text-primary) !important;
+  color: #000000 !important;
 }
 
 /* Animaciones personalizadas */
@@ -130,24 +130,24 @@ body {
 
 /* Textos oscuros */
 .text-white {
-  color: #1E293B !important;
+  color: #000000 !important;
 }
 
 .text-slate-300 {
-  color: #475569 !important;
+  color: #000000 !important;
 }
 
 .text-slate-400, .text-slate-500 {
-  color: #64748B !important;
+  color: #000000 !important;
 }
 
 .text-slate-200 {
-  color: #475569 !important;
+  color: #000000 !important;
 }
 
 /* Hover text states */
 .hover\\:text-white:hover {
-  color: #1E293B !important;
+  color: #000000 !important;
 }
 /* Cards y contenedores */
 .card, .card-body {
@@ -263,6 +263,7 @@ body.sidebar-open .app-sidebar {
 
 .app-main {
   margin-left: 250px !important;
+  padding-top: 60px !important;
   transition: margin-left 0.3s ease-in-out !important;
   min-height: 100vh !important;
 }
@@ -365,4 +366,13 @@ body.sidebar-collapse .sidebar-brand .brand-text {
 
 .login-page .card-footer small {
   color: #64748B !important;
+}
+
+/* Forzar todos los textos a negro (excepto login) */
+p, span, div:not(.login-page *), label, h1, h2, h3, h4, h5, h6, td, th, li, a {
+  color: #000000 !important;
+}
+
+.card-title, .card-text, .small, .badge {
+  color: #000000 !important;
 }
