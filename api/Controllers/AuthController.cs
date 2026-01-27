@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SoftSportAPI.Data;
 using SoftSportAPI.Models;
+using BCrypt.Net;
 
 namespace SoftSportAPI.Controllers
 {
@@ -30,8 +31,8 @@ namespace SoftSportAPI.Controllers
                     return Unauthorized(new { error = "Credenciales inválidas" });
                 }
 
-                // Verify password (in production, use proper password hashing)
-                if (user.PasswordHash != request.Password)
+                // Verify password using BCrypt
+                if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
                 {
                     return Unauthorized(new { error = "Credenciales inválidas" });
                 }
