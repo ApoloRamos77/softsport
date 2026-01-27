@@ -87,33 +87,32 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) => {
       )}
 
       <div className={sidebarClasses}>
-        {/* Brand */}
-        <div className="sidebar-brand">
-          <img src="/images/logo.png" alt="Logo" className="brand-logo" />
-          <span className="brand-name">ADHSOFT SPORT</span>
+        {/* Scrollable area: logo, brand, nav */}
+        <div className="sidebar-scroll">
+          <div className="sidebar-brand">
+            <img src="/images/logo.png" alt="Logo" className="brand-logo" />
+            <span className="brand-name">ADHSOFT SPORT</span>
+          </div>
+          <div className="sidebar-nav">
+            {Object.entries(menuSections).map(([sectionKey, items]) => (
+              <div key={sectionKey} className="nav-section">
+                <div className="nav-section-title">{sectionTitles[sectionKey]}</div>
+                {items.map((item) => (
+                  <button
+                    key={item.id}
+                    className={`nav-item ${currentView === item.id ? 'active' : ''}`}
+                    onClick={() => handleNavClick(item.id)}
+                    title={item.name}
+                  >
+                    <i className={`bi ${item.icon} nav-icon"></i>
+                    <span className="nav-label">{item.name}</span>
+                  </button>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
-
-        {/* Navigation */}
-        <div className="sidebar-nav">
-          {Object.entries(menuSections).map(([sectionKey, items]) => (
-            <div key={sectionKey} className="nav-section">
-              <div className="nav-section-title">{sectionTitles[sectionKey]}</div>
-              {items.map((item) => (
-                <button
-                  key={item.id}
-                  className={`nav-item ${currentView === item.id ? 'active' : ''}`}
-                  onClick={() => handleNavClick(item.id)}
-                  title={item.name}
-                >
-                  <i className={`bi ${item.icon} nav-icon`}></i>
-                  <span className="nav-label">{item.name}</span>
-                </button>
-              ))}
-            </div>
-          ))}
-        </div>
-
-        {/* Footer */}
+        {/* Footer fuera del scroll, siempre visible */}
         <div className="sidebar-footer">
           <i className="bi bi-info-circle"></i>
           <span className="footer-text">v2.0.1</span>

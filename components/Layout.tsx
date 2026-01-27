@@ -25,18 +25,15 @@ const Layout: React.FC<LayoutProps> = ({
 }) => {
   return (
     <>
-      {/* Sidebar */}
       <Sidebar currentView={currentView} onViewChange={onViewChange} />
-      
-      {/* Navbar - Siempre visible */}
-      <Navbar
-        onNavigate={onNavigate}
-        darkMode={darkMode}
-        toggleTheme={toggleTheme}
-        onLogout={onLogout}
-      />
-
-      {/* Main Content */}
+      <header className="app-header">
+        <Navbar
+          onNavigate={onNavigate}
+          darkMode={darkMode}
+          toggleTheme={toggleTheme}
+          onLogout={onLogout}
+        />
+      </header>
       <main className="app-main">
         <div className="app-content-header">
           <div className="container-fluid">
@@ -55,7 +52,6 @@ const Layout: React.FC<LayoutProps> = ({
             </div>
           </div>
         </div>
-
         <div className="app-content">
           <div className="container-fluid">{children}</div>
         </div>
