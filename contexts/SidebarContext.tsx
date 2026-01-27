@@ -1,48 +1,35 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 
 interface SidebarContextType {
-  sidebarShow: boolean;
-  setSidebarShow: (show: boolean) => void;
-  sidebarUnfoldable: boolean;
-  setSidebarUnfoldable: (unfoldable: boolean) => void;
+  visible: boolean;
+  unfoldable: boolean;
   toggleSidebar: () => void;
+  setUnfoldable: (value: boolean) => void;
+  setSidebarVisible: (value: boolean) => void;
 }
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
 
 export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [sidebarShow, setSidebarShow] = useState(true);
-  const [sidebarUnfoldable, setSidebarUnfoldable] = useState(false);
+  const [visible, setVisible] = useState(true);
+  const [unfoldable, setUnfoldable] = useState(false);
 
-  const toggleSidebar = () => {
-    setSidebarShow(!sidebarShow);
-  };
+  const toggleSidebar = useCallback(() => {
+    setVisible(prev => !prev);
+  }, []);
 
-  // Responsive behavior
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 992) {
-        setSidebarShow(false);
-      } else {
-        setSidebarShow(true);
-      }
-    };
-
-    // Set initial state
-    handleResize();
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+  const setSidebarVisible = useCallback((value: boolean) => {
+    setVisible(value);
   }, []);
 
   return (
     <SidebarContext.Provider
       value={{
-        sidebarShow,
-        setSidebarShow,
-        sidebarUnfoldable,
-        setSidebarUnfoldable,
+        visible,
+        unfoldable,
         toggleSidebar,
+        setUnfoldable,
+        setSidebarVisible,
       }}
     >
       {children}

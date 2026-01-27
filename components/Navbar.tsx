@@ -10,7 +10,7 @@ interface NavbarProps {
 }
 
 const Navbar: React.FC<NavbarProps> = ({ onNavigate, darkMode, toggleTheme, onLogout }) => {
-  const { toggleSidebar, sidebarUnfoldable, setSidebarUnfoldable } = useSidebar();
+  const { toggleSidebar, unfoldable, setUnfoldable } = useSidebar();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [userData, setUserData] = useState({
     nombre: 'Usuario',
@@ -72,11 +72,11 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, darkMode, toggleTheme, onLo
               role="button" 
               onClick={(e) => { 
                 e.preventDefault(); 
-                setSidebarUnfoldable(!sidebarUnfoldable); 
+                setUnfoldable(!unfoldable); 
               }}
-              title={sidebarUnfoldable ? "Desanclar sidebar" : "Anclar sidebar"}
+              title={unfoldable ? "Expandir sidebar" : "Contraer sidebar"}
             >
-              <i className={`bi ${sidebarUnfoldable ? 'bi-pin-angle-fill' : 'bi-pin-angle'}`}></i>
+              <i className={`bi ${unfoldable ? 'bi-arrows-angle-expand' : 'bi-arrows-angle-contract'}`}></i>
             </a>
           </li>
         </ul>

@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { useSidebar } from '../contexts/SidebarContext';
 
 interface SidebarProps {
@@ -7,17 +7,8 @@ interface SidebarProps {
   onViewChange: (view: string) => void;
 }
 
-interface MenuItem {
-  id: string;
-  name: string;
-  icon: string;
-  badge?: string;
-  badgeColor?: string;
-}
-
 const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) => {
-  const { sidebarShow, setSidebarShow, sidebarUnfoldable } = useSidebar();
-  const sidebarRef = useRef<HTMLDivElement>(null);
+  const { visible, unfoldable, setSidebarVisible } = useSidebar();
 
   const menuSections = {
     principal: [
@@ -53,100 +44,79 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) => {
   };
 
   const sectionTitles: { [key: string]: string } = {
-    principal: 'Principal',
-    deportivo: 'Deportivo',
-    academico: 'Académico',
-    financiero: 'Financiero',
-    servicios: 'Servicios',
-    sistema: 'Sistema',
+    principal: 'PRINCIPAL',
+    deportivo: 'DEPORTIVO',
+    academico: 'ACADÉMICO',
+    financiero: 'FINANCIERO',
+    servicios: 'SERVICIOS',
+    sistema: 'SISTEMA',
   };
 
-  // Cerrar sidebar en móvil al hacer clic fuera
+  // Responsive: cerrar en móvil, abrir en desktop
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (window.innerWidth < 992 && sidebarShow) {
-        if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
-          const target = event.target as HTMLElement;
-          // No cerrar si se hace clic en el botón toggle
-          if (!target.closest('[data-sidebar-toggle]')) {
-            setSidebarShow(false);
-          }
-        }
+    const handleResize = () => {
+      if (window.innerWidth < 992) {
+        setSidebarVisible(false);
+      } else {
+        setSidebarVisible(true);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [sidebarShow, setSidebarShow]);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [setSidebarVisible]);
 
-  // Cerrar en móvil al seleccionar un item
   const handleNavClick = (itemId: string) => {
     onViewChange(itemId);
+    // Cerrar en móvil después de seleccionar
     if (window.innerWidth < 992) {
-      setSidebarShow(false);
+      setSidebarVisible(false);
     }
   };
 
-  const sidebarClasses = [
-    'sidebar-coreui',
-    sidebarShow ? 'show' : '',
-    sidebarUnfoldable ? 'unfoldable' : '',
-  ].filter(Boolean).join(' ');
+  const sidebarClasses = ['sidebar', visible && 'sidebar-visible', unfoldable && 'sidebar-narrow']
+    .filter(Boolean)
+    .join(' ');
 
   return (
     <>
-      {/* Overlay para móvil */}
-      {sidebarShow && window.innerWidth < 992 && (
-        <div 
-          className="sidebar-backdrop" 
-          onClick={() => setSidebarShow(false)}
-        />
+      {/* Backdrop para móvil */}
+      {visible && window.innerWidth < 992 && (
+        <div className="sidebar-backdrop" onClick={() => setSidebarVisible(false)} />
       )}
-      
-      <div ref={sidebarRef} className={sidebarClasses}>
+
+      <div className={sidebarClasses}>
+        {/* Brand */}
         <div className="sidebar-brand">
-          <div className="brand-link">
-            <img src="/images/logo.png" alt="ADHSOFT SPORT" className="brand-image" />
-            <span className="brand-text">ADHSOFT SPORT</span>
-          </div>
+          <img src="/images/logo.png" alt="Logo" className="brand-logo" />
+          <span className="brand-name">ADHSOFT SPORT</span>
         </div>
 
-        <div className="sidebar-nav-wrapper">
-          <nav className="sidebar-nav">
-            {Object.entries(menuSections).map(([sectionKey, items]) => (
-              <div key={sectionKey} className="nav-group">
-                <div className="nav-group-title">
-                  <span>{sectionTitles[sectionKey]}</span>
-                </div>
-                <ul className="nav-list">
-                  {items.map((item) => (
-                    <li className="nav-item" key={item.id}>
-                      <a
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleNavClick(item.id);
-                        }}
-                        className={`nav-link ${currentView === item.id ? 'active' : ''}`}
-                        title={item.name}
-                      >
-                        <i className={`nav-icon bi ${item.icon}`}></i>
-                        <span className="nav-text">{item.name}</span>
-                        {currentView === item.id && <div className="active-indicator"></div>}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </nav>
+        {/* Navigation */}
+        <div className="sidebar-nav">
+          {Object.entries(menuSections).map(([sectionKey, items]) => (
+            <div key={sectionKey} className="nav-section">
+              <div className="nav-section-title">{sectionTitles[sectionKey]}</div>
+              {items.map((item) => (
+                <button
+                  key={item.id}
+                  className={`nav-item ${currentView === item.id ? 'active' : ''}`}
+                  onClick={() => handleNavClick(item.id)}
+                  title={item.name}
+                >
+                  <i className={`bi ${item.icon} nav-icon`}></i>
+                  <span className="nav-label">{item.name}</span>
+                </button>
+              ))}
+            </div>
+          ))}
         </div>
 
+        {/* Footer */}
         <div className="sidebar-footer">
-          <div className="footer-content">
-            <i className="bi bi-info-circle"></i>
-            <span className="footer-text">v2.0.1</span>
-          </div>
+          <i className="bi bi-info-circle"></i>
+          <span className="footer-text">v2.0.1</span>
         </div>
       </div>
     </>
