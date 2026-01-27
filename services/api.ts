@@ -1,5 +1,7 @@
 // API service for interacting with the C# backend
-const API_BASE_URL = 'http://localhost:5081/api';
+const API_BASE_URL = import.meta.env.PROD 
+  ? 'https://softsport77-api.scuiaw.easypanel.host/api'
+  : 'http://localhost:5081/api';
 
 export interface Alumno {
   id?: number;
