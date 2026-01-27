@@ -242,49 +242,49 @@ input[type="checkbox"]:checked {
 
 /* Sidebar Collapse Functionality */
 .app-sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 250px;
-  z-index: 1000;
-  transition: margin-left 0.3s ease-in-out, width 0.3s ease-in-out;
-  overflow-x: hidden;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  bottom: 0 !important;
+  width: 250px !important;
+  z-index: 1000 !important;
+  transition: margin-left 0.3s ease-in-out !important;
+  overflow-x: hidden !important;
 }
 
 body.sidebar-collapse .app-sidebar {
-  margin-left: -250px;
+  margin-left: -250px !important;
 }
 
 body.sidebar-open .app-sidebar {
-  margin-left: 0;
+  margin-left: 0 !important;
 }
 
 .app-main {
-  margin-left: 250px;
-  transition: margin-left 0.3s ease-in-out;
+  margin-left: 250px !important;
+  transition: margin-left 0.3s ease-in-out !important;
 }
 
 body.sidebar-collapse .app-main {
-  margin-left: 0;
+  margin-left: 0 !important;
 }
 
 body.sidebar-open .app-main {
-  margin-left: 250px;
+  margin-left: 250px !important;
 }
 
 /* Navbar adjustments */
 .app-header {
-  margin-left: 250px;
-  transition: margin-left 0.3s ease-in-out;
+  margin-left: 250px !important;
+  transition: margin-left 0.3s ease-in-out !important;
 }
 
 body.sidebar-collapse .app-header {
-  margin-left: 0;
+  margin-left: 0 !important;
 }
 
 body.sidebar-open .app-header {
-  margin-left: 250px;
+  margin-left: 250px !important;
 }
 
 /* Sidebar brand text transition */
