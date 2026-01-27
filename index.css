@@ -339,13 +339,15 @@ body.sidebar-collapse .sidebar-brand .brand-text {
 }
 
 .login-page .form-control-custom {
-  background: #F5FAFF !important;
-  border: 2px solid #E3F2FD !important;
-  color: #1E293B !important;
+  background: #FFFFFF !important;
+  border: 2px solid #27BBF5 !important;
+  color: #000000 !important;
+  font-weight: 500 !important;
 }
 
 .login-page .form-control-custom::placeholder {
-  color: #9CA3AF !important;
+  color: #64748B !important;
+  font-weight: 400 !important;
 }
 
 .login-page .input-icon {
