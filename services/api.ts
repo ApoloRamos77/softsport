@@ -108,6 +108,20 @@ export interface Producto {
   activo: boolean;
 }
 
+export interface Training {
+  id: number;
+  titulo: string;
+  descripcion?: string;
+  fecha?: string;
+  horaInicio?: string;
+  horaFin?: string;
+  ubicacion?: string;
+  categoriaId?: number;
+  categoria?: Categoria;
+  tipo?: string;
+  estado: string;
+}
+
 export interface Game {
   id?: number;
   titulo?: string;

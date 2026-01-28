@@ -1,24 +1,106 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { apiService, Alumno, Training, Game } from '../services/api';
 
 const CalendarManagement: React.FC = () => {
   const [viewType, setViewType] = useState<'Mes' | 'Semana' | 'Día' | 'Agenda'>('Mes');
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [loading, setLoading] = useState(false);
 
-  const stats = [
-    { label: 'Total Eventos', value: '0', sub: 'Entrenamientos y juegos', icon: 'fa-calendar' },
-    { label: 'Próximos Entrenamientos', value: '0', sub: 'Programados', icon: 'fa-running' },
-    { label: 'Próximos Juegos', value: '0', sub: 'Programados', icon: 'fa-trophy' },
-  ];
+  const [alumnos, setAlumnos] = useState<Alumno[]>([]);
+  const [trainings, setTrainings] = useState<Training[]>([]);
+  const [games, setGames] = useState<Game[]>([]);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [alumnosData, trainingsData, gamesData] = await Promise.all([
+        apiService.getAll<Alumno>('alumnos'),
+        apiService.getAll<Training>('trainings'),
+        apiService.getAll<Game>('games')
+      ]);
+      setAlumnos(alumnosData.filter(a => !a.fechaAnulacion));
+      setTrainings(trainingsData);
+      setGames(gamesData);
+    } catch (error) {
+      console.error('Error loading calendar data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const daysOfWeek = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-  // Simulated grid for January 2026
-  const calendarGrid = [
-    [28, 29, 30, 31, 1, 2, 3],
-    [4, 5, 6, 7, 8, 9, 10],
-    [11, 12, 13, 14, 15, 16, 17],
-    [18, 19, 20, 21, 22, 23, 24],
-    [25, 26, 27, 28, 29, 30, 31],
+  const getDaysInMonth = (year: number, month: number) => {
+    const date = new Date(year, month, 1);
+    const days = [];
+
+    // Previous month filling
+    const firstDayIndex = date.getDay();
+    const prevMonthLastDay = new Date(year, month, 0).getDate();
+    for (let i = firstDayIndex - 1; i >= 0; i--) {
+      days.push({ day: prevMonthLastDay - i, month: month - 1, year, currentMonth: false });
+    }
+
+    // Current month
+    const lastDay = new Date(year, month + 1, 0).getDate();
+    for (let i = 1; i <= lastDay; i++) {
+      days.push({ day: i, month, year, currentMonth: true });
+    }
+
+    // Next month filling
+    const remaining = 42 - days.length;
+    for (let i = 1; i <= remaining; i++) {
+      days.push({ day: i, month: month + 1, year, currentMonth: false });
+    }
+
+    return days;
+  };
+
+  const calendarDays = getDaysInMonth(currentDate.getFullYear(), currentDate.getMonth());
+
+  const changeMonth = (offset: number) => {
+    const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + offset, 1);
+    setCurrentDate(newDate);
+  };
+
+  const isToday = (day: number, month: number, year: number) => {
+    const today = new Date();
+    return today.getDate() === day && today.getMonth() === month && today.getFullYear() === year;
+  };
+
+  const getEventsForDay = (day: number, month: number, year: number) => {
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+    const dayTrainings = trainings.filter(t => t.fecha && t.fecha.startsWith(dateStr));
+    const dayGames = games.filter(g => g.fecha && g.fecha.startsWith(dateStr));
+
+    // Birthdays (ignoring year)
+    const dayBirthdays = alumnos.filter(a => {
+      if (!a.fechaNacimiento) return false;
+      const bday = new Date(a.fechaNacimiento);
+      return bday.getMonth() === month && bday.getDate() === day;
+    });
+
+    return {
+      trainings: dayTrainings,
+      games: dayGames,
+      birthdays: dayBirthdays
+    };
+  };
+
+  const totalEvents = trainings.length + games.length;
+  const upcomingTrainings = trainings.filter(t => t.fecha && new Date(t.fecha) > new Date()).length;
+  const upcomingGames = games.filter(g => g.fecha && new Date(g.fecha) > new Date()).length;
+
+  const stats = [
+    { label: 'Total Eventos', value: totalEvents.toString(), sub: 'Entrenamientos y juegos', icon: 'fa-calendar' },
+    { label: 'Próximos Entrenamientos', value: upcomingTrainings.toString(), sub: 'Programados', icon: 'fa-running' },
+    { label: 'Próximos Juegos', value: upcomingGames.toString(), sub: 'Programados', icon: 'fa-trophy' },
   ];
 
   return (
@@ -27,7 +109,7 @@ const CalendarManagement: React.FC = () => {
         <div className="d-flex justify-content-between align-items-end mb-2">
           <div>
             <h2 className="mb-1 text-white fw-bold h4">Calendario de Actividades</h2>
-            <p className="text-secondary mb-0 small">Visualización mensual de entrenamientos y encuentros deportivos</p>
+            <p className="text-secondary mb-0 small">Visualización mensual de entrenamientos, juegos y cumpleaños</p>
           </div>
         </div>
 
@@ -63,6 +145,10 @@ const CalendarManagement: React.FC = () => {
                 <div className="rounded-circle" style={{ width: '8px', height: '8px', backgroundColor: '#f59e0b' }}></div>
                 <span className="text-secondary fw-bold" style={{ fontSize: '11px' }}>Juegos</span>
               </div>
+              <div className="d-flex align-items-center gap-2">
+                <div className="rounded-circle" style={{ width: '8px', height: '8px', backgroundColor: '#38bdf8' }}></div>
+                <span className="text-secondary fw-bold" style={{ fontSize: '11px' }}>Cumpleaños</span>
+              </div>
             </div>
 
             <div className="btn-group btn-group-sm bg-[#0d1117] p-1 rounded border border-secondary border-opacity-25">
@@ -81,15 +167,17 @@ const CalendarManagement: React.FC = () => {
         </div>
 
         {/* Calendar View */}
-        <div className="card border-0 shadow-lg overflow-hidden" style={{ backgroundColor: '#0f1419' }}>
+        <div className="card border-0 shadow-lg" style={{ backgroundColor: '#0f1419' }}>
           <div className="card-header bg-transparent border-bottom border-secondary border-opacity-25 p-4 py-3">
             <div className="d-flex justify-content-between align-items-center">
               <div className="d-flex align-items-center gap-3">
-                <h5 className="mb-0 text-white fw-bold fs-6">Enero 2026</h5>
+                <h5 className="mb-0 text-white fw-bold fs-6">
+                  {months[currentDate.getMonth()]} {currentDate.getFullYear()}
+                </h5>
                 <div className="btn-group btn-group-sm">
-                  <button className="btn btn-outline-secondary border-opacity-25 px-2 py-0"><i className="bi bi-chevron-left"></i></button>
-                  <button className="btn btn-outline-secondary border-opacity-25 px-3 py-0 small fw-bold" style={{ fontSize: '11px' }}>Hoy</button>
-                  <button className="btn btn-outline-secondary border-opacity-25 px-2 py-0"><i className="bi bi-chevron-right"></i></button>
+                  <button onClick={() => changeMonth(-1)} className="btn btn-outline-secondary border-opacity-25 px-2 py-0"><i className="bi bi-chevron-left"></i></button>
+                  <button onClick={() => setCurrentDate(new Date())} className="btn btn-outline-secondary border-opacity-25 px-3 py-0 small fw-bold" style={{ fontSize: '11px' }}>Hoy</button>
+                  <button onClick={() => changeMonth(1)} className="btn btn-outline-secondary border-opacity-25 px-2 py-0"><i className="bi bi-chevron-right"></i></button>
                 </div>
               </div>
               <span className="text-secondary opacity-75 small" style={{ fontSize: '11px' }}>Vista de {viewType}</span>
@@ -97,43 +185,57 @@ const CalendarManagement: React.FC = () => {
           </div>
 
           <div className="card-body p-0">
-            <div className="table-responsive">
-              <table className="table table-bordered border-secondary border-opacity-10 mb-0 align-top">
+            <div className="table-responsive overflow-hidden">
+              <table className="table table-bordered border-secondary border-opacity-10 mb-0 align-top table-fixed" style={{ tableLayout: 'fixed' }}>
                 <thead style={{ backgroundColor: '#161b22' }}>
                   <tr>
                     {daysOfWeek.map(day => (
-                      <th key={day} className="text-center py-2 text-secondary fw-bold border-bottom border-secondary border-opacity-25" style={{ fontSize: '11px', width: '14.28%' }}>
+                      <th key={day} className="text-center py-2 text-secondary fw-bold border-bottom border-secondary border-opacity-25" style={{ fontSize: '11px' }}>
                         {day}
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {calendarGrid.map((week, weekIdx) => (
-                    <tr key={weekIdx} style={{ height: '100px' }}>
-                      {week.map((day, dayIdx) => (
-                        <td
-                          key={dayIdx}
-                          className={`p-2 transition-all hover-bg-dark-lighter border-secondary border-opacity-10 ${day === 21 ? 'bg-primary bg-opacity-5' : ''}`}
-                          style={{ cursor: 'pointer' }}
-                        >
-                          <div className="d-flex justify-content-between align-items-start mb-2">
-                            <span className={`${dayIdx === 0 || dayIdx === 6 ? 'text-secondary opacity-50' : 'text-white'} fw-bold`} style={{ fontSize: '12px' }}>
-                              {day}
-                            </span>
-                          </div>
-                          {day === 21 && (
-                            <div className="d-flex flex-column gap-1">
-                              <div className="badge w-100 text-start bg-success bg-opacity-10 text-success border border-success border-opacity-25 p-1" style={{ fontSize: '9px', fontWeight: 'normal' }}>
-                                <i className="bi bi-person-arms-up me-1"></i> Entren. Sub-15
-                              </div>
-                              <div className="badge w-100 text-start bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 p-1" style={{ fontSize: '9px', fontWeight: 'normal' }}>
-                                <i className="bi bi-trophy me-1"></i> Juego vs Elite
-                              </div>
+                  {Array.from({ length: Math.ceil(calendarDays.length / 7) }).map((_, weekIdx) => (
+                    <tr key={weekIdx} style={{ height: '120px' }}>
+                      {calendarDays.slice(weekIdx * 7, weekIdx * 7 + 7).map((d, dayIdx) => {
+                        const { trainings, games, birthdays } = getEventsForDay(d.day, d.month, d.year);
+                        const today = isToday(d.day, d.month, d.year);
+
+                        return (
+                          <td
+                            key={dayIdx}
+                            className={`p-2 transition-all hover-bg-dark-lighter border-secondary border-opacity-10 ${!d.currentMonth ? 'opacity-25' : ''} ${today ? 'bg-primary bg-opacity-5' : ''}`}
+                            style={{ cursor: 'pointer', verticalAlign: 'top' }}
+                          >
+                            <div className="d-flex justify-content-between align-items-start mb-2">
+                              <span className={`${today ? 'bg-primary text-white rounded-circle d-flex align-items-center justify-center' : (dayIdx === 0 || dayIdx === 6 ? 'text-secondary opacity-50' : 'text-white')} fw-bold`}
+                                style={today ? { width: '22px', height: '22px', fontSize: '12px', marginTop: '-2px' } : { fontSize: '12px' }}>
+                                {d.day}
+                              </span>
                             </div>
-                          )}
-                        </td>
-                      ))}
+
+                            <div className="d-flex flex-column gap-1 overflow-hidden" style={{ maxHeight: '85px' }}>
+                              {trainings.map(t => (
+                                <div key={t.id} className="badge w-100 text-start bg-success bg-opacity-10 text-success border border-success border-opacity-10 p-1 text-truncate" style={{ fontSize: '8px', fontWeight: '500' }}>
+                                  <i className="bi bi-person-arms-up me-1"></i> {t.titulo}
+                                </div>
+                              ))}
+                              {games.map(g => (
+                                <div key={g.id} className="badge w-100 text-start bg-warning bg-opacity-10 text-warning border border-warning border-opacity-10 p-1 text-truncate" style={{ fontSize: '8px', fontWeight: '500' }}>
+                                  <i className="bi bi-trophy me-1"></i> {g.equipoLocal} vs {g.equipoVisitante}
+                                </div>
+                              ))}
+                              {birthdays.map(a => (
+                                <div key={a.id} className="badge w-100 text-start bg-info bg-opacity-10 text-info border border-info border-opacity-10 p-1 text-truncate" style={{ fontSize: '8px', fontWeight: '500' }}>
+                                  <i className="fa fa-birthday-cake me-1"></i> Cumple: {a.nombre}
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                        );
+                      })}
                     </tr>
                   ))}
                 </tbody>
