@@ -138,7 +138,7 @@ body {
   background: var(--sidebar-bg);
   display: flex;
   flex-direction: column;
-  z-index: 1050;
+  z-index: 1060;
   transform: translateX(-100%);
   transition: transform var(--transition-speed) var(--transition-timing),
     width var(--transition-speed) var(--transition-timing);
@@ -338,7 +338,7 @@ body {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.6);
-  z-index: 1040;
+  z-index: 1050;
   backdrop-filter: blur(2px);
   animation: fadeIn 0.3s ease;
 }
@@ -982,7 +982,7 @@ label:not(.btn) {
   left: 0;
   bottom: 0;
   height: 100vh;
-  z-index: 1030;
+  z-index: 1060;
   /* Other styles already defined above */
 }
 
