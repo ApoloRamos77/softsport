@@ -79,16 +79,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, darkMode, toggleTheme, onLo
               <i className="bi bi-list" style={{ fontSize: '28px', fontWeight: 'bold' }}></i>
             </a>
           </li>
-          <li className="nav-item">
-            <span style={{
-              marginLeft: '1rem',
-              fontSize: '20px',
-              fontWeight: 'bold',
-              color: '#ef4444'
-            }}>
-              HOLA - TEST DEPLOYMENT
-            </span>
-          </li>
+
           <li className="nav-item d-none d-md-block">
             <a
               className="nav-link"
