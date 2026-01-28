@@ -316,7 +316,7 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
                         <option value="">{itemType === 'servicio' ? 'Elegir servicio...' : 'Elegir producto...'}</option>
                         {(itemType === 'servicio' ? servicios : productos).map((item) => (
                           <option key={item.id} value={item.id}>
-                            {item.nombre} - ${item.precio.toFixed(2)}
+                            {item.nombre} - S/. {item.precio.toFixed(2)}
                           </option>
                         ))}
                       </select>
@@ -376,8 +376,8 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
                               <br /><small className="text-secondary text-uppercase" style={{ fontSize: '10px' }}>{item.tipo}</small>
                             </td>
                             <td className="text-secondary border-bottom border-secondary border-opacity-10 py-3">{item.cantidad}</td>
-                            <td className="text-secondary border-bottom border-secondary border-opacity-10 py-3">${item.precio.toFixed(2)}</td>
-                            <td className="fw-bold text-blue-400 border-bottom border-secondary border-opacity-10 py-3">${item.subtotal.toFixed(2)}</td>
+                            <td className="text-secondary border-bottom border-secondary border-opacity-10 py-3">S/. {item.precio.toFixed(2)}</td>
+                            <td className="fw-bold text-blue-400 border-bottom border-secondary border-opacity-10 py-3">S/. {item.subtotal.toFixed(2)}</td>
                             <td className="text-end pe-4 border-bottom border-secondary border-opacity-10 py-3">
                               <button
                                 type="button"
@@ -403,13 +403,13 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
                   <div className="space-y-4 flex-grow-1">
                     <div className="d-flex justify-content-between align-items-center border-bottom border-secondary border-opacity-10 pb-2">
                       <span className="text-secondary text-sm">Subtotal Bruto:</span>
-                      <span className="text-white fw-bold">${calcularSubtotal().toFixed(2)}</span>
+                      <span className="text-white fw-bold">S/. {calcularSubtotal().toFixed(2)}</span>
                     </div>
 
                     <div className="space-y-2 mt-4">
                       <label className="text-[11px] font-bold text-slate-400 uppercase mb-2">Descuento Manual / Ajuste</label>
                       <div className="input-group input-group-sm">
-                        <span className="input-group-text bg-[#0d1117] border-secondary border-opacity-25 text-secondary">$</span>
+                        <span className="input-group-text bg-[#0d1117] border-secondary border-opacity-25 text-secondary">S/.</span>
                         <input
                           type="number"
                           min="0"
@@ -425,7 +425,7 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
                   <div className="pt-4 mt-5 border-top border-secondary border-opacity-20">
                     <div className="d-flex justify-content-between align-items-end">
                       <span className="text-secondary font-bold text-xs uppercase tracking-tighter h5 mb-0">TOTAL FINAL</span>
-                      <span className="text-white font-bold h2 mb-0 tracking-tighter">${calcularTotal().toFixed(2)}</span>
+                      <span className="text-white font-bold h2 mb-0 tracking-tighter">S/. {calcularTotal().toFixed(2)}</span>
                     </div>
                     <p className="text-[10px] text-blue-400 mt-3 italic text-end mb-0">
                       <i className="bi bi-exclamation-triangle me-1"></i>

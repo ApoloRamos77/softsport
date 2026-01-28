@@ -14,6 +14,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, onCancel }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [telefono, setTelefono] = useState('');
+  const [codigoPais, setCodigoPais] = useState('+51');
   const [role, setRole] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -126,14 +127,26 @@ const UserForm: React.FC<UserFormProps> = ({ user, onCancel }) => {
                     required
                   />
                 </div>
-                <div className="col-md-6">
+                <div className="col-md-2">
+                  <label>Cód.</label>
+                  <select
+                    className="form-select"
+                    value={codigoPais}
+                    onChange={(e) => setCodigoPais(e.target.value)}
+                  >
+                    <option value="+51">+51 (PE)</option>
+                    <option value="+58">+58 (VE)</option>
+                    <option value="+57">+57 (CO)</option>
+                  </select>
+                </div>
+                <div className="col-md-4">
                   <label>Teléfono</label>
                   <input
                     type="tel"
                     className="form-control"
                     value={telefono}
                     onChange={(e) => setTelefono(e.target.value)}
-                    placeholder="+58 412..."
+                    placeholder="999 999 999"
                   />
                 </div>
               </div>

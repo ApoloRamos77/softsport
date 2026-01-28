@@ -15,6 +15,7 @@ const RepresentativeForm: React.FC<RepresentativeFormProps> = ({ representative,
     documento: '',
     email: '',
     telefono: '',
+    cod_pais: '+51',
     parentesco: 'Padre',
     direccion: ''
   });
@@ -129,7 +130,12 @@ const RepresentativeForm: React.FC<RepresentativeFormProps> = ({ representative,
               <div className="row g-3">
                 <div className="col-md-4">
                   <label>Cod. País</label>
-                  <select className="form-select">
+                  <select
+                    className="form-select"
+                    value={formData.cod_pais}
+                    onChange={e => setFormData({ ...formData, cod_pais: e.target.value })}
+                  >
+                    <option value="+51">PE +51</option>
                     <option value="+58">VE +58</option>
                     <option value="+57">CO +57</option>
                   </select>

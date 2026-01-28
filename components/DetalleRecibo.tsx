@@ -36,13 +36,12 @@ const DetalleRecibo: React.FC<DetalleReciboProps> = ({ recibo, onClose }) => {
             </div>
             <div>
               <p className="text-xs text-slate-400 mb-1">Estado</p>
-              <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                recibo.estado === 'Pagado' 
-                  ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                  : recibo.estado === 'Pendiente'
+              <span className={`px-2 py-1 rounded text-xs font-semibold ${recibo.estado === 'Pagado'
+                ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                : recibo.estado === 'Pendiente'
                   ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
                   : 'bg-red-500/20 text-red-400 border border-red-500/30'
-              }`}>
+                }`}>
                 {recibo.estado}
               </span>
             </div>
@@ -67,8 +66,8 @@ const DetalleRecibo: React.FC<DetalleReciboProps> = ({ recibo, onClose }) => {
                       <tr key={index} className="border-t border-slate-700">
                         <td className="px-4 py-3 text-white">{item.descripcion}</td>
                         <td className="px-4 py-3 text-right text-slate-300">{item.cantidad}</td>
-                        <td className="px-4 py-3 text-right text-slate-300">${item.precioUnitario?.toFixed(2)}</td>
-                        <td className="px-4 py-3 text-right text-white font-semibold">${item.total?.toFixed(2)}</td>
+                        <td className="px-4 py-3 text-right text-slate-300">S/. {item.precioUnitario?.toFixed(2)}</td>
+                        <td className="px-4 py-3 text-right text-white font-semibold">S/. {item.total?.toFixed(2)}</td>
                       </tr>
                     ))
                   ) : (
@@ -88,15 +87,15 @@ const DetalleRecibo: React.FC<DetalleReciboProps> = ({ recibo, onClose }) => {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-slate-400">Subtotal:</span>
-                <span className="text-white font-semibold">${recibo.subtotal.toFixed(2)}</span>
+                <span className="text-white font-semibold">S/. {recibo.subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Descuento:</span>
-                <span className="text-yellow-400 font-semibold">-${recibo.descuento.toFixed(2)}</span>
+                <span className="text-yellow-400 font-semibold">-S/. {recibo.descuento.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-lg">
                 <span className="text-white font-bold">Total:</span>
-                <span className="text-green-400 font-bold">${recibo.total.toFixed(2)}</span>
+                <span className="text-green-400 font-bold">S/. {recibo.total.toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -109,7 +108,7 @@ const DetalleRecibo: React.FC<DetalleReciboProps> = ({ recibo, onClose }) => {
                 {recibo.abonos.map((abono: any, index: number) => (
                   <div key={index} className="flex justify-between items-center">
                     <div>
-                      <p className="text-white font-semibold">${abono.monto.toFixed(2)}</p>
+                      <p className="text-white font-semibold">S/. {abono.monto.toFixed(2)}</p>
                       <p className="text-xs text-slate-400">
                         {new Date(abono.fecha).toLocaleDateString('es-ES')}
                       </p>

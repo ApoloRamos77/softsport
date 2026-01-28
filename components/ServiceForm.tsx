@@ -132,10 +132,10 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ onCancel, onSave, serviceId, 
 
             <div className="form-group">
               <label className="form-label text-secondary small fw-bold">
-                Precio ($) <span className="text-danger">*</span>
+                Precio (S/.) <span className="text-danger">*</span>
               </label>
               <div className="input-group">
-                <span className="input-group-text border-secondary border-opacity-25 text-secondary" style={{ backgroundColor: '#0d1117' }}>$</span>
+                <span className="input-group-text border-secondary border-opacity-25 text-secondary" style={{ backgroundColor: '#0d1117' }}>S/.</span>
                 <input
                   type="number"
                   step="0.01"
@@ -151,9 +151,9 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ onCancel, onSave, serviceId, 
             </div>
 
             <div className="form-group">
-              <label className="form-label text-secondary small fw-bold">Precio con Pronto Pago ($)</label>
+              <label className="form-label text-secondary small fw-bold">Precio con Pronto Pago (S/.)</label>
               <div className="input-group">
-                <span className="input-group-text border-secondary border-opacity-25 text-secondary" style={{ backgroundColor: '#0d1117' }}>$</span>
+                <span className="input-group-text border-secondary border-opacity-25 text-secondary" style={{ backgroundColor: '#0d1117' }}>S/.</span>
                 <input
                   type="number"
                   step="0.01"

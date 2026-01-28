@@ -219,7 +219,7 @@ const AbonoManagement: React.FC = () => {
                             ? abono.recibo.items.map(i => i.nombre || i.descripcion || '').join(', ')
                             : abono.referencia || '-'}
                         </td>
-                        <td className="py-3 text-success fw-bold border-bottom border-secondary border-opacity-10">${abono.monto.toFixed(2)}</td>
+                        <td className="py-3 text-success fw-bold border-bottom border-secondary border-opacity-10">S/. {abono.monto.toFixed(2)}</td>
                         <td className="py-3 text-secondary border-bottom border-secondary border-opacity-10">
                           {new Date(abono.fecha).toLocaleDateString('es-ES')}
                         </td>

@@ -162,7 +162,7 @@ const ProductManagement: React.FC = () => {
                       <tr key={producto.id} className="hover-bg-dark-lighter" style={{ transition: 'background-color 0.2s' }}>
                         <td className="ps-4 py-3 text-white fw-medium border-bottom border-secondary border-opacity-10">{producto.nombre}</td>
                         <td className="py-3 text-secondary border-bottom border-secondary border-opacity-10">{producto.sku || '-'}</td>
-                        <td className="py-3 text-white border-bottom border-secondary border-opacity-10">${producto.precio.toFixed(2)}</td>
+                        <td className="py-3 text-white border-bottom border-secondary border-opacity-10">S/. {producto.precio.toFixed(2)}</td>
                         <td className="py-3 text-secondary border-bottom border-secondary border-opacity-10">{producto.cantidad}</td>
                         <td className="py-3 border-bottom border-secondary border-opacity-10">
                           <span className={`badge bg-opacity-20 border border-opacity-30 text-white ${producto.cantidad > 10

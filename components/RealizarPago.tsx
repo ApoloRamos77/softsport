@@ -99,11 +99,11 @@ const RealizarPago: React.FC<RealizarPagoProps> = ({ recibo, onClose, onSuccess 
           </div>
           <div className="flex justify-between mb-2">
             <span className="text-slate-400">Total Recibo:</span>
-            <span className="text-white font-semibold">${recibo.total.toFixed(2)}</span>
+            <span className="text-white font-semibold">S/. {recibo.total.toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-lg border-t border-slate-700 pt-2 mt-2">
             <span className="text-white font-bold">Saldo Pendiente:</span>
-            <span className="text-red-400 font-bold">${saldoPendiente.toFixed(2)}</span>
+            <span className="text-red-400 font-bold">S/. {saldoPendiente.toFixed(2)}</span>
           </div>
         </div>
 

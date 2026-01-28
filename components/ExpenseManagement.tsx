@@ -105,8 +105,8 @@ const ExpenseManagement: React.FC = () => {
           <div className="col-12 col-md-4">
             <div className="card border-0 shadow-sm h-100" style={{ backgroundColor: '#161b22' }}>
               <div className="card-body">
-                <p className="text-secondary small fw-bold mb-2">Egresos en Bs.</p>
-                <h3 className="fs-2 fw-bold text-white mb-1">{stats.egresosBs.toFixed(2)} Bs.</h3>
+                <p className="text-secondary small fw-bold mb-2">Egresos en S/.</p>
+                <h3 className="fs-2 fw-bold text-white mb-1">{stats.egresosBs.toFixed(2)} S/.</h3>
                 <p className="text-secondary small mb-0">En el rango de fechas</p>
               </div>
             </div>
@@ -114,8 +114,8 @@ const ExpenseManagement: React.FC = () => {
           <div className="col-12 col-md-4">
             <div className="card border-0 shadow-sm h-100" style={{ backgroundColor: '#161b22' }}>
               <div className="card-body">
-                <p className="text-secondary small fw-bold mb-2">Egresos en $</p>
-                <h3 className="fs-2 fw-bold text-white mb-1">${stats.egresosDolares.toFixed(2)}</h3>
+                <p className="text-secondary small fw-bold mb-2">Egresos en S/.</p>
+                <h3 className="fs-2 fw-bold text-white mb-1">S/. {stats.egresosDolares.toFixed(2)}</h3>
                 <p className="text-secondary small mb-0">En el rango de fechas</p>
               </div>
             </div>
@@ -201,7 +201,7 @@ const ExpenseManagement: React.FC = () => {
                       <tr key={expense.id} className="hover-bg-dark-lighter" style={{ transition: 'background-color 0.2s' }}>
                         <td className="ps-4 py-3 text-white border-bottom border-secondary border-opacity-10 font-bold">#{expense.id}</td>
                         <td className="py-3 text-secondary border-bottom border-secondary border-opacity-10">{expense.descripcion}</td>
-                        <td className="py-3 text-white border-bottom border-secondary border-opacity-10">${expense.monto.toFixed(2)}</td>
+                        <td className="py-3 text-white border-bottom border-secondary border-opacity-10">S/. {expense.monto.toFixed(2)}</td>
                         <td className="py-3 text-secondary border-bottom border-secondary border-opacity-10">
                           {new Date(expense.fecha).toLocaleDateString('es-ES')}
                         </td>

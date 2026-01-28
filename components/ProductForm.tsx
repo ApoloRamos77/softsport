@@ -94,7 +94,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ onCancel, onSubmit, initialDa
               <div className="col-6">
                 <label className="form-label text-secondary small fw-bold">Precio</label>
                 <div className="input-group">
-                  <span className="input-group-text border-secondary border-opacity-25 text-secondary" style={{ backgroundColor: '#0d1117' }}>$</span>
+                  <span className="input-group-text border-secondary border-opacity-25 text-secondary" style={{ backgroundColor: '#0d1117' }}>S/.</span>
                   <input
                     type="number"
                     step="0.01"

@@ -94,7 +94,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ expense, onCancel, onSuccess 
             <div className="form-group">
               <label className="form-label text-secondary small fw-bold">Monto *</label>
               <div className="input-group">
-                <span className="input-group-text border-secondary border-opacity-25 text-secondary" style={{ backgroundColor: '#0d1117' }}>$</span>
+                <span className="input-group-text border-secondary border-opacity-25 text-secondary" style={{ backgroundColor: '#0d1117' }}>S/.</span>
                 <input
                   type="number"
                   step="0.01"

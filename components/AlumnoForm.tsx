@@ -26,7 +26,7 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
     numeroCamiseta: '10',
     sexo: '',
     fotografia: null as File | null,
-    codigoPais: '+58',
+    codigoPais: '+51',
     telefono: '',
     email: '',
     direccion: '',
@@ -34,7 +34,7 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
     segundoRepresentante: {
       nombreCompleto: '',
       parentesco: '',
-      codigoPais: '+58',
+      codigoPais: '+51',
       telefono: '',
       email: ''
     },
@@ -45,7 +45,7 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
     condicionesMedicas: '',
     medicamentos: '',
     contactoEmergencia: '',
-    codigoPaisEmergencia: '+58',
+    codigoPaisEmergencia: '+51',
     telefonoEmergencia: '',
     // Campos administrativos
     grupo: 'Básico',
@@ -91,7 +91,7 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
         numeroCamiseta: alumno.numeroCamiseta?.toString() || '10',
         sexo: alumno.sexo || '',
         fotografia: null,
-        codigoPais: alumno.codigoPais || '+58',
+        codigoPais: alumno.codigoPais || '+51',
         telefono: alumno.telefono || '',
         email: alumno.email || '',
         direccion: alumno.direccion || '',
@@ -99,7 +99,7 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
         segundoRepresentante: {
           nombreCompleto: alumno.segundoRepresentanteNombre || '',
           parentesco: alumno.segundoRepresentanteParentesco || '',
-          codigoPais: alumno.segundoRepresentanteCodigo || '+58',
+          codigoPais: alumno.segundoRepresentanteCodigo || '+51',
           telefono: alumno.segundoRepresentanteTelefono || '',
           email: alumno.segundoRepresentanteEmail || ''
         },
@@ -109,7 +109,7 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
         condicionesMedicas: alumno.condicionesMedicas || '',
         medicamentos: alumno.medicamentos || '',
         contactoEmergencia: alumno.contactoEmergencia || '',
-        codigoPaisEmergencia: alumno.codigoPaisEmergencia || '+58',
+        codigoPaisEmergencia: alumno.codigoPaisEmergencia || '+51',
         telefonoEmergencia: alumno.telefonoEmergencia || '',
         representanteId: alumno.representanteId?.toString() || '',
         grupo: alumno.grupo?.nombre || '',
@@ -303,9 +303,9 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
                     value={formData.codigoPais}
                     onChange={e => setFormData({ ...formData, codigoPais: e.target.value })}
                   >
+                    <option value="+51">PE +51</option>
                     <option value="+58">VE +58</option>
                     <option value="+57">CO +57</option>
-                    <option value="+51">PE +51</option>
                   </select>
                 </div>
                 <div className="col-md-3">
@@ -448,9 +448,9 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
                     value={formData.codigoPaisEmergencia}
                     onChange={e => setFormData({ ...formData, codigoPaisEmergencia: e.target.value })}
                   >
-                    <option value="+58">+58</option>
-                    <option value="+57">+57</option>
-                    <option value="+51">+51</option>
+                    <option value="+51">+51 (PE)</option>
+                    <option value="+58">+58 (VE)</option>
+                    <option value="+57">+57 (CO)</option>
                   </select>
                 </div>
                 <div className="col-md-4">

@@ -64,72 +64,72 @@ const Dashboard: React.FC = () => {
   }
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-VE', {
+    return new Intl.NumberFormat('es-PE', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'PEN',
       minimumFractionDigits: 2,
     }).format(amount);
   };
 
   const topStats = [
-    { 
-      label: 'Total Alumnos', 
-      value: stats.topStats.totalAlumnos.toString(), 
-      sub: `${stats.topStats.alumnosActivos} activos`, 
-      icon: 'fa-user-friends', 
-      color: 'text-blue-500' 
+    {
+      label: 'Total Alumnos',
+      value: stats.topStats.totalAlumnos.toString(),
+      sub: `${stats.topStats.alumnosActivos} activos`,
+      icon: 'fa-user-friends',
+      color: 'text-blue-500'
     },
-    { 
-      label: 'Representantes', 
-      value: stats.topStats.totalRepresentantes.toString(), 
-      sub: 'Registrados', 
-      icon: 'fa-user-tie', 
-      color: 'text-indigo-400' 
+    {
+      label: 'Representantes',
+      value: stats.topStats.totalRepresentantes.toString(),
+      sub: 'Registrados',
+      icon: 'fa-user-tie',
+      color: 'text-indigo-400'
     },
-    { 
-      label: 'Partidos Jugados', 
-      value: stats.topStats.partidosJugados.toString(), 
-      sub: '', 
-      icon: 'fa-trophy', 
-      color: 'text-yellow-500' 
+    {
+      label: 'Partidos Jugados',
+      value: stats.topStats.partidosJugados.toString(),
+      sub: '',
+      icon: 'fa-trophy',
+      color: 'text-yellow-500'
     },
-    { 
-      label: 'Entrenamientos', 
-      value: stats.topStats.entrenamientos.toString(), 
-      sub: '', 
-      icon: 'fa-running', 
-      color: 'text-emerald-400' 
+    {
+      label: 'Entrenamientos',
+      value: stats.topStats.entrenamientos.toString(),
+      sub: '',
+      icon: 'fa-running',
+      color: 'text-emerald-400'
     },
   ];
 
   const financialStats = [
-    { 
-      label: 'Monto Facturado', 
-      value: formatCurrency(stats.financialStats.montoFacturado), 
-      sub: 'Total facturado', 
-      icon: 'fa-file-invoice-dollar', 
-      color: 'text-blue-500' 
+    {
+      label: 'Monto Facturado',
+      value: formatCurrency(stats.financialStats.montoFacturado),
+      sub: 'Total facturado',
+      icon: 'fa-file-invoice-dollar',
+      color: 'text-blue-500'
     },
-    { 
-      label: 'Monto Recaudado', 
-      value: formatCurrency(stats.financialStats.montoRecaudado), 
-      sub: 'Total recaudado', 
-      icon: 'fa-hand-holding-usd', 
-      color: 'text-green-500' 
+    {
+      label: 'Monto Recaudado',
+      value: formatCurrency(stats.financialStats.montoRecaudado),
+      sub: 'Total recaudado',
+      icon: 'fa-hand-holding-usd',
+      color: 'text-green-500'
     },
-    { 
-      label: 'Monto Pendiente', 
-      value: formatCurrency(stats.financialStats.montoPendiente), 
-      sub: 'Saldo pendiente', 
-      icon: 'fa-exclamation-circle', 
-      color: 'text-orange-500' 
+    {
+      label: 'Monto Pendiente',
+      value: formatCurrency(stats.financialStats.montoPendiente),
+      sub: 'Saldo pendiente',
+      icon: 'fa-exclamation-circle',
+      color: 'text-orange-500'
     },
-    { 
-      label: 'Monto Exonerado', 
-      value: formatCurrency(stats.financialStats.montoExonerado), 
-      sub: 'Por becas activas', 
-      icon: 'fa-medal', 
-      color: 'text-indigo-400' 
+    {
+      label: 'Monto Exonerado',
+      value: formatCurrency(stats.financialStats.montoExonerado),
+      sub: 'Por becas activas',
+      icon: 'fa-medal',
+      color: 'text-indigo-400'
     },
   ];
 
@@ -141,51 +141,51 @@ const Dashboard: React.FC = () => {
   const maxValue = getMaxValue();
 
   const summaryCards = [
-    { 
-      title: 'Próximos Partidos', 
-      icon: 'fa-calendar-check', 
+    {
+      title: 'Próximos Partidos',
+      icon: 'fa-calendar-check',
       content: stats.summaryData.proximosPartidos.length > 0
-        ? stats.summaryData.proximosPartidos.map(p => 
-            `${new Date(p.gameDate).toLocaleDateString()} - ${p.opponent}`
-          ).join(', ')
+        ? stats.summaryData.proximosPartidos.map(p =>
+          `${new Date(p.gameDate).toLocaleDateString()} - ${p.opponent}`
+        ).join(', ')
         : 'No hay partidos próximos',
       count: stats.summaryData.proximosPartidos.length
     },
-    { 
-      title: 'Próximos Entrenamientos', 
-      icon: 'fa-running', 
+    {
+      title: 'Próximos Entrenamientos',
+      icon: 'fa-running',
       content: 'No hay entrenamientos próximos',
       count: 0
     },
-    { 
-      title: 'Cumpleañeros del Mes', 
-      icon: 'fa-birthday-cake', 
+    {
+      title: 'Cumpleañeros del Mes',
+      icon: 'fa-birthday-cake',
       content: stats.summaryData.cumpleaneros.length > 0
-        ? stats.summaryData.cumpleaneros.map(c => 
-            `${c.nombre} ${c.apellido}`
-          ).join(', ')
+        ? stats.summaryData.cumpleaneros.map(c =>
+          `${c.nombre} ${c.apellido}`
+        ).join(', ')
         : 'No hay cumpleañeros este mes',
       count: stats.summaryData.cumpleaneros.length
     },
-    { 
-      title: 'Alumnos de Baja', 
-      icon: 'fa-user-minus', 
+    {
+      title: 'Alumnos de Baja',
+      icon: 'fa-user-minus',
       content: stats.summaryData.alumnosDeBaja.length > 0
         ? `${stats.summaryData.alumnosDeBaja.length} alumno(s) suspendido(s)`
         : 'No hay alumnos suspendidos',
       count: stats.summaryData.alumnosDeBaja.length
     },
-    { 
-      title: 'Alumnos Recientes', 
-      icon: 'fa-user-plus', 
+    {
+      title: 'Alumnos Recientes',
+      icon: 'fa-user-plus',
       content: stats.summaryData.alumnosRecientes.length > 0
         ? `${stats.summaryData.alumnosRecientes.length} nuevo(s) en los últimos 30 días`
         : 'No hay alumnos recientes',
       count: stats.summaryData.alumnosRecientes.length
     },
-    { 
-      title: 'Notificaciones del Sistema', 
-      icon: 'fa-bell', 
+    {
+      title: 'Notificaciones del Sistema',
+      icon: 'fa-bell',
       content: 'No hay notificaciones recientes',
       count: 0
     },
@@ -262,13 +262,13 @@ const Dashboard: React.FC = () => {
                       return (
                         <div key={i} className="d-flex flex-column align-items-center gap-1 flex-fill">
                           <div className="d-flex gap-1 w-100 justify-content-center align-items-end h-100">
-                            <div 
-                              className="bg-success rounded-top" 
+                            <div
+                              className="bg-success rounded-top"
                               style={{ height: `${ingresosHeight}%`, width: '12px' }}
                               title={`Ingresos: ${formatCurrency(data.ingresos)}`}
                             ></div>
-                            <div 
-                              className="bg-danger rounded-top" 
+                            <div
+                              className="bg-danger rounded-top"
                               style={{ height: `${egresosHeight}%`, width: '12px' }}
                               title={`Egresos: ${formatCurrency(data.egresos)}`}
                             ></div>

@@ -150,10 +150,10 @@ const ServiceManagement: React.FC = () => {
                             {service.descripcion && <div className="text-secondary small text-truncate" style={{ maxWidth: '300px' }}>{service.descripcion}</div>}
                           </div>
                         </td>
-                        <td className="py-3 text-white border-bottom border-secondary border-opacity-10">${service.precio.toFixed(2)}</td>
+                        <td className="py-3 text-white border-bottom border-secondary border-opacity-10">S/. {service.precio.toFixed(2)}</td>
                         <td className="py-3 text-white border-bottom border-secondary border-opacity-10">
                           {service.prontoPago ? (
-                            <span className="text-success fw-bold">${service.prontoPago.toFixed(2)}</span>
+                            <span className="text-success fw-bold">S/. {service.prontoPago.toFixed(2)}</span>
                           ) : (
                             <span className="text-secondary">-</span>
                           )}
