@@ -407,6 +407,25 @@ class ApiService {
   createContactMessage(data: ContactMessage) { return this.create<ContactMessage>('contact', data); }
   deleteContactMessage(id: number) { return this.delete('contact', id); }
 
+  // File upload
+  async uploadFile(file: File, type: string = 'general'): Promise<string> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${API_BASE_URL}/files/upload?type=${type}`, {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Error subiendo imagen: ${errorText}`);
+    }
+
+    const data = await response.json();
+    return data.url;
+  }
+
   // Dashboard endpoints
   async getDashboardStats(seasonId?: number): Promise<any> {
     const url = seasonId

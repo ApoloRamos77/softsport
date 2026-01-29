@@ -8,6 +8,7 @@ const LandingPageManagement: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [editingItem, setEditingItem] = useState<LandingGallery | null>(null);
+    const [uploading, setUploading] = useState(false);
     const [formData, setFormData] = useState<LandingGallery>({
         tipo: 'Entrenamiento',
         imageUrl: '',
@@ -39,6 +40,22 @@ const LandingPageManagement: React.FC = () => {
     const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+            setUploading(true);
+            const url = await apiService.uploadFile(file, 'gallery');
+            setFormData(prev => ({ ...prev, imageUrl: url }));
+        } catch (error) {
+            console.error('Error uploading file:', error);
+            alert('Error al subir la imagen');
+        } finally {
+            setUploading(false);
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -106,8 +123,31 @@ const LandingPageManagement: React.FC = () => {
                                         </Form.Select>
                                     </div>
                                     <div className="col-md-6 mb-3">
-                                        <Form.Label>URL de Imagen</Form.Label>
-                                        <Form.Control name="imageUrl" value={formData.imageUrl} onChange={handleFormChange} required />
+                                        <Form.Label>Imagen</Form.Label>
+                                        <div className="d-flex gap-2">
+                                            <Form.Control
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleFileUpload}
+                                                disabled={uploading}
+                                                className="bg-dark text-white border-secondary"
+                                            />
+                                            {formData.imageUrl && (
+                                                <div className="border border-secondary p-1 rounded">
+                                                    <img src={formData.imageUrl} alt="Preview" height="36" />
+                                                </div>
+                                            )}
+                                        </div>
+                                        {uploading && <small className="text-info">Subiendo...</small>}
+                                        <Form.Control
+                                            size="sm"
+                                            className="mt-1 bg-dark text-white border-secondary text-muted"
+                                            placeholder="O URL externa..."
+                                            name="imageUrl"
+                                            value={formData.imageUrl}
+                                            onChange={handleFormChange}
+                                            required
+                                        />
                                     </div>
                                     <div className="col-md-3 mb-3">
                                         <Form.Label>Fecha</Form.Label>

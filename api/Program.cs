@@ -89,6 +89,9 @@ app.UseSwaggerUI(c =>
 
 app.UseCors("AllowFrontend");
 
+// Habilitar archivos estáticos para servir uploads
+app.UseStaticFiles();
+
 app.UseAuthorization();
 
 app.MapControllers();

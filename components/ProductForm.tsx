@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Producto } from '../services/api';
+import { Producto, apiService } from '../services/api';
 
 interface ProductFormProps {
   onCancel: () => void;
@@ -16,6 +16,23 @@ const ProductForm: React.FC<ProductFormProps> = ({ onCancel, onSubmit, initialDa
   const [precio, setPrecio] = useState('0');
   const [cantidad, setCantidad] = useState('0');
   const [imagenUrl, setImagenUrl] = useState('');
+  const [uploading, setUploading] = useState(false);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploading(true);
+      const url = await apiService.uploadFile(file, 'products');
+      setImagenUrl(url);
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      alert('Error al subir la imagen');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   useEffect(() => {
     if (initialData) {
@@ -94,11 +111,43 @@ const ProductForm: React.FC<ProductFormProps> = ({ onCancel, onSubmit, initialDa
             </div>
 
             <div className="form-group">
-              <label className="form-label text-secondary small fw-bold">URL de la Imagen</label>
+              <label className="form-label text-secondary small fw-bold">Imagen del Producto</label>
+
+              <div className="d-flex gap-3 align-items-center mb-2">
+                {imagenUrl && (
+                  <div className="position-relative">
+                    <img
+                      src={imagenUrl}
+                      alt="Preview"
+                      className="rounded border border-secondary"
+                      style={{ width: '80px', height: '80px', objectFit: 'cover' }}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-danger position-absolute top-0 end-0 p-0 d-flex align-items-center justify-content-center"
+                      style={{ width: '20px', height: '20px', transform: 'translate(30%, -30%)' }}
+                      onClick={() => setImagenUrl('')}
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                <div className="flex-grow-1">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="form-control border-secondary border-opacity-25 text-white bg-[#0d1117]"
+                    disabled={uploading}
+                  />
+                  {uploading && <small className="text-info">Subiendo imagen...</small>}
+                </div>
+              </div>
+
               <input
                 type="text"
-                placeholder="https://ejemplo.com/imagen.jpg"
-                className="form-control border-secondary border-opacity-25 text-white placeholder-secondary"
+                placeholder="O pega una URL externa aquí..."
+                className="form-control border-secondary border-opacity-25 text-white placeholder-secondary text-xs"
                 style={{ backgroundColor: '#0d1117' }}
                 value={imagenUrl}
                 onChange={(e) => setImagenUrl(e.target.value)}
