@@ -24,11 +24,14 @@ import AcademyConfig from './components/AcademyConfig';
 import ProfileSettings from './components/ProfileSettings';
 import GeneralConfig from './components/GeneralConfig';
 import Login from './components/Login';
+import LandingPage from './components/LandingPage';
+import LandingPageManagement from './components/LandingPageManagement';
 
-type View = 'representantes' | 'servicios' | 'grupos' | 'categorias' | 'atletas' | 'entrenamientos' | 'becas' | 'productos' | 'pagos' | 'ingresos' | 'egresos' | 'abonos' | 'usuarios' | 'tablero' | 'juegos' | 'calendario' | 'temporadas' | 'dashboard' | 'academia_config' | 'perfil' | 'configuracion';
+type View = 'representantes' | 'servicios' | 'grupos' | 'categorias' | 'atletas' | 'entrenamientos' | 'becas' | 'productos' | 'pagos' | 'ingresos' | 'egresos' | 'abonos' | 'usuarios' | 'tablero' | 'juegos' | 'calendario' | 'temporadas' | 'dashboard' | 'academia_config' | 'perfil' | 'configuracion' | 'landing_mgmt';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('theme');
@@ -44,6 +47,12 @@ const App: React.FC = () => {
     const user = localStorage.getItem('user');
     if (user) {
       setIsAuthenticated(true);
+    }
+
+    // Check for login query parameter
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('login') === 'true') {
+      setShowLogin(true);
     }
   }, []);
 
@@ -61,7 +70,7 @@ const App: React.FC = () => {
 
     // Eventos que resetean el timer
     const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
-    
+
     events.forEach(event => {
       document.addEventListener(event, resetTimer);
     });
@@ -107,12 +116,16 @@ const App: React.FC = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('rememberMe');
     setIsAuthenticated(false);
+    setShowLogin(false);
     setCurrentView('dashboard');
   };
 
-  // Show login screen if not authenticated
+  // Show landing page if not authenticated
   if (!isAuthenticated) {
-    return <Login onLoginSuccess={handleLoginSuccess} />;
+    if (showLogin) {
+      return <Login onLoginSuccess={handleLoginSuccess} />;
+    }
+    return <LandingPage onLoginClick={() => setShowLogin(true)} />;
   }
 
   const renderView = () => {
@@ -138,6 +151,7 @@ const App: React.FC = () => {
       case 'academia_config': return <AcademyConfig />;
       case 'perfil': return <ProfileSettings darkMode={darkMode} onToggleTheme={toggleTheme} />;
       case 'configuracion': return <GeneralConfig />;
+      case 'landing_mgmt': return <LandingPageManagement />;
       default:
         return (
           <div className="bg-white dark:bg-[#111827] p-8 rounded-lg border border-slate-200 dark:border-slate-800 text-center">
@@ -170,6 +184,7 @@ const App: React.FC = () => {
       case 'abonos': return 'Abonos';
       case 'usuarios': return 'Usuarios';
       case 'tablero': return 'Tablero Táctico';
+      case 'landing_mgmt': return 'Gestión de Página Web';
       default: return 'Panel de Control';
     }
   };

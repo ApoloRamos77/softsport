@@ -30,5 +30,8 @@ namespace SoftSportAPI.Models
         [Required]
         [Column("cantidad")]
         public int Cantidad { get; set; }
+
+        [Column("imagen_url")]
+        public string? ImagenUrl { get; set; }
     }
 }

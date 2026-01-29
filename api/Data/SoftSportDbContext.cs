@@ -38,6 +38,8 @@ namespace SoftSportAPI.Data
         public DbSet<Role> Roles { get; set; }
         public DbSet<RolePermission> RolePermissions { get; set; }
         public DbSet<AcademyConfig> AcademyConfigs { get; set; }
+        public DbSet<LandingGallery> LandingGalleries { get; set; }
+        public DbSet<ContactMessage> ContactMessages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

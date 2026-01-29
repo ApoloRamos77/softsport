@@ -15,6 +15,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ onCancel, onSubmit, initialDa
   const [descripcion, setDescripcion] = useState('');
   const [precio, setPrecio] = useState('0');
   const [cantidad, setCantidad] = useState('0');
+  const [imagenUrl, setImagenUrl] = useState('');
 
   useEffect(() => {
     if (initialData) {
@@ -23,6 +24,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ onCancel, onSubmit, initialDa
       setDescripcion(initialData.descripcion || '');
       setPrecio(initialData.precio?.toString() || '0');
       setCantidad(initialData.cantidad?.toString() || '0');
+      setImagenUrl(initialData.imagenUrl || '');
     }
   }, [initialData]);
 
@@ -40,6 +42,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ onCancel, onSubmit, initialDa
       descripcion: descripcion.trim() || null,
       precio: parseFloat(precio) || 0,
       cantidad: parseInt(cantidad) || 0,
+      imagenUrl: imagenUrl.trim() || null,
     };
 
     onSubmit(productoData);
@@ -87,6 +90,18 @@ const ProductForm: React.FC<ProductFormProps> = ({ onCancel, onSubmit, initialDa
                 style={{ backgroundColor: '#0d1117', resize: 'none' }}
                 value={descripcion}
                 onChange={(e) => setDescripcion(e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label text-secondary small fw-bold">URL de la Imagen</label>
+              <input
+                type="text"
+                placeholder="https://ejemplo.com/imagen.jpg"
+                className="form-control border-secondary border-opacity-25 text-white placeholder-secondary"
+                style={{ backgroundColor: '#0d1117' }}
+                value={imagenUrl}
+                onChange={(e) => setImagenUrl(e.target.value)}
               />
             </div>
 

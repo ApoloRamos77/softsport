@@ -101,11 +101,31 @@ export interface Servicio {
 export interface Producto {
   id?: number;
   nombre: string;
+  sku?: string;
   descripcion?: string;
   precio: number;
-  stock: number;
-  imagen?: string;
+  cantidad: number;
+  imagenUrl?: string;
   activo: boolean;
+}
+
+export interface LandingGallery {
+  id?: number;
+  tipo: 'Entrenamiento' | 'Torneo';
+  imageUrl: string;
+  titulo?: string;
+  descripcion?: string;
+  fecha?: string;
+}
+
+export interface ContactMessage {
+  id?: number;
+  nombres: string;
+  apellidos: string;
+  email: string;
+  celular: string;
+  mensaje?: string;
+  fechaCreacion?: string;
 }
 
 export interface Training {
@@ -374,6 +394,18 @@ class ApiService {
   createTacticalBoard(data: TacticalBoard) { return this.create<TacticalBoard>('tacticalboards', data); }
   updateTacticalBoard(id: number, data: TacticalBoard) { return this.update<TacticalBoard>('tacticalboards', id, data); }
   deleteTacticalBoard(id: number) { return this.delete('tacticalboards', id); }
+
+  // Landing Page Gallery methods
+  getGalleries() { return this.getAll<LandingGallery>('gallery'); }
+  getGallery(id: number) { return this.getById<LandingGallery>('gallery', id); }
+  createGallery(data: LandingGallery) { return this.create<LandingGallery>('gallery', data); }
+  updateGallery(id: number, data: LandingGallery) { return this.update<LandingGallery>('gallery', id, data); }
+  deleteGallery(id: number) { return this.delete('gallery', id); }
+
+  // Contact Message methods
+  getContactMessages() { return this.getAll<ContactMessage>('contact'); }
+  createContactMessage(data: ContactMessage) { return this.create<ContactMessage>('contact', data); }
+  deleteContactMessage(id: number) { return this.delete('contact', id); }
 
   // Dashboard endpoints
   async getDashboardStats(seasonId?: number): Promise<any> {
