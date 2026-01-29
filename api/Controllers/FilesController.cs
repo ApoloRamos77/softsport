@@ -44,7 +44,24 @@ namespace SoftSportAPI.Controllers
             }
 
             // Retornar URL
-            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+            // Determinar esquema correcto (http vs https) pensando en proxies
+            var scheme = Request.Scheme;
+            
+            // Si hay header X-Forwarded-Proto, usarlo (aunque el middleware ya debería manejarlo)
+            if (Request.Headers.ContainsKey("X-Forwarded-Proto"))
+            {
+                scheme = Request.Headers["X-Forwarded-Proto"].ToString();
+            }
+            
+            var host = Request.Host.ToString();
+            
+            // Forzar HTTPS si estamos en easypanel (patch de seguridad visual)
+            if (host.Contains("easypanel.host") && scheme == "http")
+            {
+                scheme = "https";
+            }
+
+            var baseUrl = $"{scheme}://{host}";
             var fileUrl = $"{baseUrl}/uploads/{type}/{fileName}";
 
             return Ok(new { url = fileUrl });

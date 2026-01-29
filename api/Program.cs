@@ -38,6 +38,16 @@ builder.Services.AddDbContext<SoftSportDbContext>(options =>
 // Add HttpContextAccessor for audit fields
 builder.Services.AddHttpContextAccessor();
 
+// Configurar soporte para Proxy Inverso (Easypanel/Nginx)
+builder.Services.Configure<Microsoft.AspNetCore.Builder.ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | 
+                               Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
+    // Limpiar redes conocidas y proxys para aceptar headers de cualquier origen en docker
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 // Configure CORS
 builder.Services.AddCors(options =>
 {
@@ -79,6 +89,8 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
+app.UseForwardedHeaders();
+
 // Habilitar Swagger en todos los ambientes para facilitar testing
 app.UseSwagger();
 app.UseSwaggerUI(c =>
