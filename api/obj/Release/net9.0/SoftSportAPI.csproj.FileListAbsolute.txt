@@ -1,5 +1,7 @@
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\appsettings.Development.json
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\appsettings.json
+C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\appsettings.PostgreSQL.json
+C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\appsettings.Production.json
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\SoftSportAPI.staticwebassets.endpoints.json
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\SoftSportAPI.exe
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\SoftSportAPI.deps.json
@@ -8,6 +10,7 @@ C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\SoftSportAPI.dll
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\SoftSportAPI.pdb
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\Azure.Core.dll
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\Azure.Identity.dll
+C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\BCrypt.Net-Next.dll
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\Humanizer.dll
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\Microsoft.AspNetCore.OpenApi.dll
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\Microsoft.Bcl.AsyncInterfaces.dll
@@ -46,6 +49,8 @@ C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\Microsoft.OpenApi.dll
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\Microsoft.SqlServer.Server.dll
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\Microsoft.Win32.SystemEvents.dll
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\Mono.TextTemplating.dll
+C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\Npgsql.dll
+C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\Swashbuckle.AspNetCore.Swagger.dll
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\Swashbuckle.AspNetCore.SwaggerGen.dll
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\Swashbuckle.AspNetCore.SwaggerUI.dll
@@ -149,6 +154,7 @@ C:\Proyecto_2026\Soft_Sport\api\obj\Release\net9.0\SoftSportAPI.AssemblyInfo.cs
 C:\Proyecto_2026\Soft_Sport\api\obj\Release\net9.0\SoftSportAPI.csproj.CoreCompileInputs.cache
 C:\Proyecto_2026\Soft_Sport\api\obj\Release\net9.0\SoftSportAPI.MvcApplicationPartsAssemblyInfo.cs
 C:\Proyecto_2026\Soft_Sport\api\obj\Release\net9.0\SoftSportAPI.MvcApplicationPartsAssemblyInfo.cache
+C:\Proyecto_2026\Soft_Sport\api\obj\Release\net9.0\SoftSportAPI.sourcelink.json
 C:\Proyecto_2026\Soft_Sport\api\obj\Release\net9.0\rjimswa.dswa.cache.json
 C:\Proyecto_2026\Soft_Sport\api\obj\Release\net9.0\rjsmrazor.dswa.cache.json
 C:\Proyecto_2026\Soft_Sport\api\obj\Release\net9.0\rjsmcshtml.dswa.cache.json
