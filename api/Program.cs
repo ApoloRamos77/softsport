@@ -120,7 +120,20 @@ app.UseSwaggerUI(c =>
 app.UseCors("AllowFrontend");
 
 // Habilitar archivos estáticos para servir uploads
-app.UseStaticFiles();
+var webRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+if (!Directory.Exists(webRoot))
+{
+    Directory.CreateDirectory(webRoot);
+}
+app.UseStaticFiles(new StaticFileOptions
+{
+    ServeUnknownFileTypes = true,
+    OnPrepareResponse = ctx =>
+    {
+        ctx.Context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+        ctx.Context.Response.Headers.Append("Cache-Control", "public, max-age=600");
+    }
+});
 
 app.UseAuthorization();
 
