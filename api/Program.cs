@@ -88,6 +88,24 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Aplicar migraciones automáticamente al inicio
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<SoftSportDbContext>();
+        
+        // Ejecutar inicializador de DB personalizado para crear tablas faltantes
+        SoftSportAPI.Data.DbInitializer.Initialize(context);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Un error ocurrió al inicializar la base de datos.");
+    }
+}
+
 // Configure the HTTP request pipeline
 app.UseForwardedHeaders();
 
