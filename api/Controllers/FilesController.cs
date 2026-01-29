@@ -26,7 +26,11 @@ namespace SoftSportAPI.Controllers
                 return BadRequest("Tipo de archivo no permitido. Use imágenes (jpg, png, webp)");
 
             // Asegurar que WebRootPath existe
-            var webRootPath = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            // Usamos GetCurrentDirectory() explícitamente para coincidir con la config de static files en Program.cs
+            var webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            
+            // Log para debug (si tuvieramos acceso a logs)
+            Console.WriteLine($"[UPLOAD] Guardando archivo en root: {webRootPath}");
             
             // Crear directorio si no existe
             var uploadsFolder = Path.Combine(webRootPath, "uploads", type);

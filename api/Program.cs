@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using SoftSportAPI.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -120,13 +121,21 @@ app.UseSwaggerUI(c =>
 app.UseCors("AllowFrontend");
 
 // Habilitar archivos estáticos para servir uploads
-var webRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-if (!Directory.Exists(webRoot))
+var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+if (!Directory.Exists(uploadsPath))
 {
-    Directory.CreateDirectory(webRoot);
+    Directory.CreateDirectory(uploadsPath);
+    Console.WriteLine($"[INFO] Carpeta wwwroot creada en: {uploadsPath}");
 }
+else 
+{
+    Console.WriteLine($"[INFO] Usando carpeta wwwroot existente en: {uploadsPath}");
+}
+
 app.UseStaticFiles(new StaticFileOptions
 {
+    FileProvider = new PhysicalFileProvider(uploadsPath),
+    RequestPath = "", // Servir desde la raiz (ej. /uploads/...)
     ServeUnknownFileTypes = true,
     OnPrepareResponse = ctx =>
     {
