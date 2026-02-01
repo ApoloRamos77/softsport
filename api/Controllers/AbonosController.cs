@@ -17,13 +17,18 @@ namespace SoftSportAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<object>>> GetAbonos()
+        public async Task<ActionResult<IEnumerable<object>>> GetAbonos(int page = 1, int pageSize = 20)
         {
-            var abonos = await _context.Abonos
+            var query = _context.Abonos
                 .Include(a => a.Recibo)
                     .ThenInclude(r => r.Alumno)
                 .Include(a => a.Recibo)
                     .ThenInclude(r => r.Items)
+                .AsQueryable();
+
+            var abonos = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
 
             return Ok(abonos.Select(a => new

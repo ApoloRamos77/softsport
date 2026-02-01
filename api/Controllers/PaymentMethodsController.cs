@@ -25,9 +25,13 @@ namespace SoftSportAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<object>>> GetPaymentMethods()
+        public async Task<ActionResult<IEnumerable<object>>> GetPaymentMethods(int page = 1, int pageSize = 20)
         {
-            var methods = await _context.PaymentMethods.ToListAsync();
+            var query = _context.PaymentMethods.AsQueryable();
+            var methods = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
             return Ok(methods.Select(m => new
             {
                 m.Id,

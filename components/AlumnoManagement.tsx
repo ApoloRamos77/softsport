@@ -4,20 +4,58 @@ import AlumnoForm from './AlumnoForm';
 import { Alumno, apiService } from '../services/api';
 
 const AlumnoManagement: React.FC = () => {
+    // Paginación
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    // Log visual de fetch y estados
+    const [rawFetchResult, setRawFetchResult] = useState<any>(null);
+    const [fetchError, setFetchError] = useState<any>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingAlumno, setEditingAlumno] = useState<Alumno | null>(null);
   const [alumnos, setAlumnos] = useState<Alumno[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [estadoFiltro, setEstadoFiltro] = useState<'Activos' | 'Inactivos' | 'Todos'>('Activos');
 
   const loadAlumnos = async () => {
     setLoading(true);
+    setFetchError(null);
+    setRawFetchResult(null);
     try {
-      const data = await apiService.getAll<Alumno>('alumnos');
-      // Filtrar alumnos anulados
-      const activeAlumnos = data.filter(a => !a.fechaAnulacion);
-      setAlumnos(activeAlumnos);
+      let data;
+      try {
+        data = await apiService.getAll('alumnos');
+      } catch (fetchError) {
+        setFetchError(fetchError);
+        setLoading(false);
+        return;
+      }
+      setRawFetchResult(data);
+      if (!Array.isArray(data)) {
+        setFetchError('La respuesta del backend no es un array. Puede que sea demasiado grande o esté malformateada.');
+        setLoading(false);
+        return;
+      }
+      if (data.length > 10000) {
+        setFetchError('La respuesta contiene demasiados alumnos (' + data.length + '). Prueba limitar la consulta en el backend.');
+        setLoading(false);
+        return;
+      }
+      // Normalizar campos nulos en cada alumno
+      const normalized = data.map(a => ({
+        ...a,
+        fechaAnulacion: a.hasOwnProperty('fechaAnulacion') ? a.fechaAnulacion : null,
+        telefono: a.telefono ?? '',
+        email: a.email ?? '',
+        posicion: a.posicion ?? '',
+        grupo: a.grupo ?? null,
+        categoria: a.categoria ?? null,
+        beca: a.beca ?? null,
+        estado: a.estado ?? 'Activo',
+      }));
+      setAlumnos(normalized);
     } catch (error) {
+      setFetchError('Error de parsing o memoria: ' + (error instanceof Error ? error.message : String(error)));
       console.error('Error loading alumnos:', error);
     } finally {
       setLoading(false);
@@ -53,9 +91,22 @@ const AlumnoManagement: React.FC = () => {
     }
   };
 
-  const filteredAlumnos = alumnos.filter(a =>
-    `${a.nombre} ${a.apellido}`.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredAlumnos = alumnos.filter(a => {
+    // Filtro por estado
+    if (estadoFiltro === 'Activos' && a.fechaAnulacion) return false;
+    if (estadoFiltro === 'Inactivos' && !a.fechaAnulacion) return false;
+    // Filtro por búsqueda
+    return `${a.nombre} ${a.apellido}`.toLowerCase().includes(searchTerm.toLowerCase());
+  });
+
+  // Paginación en memoria
+  const totalPages = Math.max(1, Math.ceil(filteredAlumnos.length / itemsPerPage));
+  const paginatedAlumnos = filteredAlumnos.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  // Resetear página si cambia el filtro o búsqueda
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, estadoFiltro, itemsPerPage]);
 
   if (showForm) {
     return (
@@ -117,10 +168,10 @@ const AlumnoManagement: React.FC = () => {
               <div className="d-flex gap-2 flex-wrap justify-content-lg-end">
                 <div className="d-flex align-items-center bg-[#0d1117] border border-secondary border-opacity-25 rounded px-3" style={{ height: '38px' }}>
                   <span className="text-secondary text-[10px] font-bold uppercase me-3 tracking-wider">Estado</span>
-                  <select className="bg-transparent border-0 text-white text-[13px] focus:outline-none cursor-pointer">
-                    <option>Activos</option>
-                    <option>Inactivos</option>
-                    <option>Todos</option>
+                  <select className="bg-transparent border-0 text-white text-[13px] focus:outline-none cursor-pointer" value={estadoFiltro} onChange={e => setEstadoFiltro(e.target.value as any)}>
+                    <option value="Activos">Activos</option>
+                    <option value="Inactivos">Inactivos</option>
+                    <option value="Todos">Todos</option>
                   </select>
                 </div>
 
@@ -153,7 +204,29 @@ const AlumnoManagement: React.FC = () => {
       </div>
 
       <div className="text-muted mb-3 small">
-        Mostrando {filteredAlumnos.length} de {alumnos.length} alumnos
+        Mostrando {paginatedAlumnos.length} de {filteredAlumnos.length} alumnos filtrados (Total: {alumnos.length})
+        <div style={{color: 'lime', fontWeight: 'bold', marginTop: '8px'}}>VALIDACIÓN: El frontend se está actualizando correctamente.</div>
+        {/* LOG VISUAL: Mostrar el contenido de filteredAlumnos para depuración */}
+        <div style={{ color: 'yellow', background: '#222', padding: '8px', marginTop: '8px', fontSize: '12px' }}>
+          <strong>LOG VISUAL (filteredAlumnos):</strong>
+          <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{JSON.stringify(filteredAlumnos, null, 2)}</pre>
+        </div>
+        {/* LOG VISUAL: Mostrar el contenido de alumnos para depuración */}
+        <div style={{ color: 'orange', background: '#222', padding: '8px', marginTop: '8px', fontSize: '12px' }}>
+          <strong>LOG VISUAL (alumnos):</strong>
+          <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{JSON.stringify(alumnos, null, 2)}</pre>
+        </div>
+        {/* LOG VISUAL: Mostrar el resultado bruto del fetch */}
+        <div style={{ color: 'cyan', background: '#222', padding: '8px', marginTop: '8px', fontSize: '12px' }}>
+          <strong>LOG VISUAL (rawFetchResult):</strong>
+          <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{JSON.stringify(rawFetchResult, null, 2)}</pre>
+        </div>
+        {/* LOG VISUAL: Mostrar estados de loading y error */}
+        <div style={{ color: loading ? 'yellow' : fetchError ? 'red' : 'lime', background: '#222', padding: '8px', marginTop: '8px', fontSize: '12px' }}>
+          <strong>LOG VISUAL (loading/error):</strong>
+          <div>loading: {JSON.stringify(loading)}</div>
+          <div>fetchError: {fetchError ? fetchError.toString() : 'null'}</div>
+        </div>
       </div>
 
       {/* Table */}
@@ -174,9 +247,9 @@ const AlumnoManagement: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredAlumnos.length > 0 ? filteredAlumnos.map((a, i) => (
+              {paginatedAlumnos.length > 0 ? paginatedAlumnos.map((a, i) => (
                 <tr key={a.id} className="hover-bg-dark-lighter" style={{ transition: 'background-color 0.2s' }}>
-                  <td className="ps-4 text-secondary border-bottom border-secondary border-opacity-10 py-3">{i + 1}</td>
+                  <td className="ps-4 text-secondary border-bottom border-secondary border-opacity-10 py-3">{(currentPage - 1) * itemsPerPage + i + 1}</td>
                   <td className="border-bottom border-secondary border-opacity-10 py-3">
                     <div className="d-flex flex-column">
                       <span className="fw-bold text-white">{a.nombre} {a.apellido}</span>
@@ -244,16 +317,32 @@ const AlumnoManagement: React.FC = () => {
       </div>
 
       {/* Pagination */}
-      <div className="d-flex align-items-center justify-content-between mt-4">
-        <button className="btn btn-sm btn-outline-secondary" disabled>
+      <div className="d-flex align-items-center justify-content-between mt-4 gap-2">
+        <button
+          className="btn btn-sm btn-outline-secondary"
+          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+          disabled={currentPage === 1}
+        >
           Anterior
         </button>
         <div className="small text-muted">
-          Página 1 de 1
+          Página {currentPage} de {totalPages}
         </div>
-        <button className="btn btn-sm btn-outline-secondary" disabled>
+        <button
+          className="btn btn-sm btn-outline-secondary"
+          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+          disabled={currentPage === totalPages}
+        >
           Siguiente
         </button>
+        <div className="ms-3">
+          <label className="me-2 small">Alumnos por página:</label>
+          <select value={itemsPerPage} onChange={e => setItemsPerPage(Number(e.target.value))} className="form-select form-select-sm d-inline-block w-auto">
+            {[5, 10, 20, 50, 100].map(n => (
+              <option key={n} value={n}>{n}</option>
+            ))}
+          </select>
+        </div>
       </div>
     </div >
   );

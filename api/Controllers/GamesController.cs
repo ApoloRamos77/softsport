@@ -18,9 +18,9 @@ namespace SoftSportAPI.Controllers
 
         // GET: api/Games
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<object>>> GetGames()
+        public async Task<ActionResult<IEnumerable<object>>> GetGames(int page = 1, int pageSize = 20)
         {
-            var games = await _context.Games
+            var query = _context.Games
                 .Include(g => g.Categoria)
                 .Include(g => g.AlumnosConvocados)
                     .ThenInclude(ga => ga.Alumno)
@@ -45,6 +45,11 @@ namespace SoftSportAPI.Controllers
                         NombreCompleto = ga.Alumno != null ? ga.Alumno.Nombre + " " + ga.Alumno.Apellido : null
                     }).ToList()
                 })
+                .AsQueryable();
+
+            var games = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
 
             return Ok(games);

@@ -17,9 +17,14 @@ namespace SoftSportAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Expense>>> GetExpenses()
+        public async Task<ActionResult<IEnumerable<Expense>>> GetExpenses(int page = 1, int pageSize = 20)
         {
-            return await _context.Expenses.OrderByDescending(e => e.Fecha).ToListAsync();
+            var query = _context.Expenses.OrderByDescending(e => e.Fecha).AsQueryable();
+            var expenses = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+            return Ok(expenses);
         }
 
         [HttpGet("{id}")]

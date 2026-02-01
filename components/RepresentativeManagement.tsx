@@ -13,18 +13,22 @@ const RepresentativeManagement: React.FC = () => {
 
   const loadRepresentatives = async () => {
     setLoading(true);
+    console.log('[RepresentativeManagement] Iniciando carga de representantes...');
     try {
       const [repsData, alumnosData] = await Promise.all([
         apiService.getRepresentantes(),
         apiService.getAlumnos()
       ]);
+      console.log('[RepresentativeManagement] Datos de representantes recibidos:', repsData);
+      console.log('[RepresentativeManagement] Datos de alumnos recibidos:', alumnosData);
       setRepresentatives(repsData);
       setAlumnos(alumnosData);
     } catch (error) {
-      console.error('Error loading representatives:', error);
-      alert('Error al cargar los representantes');
+      console.error('[RepresentativeManagement] Error loading representatives:', error);
+      alert('Error al cargar los representantes: ' + (error instanceof Error ? error.message : error));
     } finally {
       setLoading(false);
+      console.log('[RepresentativeManagement] loading actualizado a false');
     }
   };
 
@@ -80,6 +84,7 @@ const RepresentativeManagement: React.FC = () => {
   );
 
   if (showForm) {
+    console.log('[RepresentativeManagement] Mostrando formulario de representante');
     return (
       <RepresentativeForm
         representative={editingRepresentative}

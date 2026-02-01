@@ -64,21 +64,27 @@ builder.Services.AddCors(options =>
                     "http://172.16.11.92:3001",
                     "http://172.16.11.92:3002",
                     "http://10.255.237.16:3002",
+                    "http://10.255.237.16:3000",
+                    "http://192.168.100.4:3000",
+                    "http://192.168.100.4:3001",
                     "http://192.168.100.4:3002")
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         }
         else
         {
-            // En producción, permitir todos los orígenes de Easypanel
+            // En producción, permitir todos los orígenes de Easypanel y también IPs locales para desarrollo
             policy.SetIsOriginAllowed(origin =>
                 {
                     if (string.IsNullOrEmpty(origin)) return false;
                     var uri = new Uri(origin);
-                    // Permitir localhost, easypanel.host, scuiaw.easypanel.host y cualquier subdominio
+                    // Permitir localhost, easypanel.host, scuiaw.easypanel.host y también IPs locales privadas
                     return uri.Host == "localhost" ||
                            uri.Host.EndsWith(".easypanel.host") ||
-                           uri.Host.EndsWith(".scuiaw.easypanel.host");
+                           uri.Host.EndsWith(".scuiaw.easypanel.host") ||
+                           uri.Host.StartsWith("192.168.") ||
+                           uri.Host.StartsWith("172.16.") ||
+                           uri.Host.StartsWith("10.");
                 })
                 .AllowAnyHeader()
                 .AllowAnyMethod()

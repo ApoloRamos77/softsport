@@ -18,9 +18,9 @@ namespace SoftSportAPI.Controllers
 
         // GET: api/roles
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<object>>> GetRoles()
+        public async Task<ActionResult<IEnumerable<object>>> GetRoles(int page = 1, int pageSize = 20)
         {
-            var roles = await _context.Roles
+            var query = _context.Roles
                 .Select(r => new
                 {
                     id = r.Id,
@@ -29,6 +29,11 @@ namespace SoftSportAPI.Controllers
                     tipo = r.Tipo,
                     academia = r.Academia
                 })
+                .AsQueryable();
+
+            var roles = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
 
             return Ok(roles);

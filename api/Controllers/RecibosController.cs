@@ -17,16 +17,21 @@ namespace SoftSportAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<object>>> GetRecibos()
+        public async Task<ActionResult<IEnumerable<object>>> GetRecibos(int page = 1, int pageSize = 20)
         {
-            var recibos = await _context.Recibos
+            var query = _context.Recibos
                 .Include(r => r.Items)
                 .Include(r => r.Abonos)
                 .Include(r => r.Alumno)
-                .ToListAsync();
+                .AsQueryable();
 
             var servicios = await _context.Servicios.ToDictionaryAsync(s => s.Id, s => s.Nombre);
             var productos = await _context.Productos.ToDictionaryAsync(p => p.Id, p => p.Nombre);
+
+            var recibos = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
 
             return recibos.Select(r => new
             {

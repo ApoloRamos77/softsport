@@ -2,6 +2,7 @@ C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\appsettings.Development.json
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\appsettings.json
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\appsettings.PostgreSQL.json
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\appsettings.Production.json
+C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\SoftSportAPI.staticwebassets.runtime.json
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\SoftSportAPI.staticwebassets.endpoints.json
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\SoftSportAPI.exe
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\SoftSportAPI.deps.json

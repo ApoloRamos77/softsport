@@ -18,14 +18,21 @@ namespace SoftSportAPI.Controllers
 
         // GET: api/alumnos
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Alumno>>> GetAlumnos()
+        public async Task<ActionResult<IEnumerable<Alumno>>> GetAlumnos(int page = 1, int pageSize = 20)
         {
-            return await _context.Alumnos
+            var query = _context.Alumnos
                 .Include(a => a.Representante)
                 .Include(a => a.Grupo)
                 .Include(a => a.Categoria)
                 .Include(a => a.Beca)
+                .AsQueryable();
+
+            var alumnos = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
+
+            return Ok(alumnos);
         }
 
         // GET: api/alumnos/5
