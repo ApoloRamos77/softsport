@@ -1,6 +1,9 @@
 // API service for interacting with the C# backend
-// Usar ruta relativa para aprovechar el proxy de Vite
-const API_BASE_URL = '/api';
+// Usar URL absoluta en producción para evitar error 405 por falta de proxy en Nginx
+const API_BASE_URL = typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? '/api'
+  : 'https://softsport77-api.scuiaw.easypanel.host/api';
 
 export interface Alumno {
   id?: number;
