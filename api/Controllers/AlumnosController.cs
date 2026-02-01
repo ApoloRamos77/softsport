@@ -18,7 +18,13 @@ namespace SoftSportAPI.Controllers
 
         // GET: api/alumnos
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Alumno>>> GetAlumnos(int page = 1, int pageSize = 20)
+        public async Task<ActionResult<object>> GetAlumnos(
+            int page = 1, 
+            int pageSize = 20, 
+            string? searchTerm = null,
+            string? estado = null,
+            int? grupoId = null,
+            int? categoriaId = null)
         {
             var query = _context.Alumnos
                 .Include(a => a.Representante)
@@ -27,12 +33,55 @@ namespace SoftSportAPI.Controllers
                 .Include(a => a.Beca)
                 .AsQueryable();
 
+            // Filtrar por término de búsqueda (Nombre, Apellido o Documento)
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                var lowerSearch = searchTerm.ToLower();
+                query = query.Where(a => 
+                    a.Nombre.ToLower().Contains(lowerSearch) || 
+                    a.Apellido.ToLower().Contains(lowerSearch) || 
+                    a.Documento.ToLower().Contains(lowerSearch));
+            }
+
+            // Filtrar por estado
+            if (!string.IsNullOrEmpty(estado))
+            {
+                if (estado == "Activo")
+                {
+                    query = query.Where(a => a.FechaAnulacion == null);
+                }
+                else if (estado == "Inactivo")
+                {
+                    query = query.Where(a => a.FechaAnulacion != null);
+                }
+            }
+
+            // Filtrar por grupo
+            if (grupoId.HasValue && grupoId > 0)
+            {
+                query = query.Where(a => a.GrupoId == grupoId);
+            }
+
+            // Filtrar por categoría
+            if (categoriaId.HasValue && categoriaId > 0)
+            {
+                query = query.Where(a => a.CategoriaId == categoriaId);
+            }
+
+            var totalCount = await query.CountAsync();
+
             var alumnos = await query
+                .OrderBy(a => a.Nombre)
+                .ThenBy(a => a.Apellido)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
 
-            return Ok(alumnos);
+            return Ok(new
+            {
+                totalCount = totalCount,
+                data = alumnos
+            });
         }
 
         // GET: api/alumnos/5

@@ -17,9 +17,34 @@ namespace SoftSportAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Servicio>>> GetServicios()
+        public async Task<ActionResult<object>> GetServicios(
+            int page = 1, 
+            int pageSize = 20, 
+            string? searchTerm = null)
         {
-            return await _context.Servicios.ToListAsync();
+            var query = _context.Servicios.AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                var lowerSearch = searchTerm.ToLower();
+                query = query.Where(s => 
+                    s.Nombre.ToLower().Contains(lowerSearch) || 
+                    (s.Descripcion != null && s.Descripcion.ToLower().Contains(lowerSearch)));
+            }
+
+            var totalCount = await query.CountAsync();
+
+            var servicios = await query
+                .OrderBy(s => s.Nombre)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return Ok(new
+            {
+                totalCount = totalCount,
+                data = servicios
+            });
         }
 
         [HttpGet("{id}")]

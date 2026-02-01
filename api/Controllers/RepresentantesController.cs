@@ -17,9 +17,50 @@ namespace SoftSportAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Representante>>> GetRepresentantes()
+        public async Task<ActionResult<object>> GetRepresentantes(
+            int page = 1, 
+            int pageSize = 20, 
+            string? searchTerm = null)
         {
-            return await _context.Representantes.ToListAsync();
+            var query = _context.Representantes.AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                var lowerSearch = searchTerm.ToLower();
+                query = query.Where(r => 
+                    r.Nombre.ToLower().Contains(lowerSearch) || 
+                    r.Apellido.ToLower().Contains(lowerSearch) || 
+                    (r.Documento != null && r.Documento.ToLower().Contains(lowerSearch)));
+            }
+
+            var totalCount = await query.CountAsync();
+
+            var representantes = await query
+                .OrderBy(r => r.Nombre)
+                .ThenBy(r => r.Apellido)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(r => new
+                {
+                    r.Id,
+                    r.Nombre,
+                    r.Apellido,
+                    r.Documento,
+                    r.Email,
+                    r.Telefono,
+                    r.Parentesco,
+                    r.Direccion,
+                    r.FechaCreacion,
+                    r.FechaAnulacion,
+                    AlumnosCount = r.Alumnos.Count(a => a.FechaAnulacion == null)
+                })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                totalCount = totalCount,
+                data = representantes
+            });
         }
 
         [HttpGet("{id}")]

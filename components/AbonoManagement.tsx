@@ -5,33 +5,35 @@ import DatePicker from './DatePicker';
 
 const AbonoManagement: React.FC = () => {
   const [abonos, setAbonos] = useState<Abono[]>([]);
-  const [filteredAbonos, setFilteredAbonos] = useState<Abono[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [estatusFilter, setEstatusFilter] = useState('todos');
-  const [atletaFilter, setAtletaFilter] = useState('todos');
   const [metodoFilter, setMetodoFilter] = useState('todos');
   const [fechaDesde, setFechaDesde] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]);
   const [fechaHasta, setFechaHasta] = useState(new Date().toISOString().split('T')[0]);
 
-  useEffect(() => {
-    loadAbonos();
-    loadPaymentMethods();
-  }, []);
-
-  useEffect(() => {
-    applyFilters();
-  }, [searchTerm, estatusFilter, atletaFilter, metodoFilter, fechaDesde, fechaHasta, abonos]);
+  // Paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
 
   const loadAbonos = async () => {
     try {
       setLoading(true);
-      const data = await apiService.getAbonos();
-      setAbonos(data);
+      const params = {
+        page: currentPage,
+        pageSize: itemsPerPage,
+        searchTerm: searchTerm,
+        paymentMethodId: metodoFilter !== 'todos' ? parseInt(metodoFilter) : undefined,
+        desde: fechaDesde,
+        hasta: fechaHasta
+      };
+      const result = await apiService.getAbonos(params);
+      setAbonos(result.data);
+      setTotalCount(result.totalCount);
     } catch (error) {
       console.error('Error cargando abonos:', error);
-      // alert('Error al cargar abonos'); // Suppress alert for better UX
     } finally {
       setLoading(false);
     }
@@ -46,48 +48,25 @@ const AbonoManagement: React.FC = () => {
     }
   };
 
-  const applyFilters = () => {
-    let filtered = [...abonos];
+  useEffect(() => {
+    loadPaymentMethods();
+  }, []);
 
-    // Filtro de búsqueda
-    if (searchTerm) {
-      filtered = filtered.filter(abono => {
-        const reciboId = abono.reciboId?.toString() || '';
-        const alumno = `${abono.recibo?.alumno?.nombre || ''} ${abono.recibo?.alumno?.apellido || ''}`.toLowerCase();
-        return reciboId.includes(searchTerm) || alumno.includes(searchTerm.toLowerCase());
-      });
-    }
+  useEffect(() => {
+    loadAbonos();
+  }, [currentPage, itemsPerPage, searchTerm, metodoFilter, fechaDesde, fechaHasta]);
 
-    // Filtro de método de pago
-    if (metodoFilter !== 'todos') {
-      filtered = filtered.filter(abono => abono.paymentMethodId === parseInt(metodoFilter));
-    }
-
-    // Filtro de estatus (simulado o según campo si existe)
-    if (estatusFilter !== 'todos') {
-      // Por ahora todos los abonos en la lista parecen ser completados, 
-      // pero si hubiera un campo 'estado', se filtraría aquí.
-    }
-
-    // Filtro de fechas
-    if (fechaDesde) {
-      const d = new Date(fechaDesde);
-      d.setHours(0, 0, 0, 0);
-      filtered = filtered.filter(abono => new Date(abono.fecha) >= d);
-    }
-    if (fechaHasta) {
-      const h = new Date(fechaHasta);
-      h.setHours(23, 59, 59, 999);
-      filtered = filtered.filter(abono => new Date(abono.fecha) <= h);
-    }
-
-    setFilteredAbonos(filtered);
-  };
+  // Al cambiar filtros, volver a página 1
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, metodoFilter, fechaDesde, fechaHasta, itemsPerPage]);
 
   const getPaymentMethodName = (id: number) => {
     const method = paymentMethods.find(m => m.id === id);
     return method?.nombre || '-';
   };
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage));
 
   return (
     <div className="animate-fadeIn" style={{ backgroundColor: '#0d1117', minHeight: '80vh' }}>
@@ -119,7 +98,7 @@ const AbonoManagement: React.FC = () => {
                     type="text"
                     placeholder="Buscar recibo o alumno..."
                     className="form-control form-control-sm"
-                    style={{ paddingLeft: '2.3rem', height: '38px', fontSize: '13px' }}
+                    style={{ paddingLeft: '2.3rem', height: '38px', fontSize: '13px', backgroundColor: '#0d1117', color: 'white', border: '1px solid rgba(48, 54, 61, 0.5)' }}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
@@ -184,15 +163,15 @@ const AbonoManagement: React.FC = () => {
               <table className="table align-middle mb-0" style={{ borderColor: '#30363d' }}>
                 <thead style={{ backgroundColor: '#161b22' }}>
                   <tr>
-                    <th className="ps-4 py-3 text-white border-bottom border-secondary border-opacity-25">ID Recibo</th>
-                    <th className="py-3 text-white border-bottom border-secondary border-opacity-25">Recibo</th>
-                    <th className="py-3 text-white border-bottom border-secondary border-opacity-25">Alumno</th>
-                    <th className="py-3 text-white border-bottom border-secondary border-opacity-25">Concepto</th>
-                    <th className="py-3 text-white border-bottom border-secondary border-opacity-25">Monto</th>
-                    <th className="py-3 text-white border-bottom border-secondary border-opacity-25">Fecha</th>
-                    <th className="py-3 text-white border-bottom border-secondary border-opacity-25">Método de Pago</th>
-                    <th className="py-3 text-center text-white border-bottom border-secondary border-opacity-25">Estatus</th>
-                    <th className="pe-4 py-3 text-end text-white border-bottom border-secondary border-opacity-25">Acciones</th>
+                    <th className="ps-4 py-3 text-white border-bottom border-secondary border-opacity-25 text-uppercase small font-weight-bold">ID Recibo</th>
+                    <th className="py-3 text-white border-bottom border-secondary border-opacity-25 text-uppercase small font-weight-bold">Recibo</th>
+                    <th className="py-3 text-white border-bottom border-secondary border-opacity-25 text-uppercase small font-weight-bold">Alumno</th>
+                    <th className="py-3 text-white border-bottom border-secondary border-opacity-25 text-uppercase small font-weight-bold">Concepto</th>
+                    <th className="py-3 text-white border-bottom border-secondary border-opacity-25 text-uppercase small font-weight-bold">Monto</th>
+                    <th className="py-3 text-white border-bottom border-secondary border-opacity-25 text-uppercase small font-weight-bold">Fecha</th>
+                    <th className="py-3 text-white border-bottom border-secondary border-opacity-25 text-uppercase small font-weight-bold">Método</th>
+                    <th className="py-3 text-center text-white border-bottom border-secondary border-opacity-25 text-uppercase small font-weight-bold">Estatus</th>
+                    <th className="pe-4 py-3 text-end text-white border-bottom border-secondary border-opacity-25 text-uppercase small font-weight-bold">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -205,7 +184,7 @@ const AbonoManagement: React.FC = () => {
                         <p className="mb-0">Cargando abonos...</p>
                       </td>
                     </tr>
-                  ) : filteredAbonos.length === 0 ? (
+                  ) : abonos.length === 0 ? (
                     <tr>
                       <td colSpan={9} className="text-center py-5">
                         <div className="d-flex flex-column align-items-center">
@@ -215,7 +194,7 @@ const AbonoManagement: React.FC = () => {
                       </td>
                     </tr>
                   ) : (
-                    filteredAbonos.map((abono) => (
+                    abonos.map((abono) => (
                       <tr key={abono.id} className="hover-bg-dark-lighter" style={{ transition: 'background-color 0.2s' }}>
                         <td className="ps-4 py-3 text-white border-bottom border-secondary border-opacity-10 font-bold">#{abono.reciboId}</td>
                         <td className="py-3 text-secondary border-bottom border-secondary border-opacity-10">Recibo #{abono.reciboId}</td>
@@ -225,9 +204,11 @@ const AbonoManagement: React.FC = () => {
                             : '-'}
                         </td>
                         <td className="py-3 text-secondary border-bottom border-secondary border-opacity-10">
-                          {abono.recibo?.items && abono.recibo.items.length > 0
-                            ? abono.recibo.items.map(i => i.nombre || i.descripcion || '').join(', ')
-                            : abono.referencia || '-'}
+                          <div className="text-truncate" style={{ maxWidth: '200px' }}>
+                            {abono.recibo?.items && abono.recibo.items.length > 0
+                              ? abono.recibo.items.map(i => i.nombre || i.descripcion || '').join(', ')
+                              : abono.referencia || '-'}
+                          </div>
                         </td>
                         <td className="py-3 text-success fw-bold border-bottom border-secondary border-opacity-10">S/. {abono.monto.toFixed(2)}</td>
                         <td className="py-3 text-secondary border-bottom border-secondary border-opacity-10">
@@ -254,6 +235,45 @@ const AbonoManagement: React.FC = () => {
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+
+        {/* Pagination Controls */}
+        <div className="d-flex align-items-center justify-content-between mt-2 gap-2">
+          <div className="d-flex align-items-center gap-3">
+            <button
+              className="btn btn-sm text-white border-secondary border-opacity-25"
+              style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              Anterior
+            </button>
+            <div className="small text-secondary">
+              Página <span className="text-white fw-bold">{currentPage}</span> de <span className="text-white fw-bold">{totalPages}</span>
+              <span className="ms-2">({totalCount} registros)</span>
+            </div>
+            <button
+              className="btn btn-sm text-white border-secondary border-opacity-25"
+              style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Siguiente
+            </button>
+          </div>
+          <div className="d-flex align-items-center gap-2">
+            <label className="text-secondary small">Mostrar:</label>
+            <select
+              value={itemsPerPage}
+              onChange={e => setItemsPerPage(Number(e.target.value))}
+              className="form-select form-select-sm border-secondary border-opacity-25 text-white"
+              style={{ backgroundColor: '#0d1117', width: 'auto' }}
+            >
+              {[5, 10, 20, 50].map(n => (
+                <option key={n} value={n} style={{ backgroundColor: '#161b22' }}>{n}</option>
+              ))}
+            </select>
           </div>
         </div>
       </div>

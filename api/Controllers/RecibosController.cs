@@ -17,7 +17,12 @@ namespace SoftSportAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<object>>> GetRecibos(int page = 1, int pageSize = 20)
+        public async Task<ActionResult<object>> GetRecibos(
+            int page = 1, 
+            int pageSize = 20, 
+            string? searchTerm = null,
+            DateTime? desde = null,
+            DateTime? hasta = null)
         {
             var query = _context.Recibos
                 .Include(r => r.Items)
@@ -25,15 +30,44 @@ namespace SoftSportAPI.Controllers
                 .Include(r => r.Alumno)
                 .AsQueryable();
 
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                var lowerSearch = searchTerm.ToLower();
+                query = query.Where(r => 
+                    r.Numero.ToLower().Contains(lowerSearch) || 
+                    (r.Alumno != null && (r.Alumno.Nombre.ToLower().Contains(lowerSearch) || r.Alumno.Apellido.ToLower().Contains(lowerSearch))));
+            }
+
+            if (desde.HasValue)
+            {
+                query = query.Where(r => r.Fecha >= desde.Value);
+            }
+
+            if (hasta.HasValue)
+            {
+                query = query.Where(r => r.Fecha <= hasta.Value);
+            }
+
+            var totalCount = await query.CountAsync();
+
+            var stats = new
+            {
+                totalFacturado = await query.SumAsync(r => r.Subtotal),
+                totalRecaudado = await query.Where(r => r.Estado == "Pagado").SumAsync(r => r.Total),
+                totalExonerado = await query.SumAsync(r => r.Descuento),
+                totalPorRecaudar = await query.Where(r => r.Estado == "Pendiente").SumAsync(r => r.Total)
+            };
+
             var servicios = await _context.Servicios.ToDictionaryAsync(s => s.Id, s => s.Nombre);
             var productos = await _context.Productos.ToDictionaryAsync(p => p.Id, p => p.Nombre);
 
             var recibos = await query
+                .OrderByDescending(r => r.Fecha)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
 
-            return recibos.Select(r => new
+            var data = recibos.Select(r => new
             {
                 r.Id,
                 r.Numero,
@@ -61,7 +95,14 @@ namespace SoftSportAPI.Controllers
                     item.Total
                 }).ToList(),
                 Abonos = r.Abonos
-            }).ToList<object>();
+            }).ToList();
+
+            return Ok(new
+            {
+                totalCount = totalCount,
+                stats = stats,
+                data = data
+            });
         }
 
         [HttpGet("{id}")]

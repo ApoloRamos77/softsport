@@ -9,22 +9,31 @@ const ServiceManagement: React.FC = () => {
   const [editingService, setEditingService] = useState<Servicio | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-
-  useEffect(() => {
-    loadServices();
-  }, []);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalServices, setTotalServices] = useState(0);
 
   const loadServices = async () => {
     try {
       setLoading(true);
-      const data = await apiService.getServicios();
-      setServices(data);
+      const params = {
+        page: currentPage,
+        pageSize: itemsPerPage,
+        searchTerm: searchTerm
+      };
+      const result = await apiService.getServicios(params);
+      setServices(result.data);
+      setTotalServices(result.totalCount);
     } catch (error) {
       console.error('Error loading services:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadServices();
+  }, [currentPage, itemsPerPage, searchTerm]);
 
   const handleEdit = (service: Servicio) => {
     setEditingService(service);
@@ -54,9 +63,11 @@ const ServiceManagement: React.FC = () => {
     setEditingService(null);
   };
 
-  const filteredServices = services.filter(s =>
-    s.nombre.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const totalPages = Math.max(1, Math.ceil(totalServices / itemsPerPage));
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, itemsPerPage]);
 
   if (showForm) {
     return (
@@ -132,7 +143,7 @@ const ServiceManagement: React.FC = () => {
                         <p className="mb-0">Cargando...</p>
                       </td>
                     </tr>
-                  ) : filteredServices.length === 0 ? (
+                  ) : services.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="text-center py-5">
                         <div className="d-flex flex-column align-items-center">
@@ -142,7 +153,7 @@ const ServiceManagement: React.FC = () => {
                       </td>
                     </tr>
                   ) : (
-                    filteredServices.map((service) => (
+                    services.map((service) => (
                       <tr key={service.id} className="hover-bg-dark-lighter" style={{ transition: 'background-color 0.2s' }}>
                         <td className="ps-4 py-3 text-white fw-medium border-bottom border-secondary border-opacity-10">
                           <div>
@@ -199,6 +210,44 @@ const ServiceManagement: React.FC = () => {
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+
+        {/* Pagination Controls */}
+        <div className="d-flex align-items-center justify-content-between mt-2 gap-2">
+          <div className="d-flex align-items-center gap-3">
+            <button
+              className="btn btn-sm text-white border-secondary border-opacity-25"
+              style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              Anterior
+            </button>
+            <div className="small text-secondary">
+              Página <span className="text-white fw-bold">{currentPage}</span> de <span className="text-white fw-bold">{totalPages}</span>
+            </div>
+            <button
+              className="btn btn-sm text-white border-secondary border-opacity-25"
+              style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Siguiente
+            </button>
+          </div>
+          <div className="d-flex align-items-center gap-2">
+            <label className="text-secondary small">Mostrar:</label>
+            <select
+              value={itemsPerPage}
+              onChange={e => setItemsPerPage(Number(e.target.value))}
+              className="form-select form-select-sm border-secondary border-opacity-25 text-white"
+              style={{ backgroundColor: '#0d1117', width: 'auto' }}
+            >
+              {[5, 10, 20, 50].map(n => (
+                <option key={n} value={n} style={{ backgroundColor: '#161b22' }}>{n}</option>
+              ))}
+            </select>
           </div>
         </div>
       </div>

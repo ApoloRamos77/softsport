@@ -17,9 +17,34 @@ namespace SoftSportAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Producto>>> GetProductos()
+        public async Task<ActionResult<object>> GetProductos(
+            int page = 1, 
+            int pageSize = 20, 
+            string? searchTerm = null)
         {
-            return await _context.Productos.ToListAsync();
+            var query = _context.Productos.AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                var lowerSearch = searchTerm.ToLower();
+                query = query.Where(p => 
+                    p.Nombre.ToLower().Contains(lowerSearch) || 
+                    (p.Sku != null && p.Sku.ToLower().Contains(lowerSearch)));
+            }
+
+            var totalCount = await query.CountAsync();
+
+            var productos = await query
+                .OrderBy(p => p.Nombre)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return Ok(new
+            {
+                totalCount = totalCount,
+                data = productos
+            });
         }
 
         [HttpGet("{id}")]

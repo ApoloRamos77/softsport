@@ -9,22 +9,31 @@ const ProductManagement: React.FC = () => {
   const [editingProducto, setEditingProducto] = useState<Producto | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-
-  useEffect(() => {
-    loadProductos();
-  }, []);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalProducts, setTotalProducts] = useState(0);
 
   const loadProductos = async () => {
     try {
       setLoading(true);
-      const data = await apiService.getProductos();
-      setProductos(data);
+      const params = {
+        page: currentPage,
+        pageSize: itemsPerPage,
+        searchTerm: searchTerm
+      };
+      const result = await apiService.getProductos(params);
+      setProductos(result.data);
+      setTotalProducts(result.totalCount);
     } catch (error) {
       console.error('Error cargando productos:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadProductos();
+  }, [currentPage, itemsPerPage, searchTerm]);
 
   const handleSubmit = async (productoData: any) => {
     try {
@@ -69,10 +78,11 @@ const ProductManagement: React.FC = () => {
     setEditingProducto(null);
   };
 
-  const filteredProductos = productos.filter(p =>
-    p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.sku?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const totalPages = Math.max(1, Math.ceil(totalProducts / itemsPerPage));
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, itemsPerPage]);
 
   if (showForm) {
     return (
@@ -148,7 +158,7 @@ const ProductManagement: React.FC = () => {
                         <p className="mb-0">Cargando...</p>
                       </td>
                     </tr>
-                  ) : filteredProductos.length === 0 ? (
+                  ) : productos.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="text-center py-5">
                         <div className="d-flex flex-column align-items-center">
@@ -158,7 +168,7 @@ const ProductManagement: React.FC = () => {
                       </td>
                     </tr>
                   ) : (
-                    filteredProductos.map((producto) => (
+                    productos.map((producto) => (
                       <tr key={producto.id} className="hover-bg-dark-lighter" style={{ transition: 'background-color 0.2s' }}>
                         <td className="ps-4 py-3 text-white fw-medium border-bottom border-secondary border-opacity-10">{producto.nombre}</td>
                         <td className="py-3 text-secondary border-bottom border-secondary border-opacity-10">{producto.sku || '-'}</td>
@@ -202,8 +212,46 @@ const ProductManagement: React.FC = () => {
             </div>
           </div>
         </div>
-      </div >
-    </div >
+
+        {/* Pagination Controls */}
+        <div className="d-flex align-items-center justify-content-between mt-2 gap-2">
+          <div className="d-flex align-items-center gap-3">
+            <button
+              className="btn btn-sm text-white border-secondary border-opacity-25"
+              style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              Anterior
+            </button>
+            <div className="small text-secondary">
+              Página <span className="text-white fw-bold">{currentPage}</span> de <span className="text-white fw-bold">{totalPages}</span>
+            </div>
+            <button
+              className="btn btn-sm text-white border-secondary border-opacity-25"
+              style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Siguiente
+            </button>
+          </div>
+          <div className="d-flex align-items-center gap-2">
+            <label className="text-secondary small">Mostrar:</label>
+            <select
+              value={itemsPerPage}
+              onChange={e => setItemsPerPage(Number(e.target.value))}
+              className="form-select form-select-sm border-secondary border-opacity-25 text-white"
+              style={{ backgroundColor: '#0d1117', width: 'auto' }}
+            >
+              {[5, 10, 20, 50].map(n => (
+                <option key={n} value={n} style={{ backgroundColor: '#161b22' }}>{n}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

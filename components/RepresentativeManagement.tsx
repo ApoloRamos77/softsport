@@ -11,16 +11,22 @@ const RepresentativeManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalRepresentatives, setTotalRepresentatives] = useState(0);
+
   const loadRepresentatives = async () => {
     setLoading(true);
     try {
-      const [reprData, alumnosData] = await Promise.all([
-        apiService.getRepresentantes(),
-        apiService.getAlumnos()
-      ]);
+      const params = {
+        page: currentPage,
+        pageSize: itemsPerPage,
+        searchTerm: searchTerm
+      };
 
-      if (Array.isArray(reprData)) setRepresentatives(reprData);
-      if (Array.isArray(alumnosData)) setAlumnos(alumnosData);
+      const result = await apiService.getRepresentantes(params);
+      setRepresentatives(result.data);
+      setTotalRepresentatives(result.totalCount);
     } catch (error) {
       console.error('Error loading data:', error);
       alert('Error al cargar la información');
@@ -31,7 +37,7 @@ const RepresentativeManagement: React.FC = () => {
 
   useEffect(() => {
     loadRepresentatives();
-  }, []);
+  }, [currentPage, itemsPerPage, searchTerm]);
 
   const handleSave = async (data: Representante) => {
     try {
@@ -74,11 +80,13 @@ const RepresentativeManagement: React.FC = () => {
     setEditingRepresentative(null);
   };
 
-  const filteredData = representatives.filter(r =>
-    !r.fechaAnulacion &&
-    (`${r.nombre} ${r.apellido}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (r.documento && r.documento.includes(searchTerm)))
-  );
+  // Paginación
+  const totalPages = Math.max(1, Math.ceil(totalRepresentatives / itemsPerPage));
+
+  // Resetear página al buscar
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, itemsPerPage]);
 
   if (showForm) {
     return (
@@ -158,7 +166,7 @@ const RepresentativeManagement: React.FC = () => {
                       <p className="mb-0">Cargando representantes...</p>
                     </td>
                   </tr>
-                ) : filteredData.length > 0 ? filteredData.map(r => (
+                ) : representatives.length > 0 ? representatives.map(r => (
                   <tr key={r.id} className="hover-bg-dark-lighter" style={{ transition: 'background-color 0.2s' }}>
                     <td className="ps-4 border-bottom border-secondary border-opacity-10 py-3">
                       <div className="d-flex flex-column">
@@ -175,7 +183,7 @@ const RepresentativeManagement: React.FC = () => {
                     </td>
                     <td className="text-center border-bottom border-secondary border-opacity-10 py-3">
                       <span className="badge bg-primary bg-opacity-20 text-blue-400 rounded-pill px-3 border border-primary border-opacity-30">
-                        {alumnos.filter(a => a.representanteId === r.id).length}
+                        {(r as any).alumnosCount || 0}
                       </span>
                     </td>
                     <td className="text-secondary small border-bottom border-secondary border-opacity-10 py-3">
@@ -214,6 +222,44 @@ const RepresentativeManagement: React.FC = () => {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+
+        {/* Pagination */}
+        <div className="d-flex align-items-center justify-content-between mt-2 gap-2">
+          <div className="d-flex align-items-center gap-3">
+            <button
+              className="btn btn-sm text-white border-secondary border-opacity-25"
+              style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              Anterior
+            </button>
+            <div className="small text-secondary">
+              Página <span className="text-white fw-bold">{currentPage}</span> de <span className="text-white fw-bold">{totalPages}</span>
+            </div>
+            <button
+              className="btn btn-sm text-white border-secondary border-opacity-25"
+              style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Siguiente
+            </button>
+          </div>
+          <div className="d-flex align-items-center gap-2">
+            <label className="text-secondary small">Mostrar:</label>
+            <select
+              value={itemsPerPage}
+              onChange={e => setItemsPerPage(Number(e.target.value))}
+              className="form-select form-select-sm border-secondary border-opacity-25 text-white"
+              style={{ backgroundColor: '#0d1117', width: 'auto' }}
+            >
+              {[5, 10, 20, 50].map(n => (
+                <option key={n} value={n} style={{ backgroundColor: '#161b22' }}>{n}</option>
+              ))}
+            </select>
           </div>
         </div>
       </div>

@@ -267,16 +267,38 @@ export interface AcademyConfig {
 }
 
 class ApiService {
-  // Generic CRUD operations
-  async getAll<T>(endpoint: string): Promise<T[]> {
-    const response = await fetch(`${API_BASE_URL}/${endpoint}`);
+  // Generic paginated GET
+  async getPaginated<T>(endpoint: string, params: Record<string, any> = {}): Promise<{ totalCount: number, data: T[] }> {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        query.append(key, value.toString());
+      }
+    });
+
+    const queryString = query.toString();
+    const url = queryString ? `${API_BASE_URL}/${endpoint}?${queryString}` : `${API_BASE_URL}/${endpoint}`;
+
+    const response = await fetch(url);
     if (!response.ok) throw new Error(`Error fetching ${endpoint}`);
-    return response.json();
+
+    const result = await response.json();
+    // Support both old (array) and new (object with data/totalCount) formats
+    if (Array.isArray(result)) {
+      return { totalCount: result.length, data: result };
+    }
+    return result;
   }
 
   async getById<T>(endpoint: string, id: number): Promise<T> {
     const response = await fetch(`${API_BASE_URL}/${endpoint}/${id}`);
     if (!response.ok) throw new Error(`Error fetching ${endpoint}/${id}`);
+    return response.json();
+  }
+
+  async getAll<T>(endpoint: string): Promise<T[]> {
+    const response = await fetch(`${API_BASE_URL}/${endpoint}`);
+    if (!response.ok) throw new Error(`Error fetching ${endpoint}`);
     return response.json();
   }
 
@@ -306,14 +328,14 @@ class ApiService {
     if (!response.ok) throw new Error(`Error deleting ${endpoint}/${id}`);
   }
 
-  // Specific methods for each entity
-  getAlumnos() { return this.getAll<Alumno>('alumnos'); }
+  // Specific methods
+  getAlumnos(params: any = {}) { return this.getPaginated<Alumno>('alumnos', params); }
   getAlumno(id: number) { return this.getById<Alumno>('alumnos', id); }
   createAlumno(data: Alumno) { return this.create<Alumno>('alumnos', data); }
   updateAlumno(id: number, data: Alumno) { return this.update<Alumno>('alumnos', id, data); }
   deleteAlumno(id: number) { return this.delete('alumnos', id); }
 
-  getRepresentantes() { return this.getAll<Representante>('representantes'); }
+  getRepresentantes(params: any = {}) { return this.getPaginated<Representante>('representantes', params); }
   getRepresentante(id: number) { return this.getById<Representante>('representantes', id); }
   createRepresentante(data: Representante) { return this.create<Representante>('representantes', data); }
   updateRepresentante(id: number, data: Representante) { return this.update<Representante>('representantes', id, data); }
@@ -337,13 +359,13 @@ class ApiService {
   updateBeca(id: number, data: Beca) { return this.update<Beca>('becas', id, data); }
   deleteBeca(id: number) { return this.delete('becas', id); }
 
-  getServicios() { return this.getAll<Servicio>('servicios'); }
+  getServicios(params: any = {}) { return this.getPaginated<Servicio>('servicios', params); }
   getServicio(id: number) { return this.getById<Servicio>('servicios', id); }
   createServicio(data: Servicio) { return this.create<Servicio>('servicios', data); }
   updateServicio(id: number, data: Servicio) { return this.update<Servicio>('servicios', id, data); }
   deleteServicio(id: number) { return this.delete('servicios', id); }
 
-  getProductos() { return this.getAll<Producto>('productos'); }
+  getProductos(params: any = {}) { return this.getPaginated<Producto>('productos', params); }
   getProducto(id: number) { return this.getById<Producto>('productos', id); }
   createProducto(data: Producto) { return this.create<Producto>('productos', data); }
   updateProducto(id: number, data: Producto) { return this.update<Producto>('productos', id, data); }
@@ -368,19 +390,19 @@ class ApiService {
   deleteRole(id: number) { return this.delete('roles', id); }
   getRolePermissions(id: number) { return this.getAll<Permission>(`roles/${id}/permissions`); }
 
-  getAbonos() { return this.getAll<Abono>('abonos'); }
+  getAbonos(params: any = {}) { return this.getPaginated<Abono>('abonos', params); }
   getAbono(id: number) { return this.getById<Abono>('abonos', id); }
   createAbono(data: Abono) { return this.create<Abono>('abonos', data); }
   updateAbono(id: number, data: Abono) { return this.update<Abono>('abonos', id, data); }
   deleteAbono(id: number) { return this.delete('abonos', id); }
 
-  getRecibos() { return this.getAll<any>('recibos'); }
+  getRecibos(params: any = {}) { return this.getPaginated<any>('recibos', params); }
   getRecibo(id: number) { return this.getById<any>('recibos', id); }
   createRecibo(data: any) { return this.create<any>('recibos', data); }
   updateRecibo(id: number, data: any) { return this.update<any>('recibos', id, data); }
   deleteRecibo(id: number) { return this.delete('recibos', id); }
 
-  getExpenses() { return this.getAll<Expense>('expenses'); }
+  getExpenses(params: any = {}) { return this.getPaginated<Expense>('expenses', params); }
   getExpense(id: number) { return this.getById<Expense>('expenses', id); }
   createExpense(data: Expense) { return this.create<Expense>('expenses', data); }
   updateExpense(id: number, data: Expense) { return this.update<Expense>('expenses', id, data); }
@@ -398,57 +420,45 @@ class ApiService {
   updateTacticalBoard(id: number, data: TacticalBoard) { return this.update<TacticalBoard>('tacticalboards', id, data); }
   deleteTacticalBoard(id: number) { return this.delete('tacticalboards', id); }
 
-  // Landing Page Gallery methods
   getGalleries() { return this.getAll<LandingGallery>('gallery'); }
   getGallery(id: number) { return this.getById<LandingGallery>('gallery', id); }
   createGallery(data: LandingGallery) { return this.create<LandingGallery>('gallery', data); }
   updateGallery(id: number, data: LandingGallery) { return this.update<LandingGallery>('gallery', id, data); }
   deleteGallery(id: number) { return this.delete('gallery', id); }
 
-  // Contact Message methods
   getContactMessages() { return this.getAll<ContactMessage>('contact'); }
   createContactMessage(data: ContactMessage) { return this.create<ContactMessage>('contact', data); }
   deleteContactMessage(id: number) { return this.delete('contact', id); }
 
-  // File upload
   async uploadFile(file: File, type: string = 'general'): Promise<string> {
     const formData = new FormData();
     formData.append('file', file);
-
     const response = await fetch(`${API_BASE_URL}/files/upload?type=${type}`, {
       method: 'POST',
       body: formData
     });
-
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`Error subiendo imagen: ${errorText}`);
     }
-
     const data = await response.json();
     return data.url;
   }
 
-  // Dashboard endpoints
   async getDashboardStats(seasonId?: number): Promise<any> {
-    const url = seasonId
-      ? `${API_BASE_URL}/dashboard/stats?seasonId=${seasonId}`
-      : `${API_BASE_URL}/dashboard/stats`;
+    const url = seasonId ? `${API_BASE_URL}/dashboard/stats?seasonId=${seasonId}` : `${API_BASE_URL}/dashboard/stats`;
     const response = await fetch(url);
     if (!response.ok) throw new Error('Error al obtener estadísticas del dashboard');
     return response.json();
   }
 
   async getFinancialChart(seasonId?: number): Promise<any> {
-    const url = seasonId
-      ? `${API_BASE_URL}/dashboard/financial-chart?seasonId=${seasonId}`
-      : `${API_BASE_URL}/dashboard/financial-chart`;
+    const url = seasonId ? `${API_BASE_URL}/dashboard/financial-chart?seasonId=${seasonId}` : `${API_BASE_URL}/dashboard/financial-chart`;
     const response = await fetch(url);
     if (!response.ok) throw new Error('Error al obtener datos del gráfico financiero');
     return response.json();
   }
 
-  // Academy Config endpoints
   async getAcademyConfig(): Promise<AcademyConfig> {
     const response = await fetch(`${API_BASE_URL}/academyconfig`);
     if (!response.ok) throw new Error('Error al obtener configuración de la academia');
@@ -465,7 +475,6 @@ class ApiService {
     return response.json();
   }
 
-  // Profile endpoints
   async getUserProfile(id: number): Promise<User> {
     const response = await fetch(`${API_BASE_URL}/users/profile/${id}`);
     if (!response.ok) throw new Error('Error al obtener perfil de usuario');
@@ -482,7 +491,6 @@ class ApiService {
     return response.json();
   }
 
-  // Change password
   async changePassword(userId: number, currentPassword: string, newPassword: string): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/users/change-password/${userId}`, {
       method: 'POST',
@@ -495,25 +503,20 @@ class ApiService {
     }
   }
 
-  // Authentication
   async login(email: string, password: string): Promise<User> {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
-
     if (!response.ok) {
       let errorMessage = 'Error al iniciar sesión';
       try {
         const error = await response.json();
         errorMessage = error.error || errorMessage;
-      } catch (e) {
-        // If response is not JSON, use default message
-      }
+      } catch (e) { }
       throw new Error(errorMessage);
     }
-
     return response.json();
   }
 }

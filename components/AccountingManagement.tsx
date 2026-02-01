@@ -34,15 +34,32 @@ const AccountingManagement: React.FC = () => {
   const [showPago, setShowPago] = useState(false);
   const [editingRecibo, setEditingRecibo] = useState<Recibo | null>(null);
 
-  useEffect(() => {
-    loadRecibos();
-  }, []);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalRecibos, setTotalRecibos] = useState(0);
+  const [grandStats, setGrandStats] = useState({
+    montoFacturado: 0,
+    montoRecaudado: 0,
+    montoExonerado: 0,
+    montoPorRecaudar: 0
+  });
 
   const loadRecibos = async () => {
     try {
       setLoading(true);
-      const data = await apiService.getAll<Recibo>('recibos');
-      setRecibos(data);
+      const params = {
+        page: currentPage,
+        pageSize: itemsPerPage,
+        searchTerm: searchTerm,
+        desde: filters.desde,
+        hasta: filters.hasta
+      };
+      const result = await apiService.getRecibos(params);
+      setRecibos(result.data);
+      setTotalRecibos(result.totalCount);
+      if ((result as any).stats) {
+        setGrandStats((result as any).stats);
+      }
     } catch (error) {
       console.error('Error cargando recibos:', error);
     } finally {
@@ -50,13 +67,16 @@ const AccountingManagement: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    loadRecibos();
+  }, [currentPage, itemsPerPage, searchTerm, filters.desde, filters.hasta]);
+
   const handleEdit = async (recibo: Recibo) => {
     if (recibo.estado === 'Pagado') {
       alert('No se puede editar un recibo que ya está pagado');
       return;
     }
 
-    // Cargar el recibo completo con todos sus detalles
     try {
       const data = await apiService.getById<Recibo>('recibos', recibo.id);
       setEditingRecibo(data);
@@ -115,43 +135,13 @@ const AccountingManagement: React.FC = () => {
     loadRecibos();
   };
 
-  const filteredRecibos = recibos.filter(r => {
-    // Rango de fechas
-    const fecha = new Date(r.fecha);
-    const desde = new Date(filters.desde);
-    desde.setHours(0, 0, 0, 0);
-    const hasta = new Date(filters.hasta);
-    hasta.setHours(23, 59, 59, 999);
+  // Paginación
+  const totalPages = Math.max(1, Math.ceil(totalRecibos / itemsPerPage));
 
-    if (fecha < desde || fecha > hasta) return false;
-
-    // Búsqueda
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      const alumno = (r.AlumnoNombre || r.alumnoNombre || '').toLowerCase();
-      const id = r.id.toString();
-      const items = r.items?.map((i: any) => i.nombre || i.Nombre || i.descripcion).join(' ').toLowerCase() || '';
-
-      if (!alumno.includes(term) && !id.includes(term) && !items.includes(term)) return false;
-    }
-
-    return true;
-  });
-
-  const calcularEstadisticas = () => {
-    const montoFacturado = filteredRecibos.reduce((sum, r) => sum + r.subtotal, 0);
-    const montoRecaudado = filteredRecibos
-      .filter(r => r.estado === 'Pagado')
-      .reduce((sum, r) => sum + r.total, 0);
-    const montoExonerado = filteredRecibos.reduce((sum, r) => sum + r.descuento, 0);
-    const montoPorRecaudar = filteredRecibos
-      .filter(r => r.estado === 'Pendiente')
-      .reduce((sum, r) => sum + r.total, 0);
-
-    return { montoFacturado, montoRecaudado, montoExonerado, montoPorRecaudar };
-  };
-
-  const stats = calcularEstadisticas();
+  // Resetear página al filtrar
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filters.desde, filters.hasta, itemsPerPage]);
 
   if (showForm) {
     return <ReceiptForm recibo={editingRecibo} onCancel={handleFormClose} />;
@@ -187,7 +177,7 @@ const AccountingManagement: React.FC = () => {
             <div className="card h-100 border-0 shadow-sm" style={{ backgroundColor: '#161b22' }}>
               <div className="card-body p-3">
                 <p className="text-secondary small fw-bold mb-1 text-uppercase" style={{ fontSize: '10px' }}>Monto Facturado</p>
-                <h3 className="fw-bold mb-0 text-white font-monospace">S/. {stats.montoFacturado.toFixed(2)}</h3>
+                <h3 className="fw-bold mb-0 text-white font-monospace">S/. {grandStats.montoFacturado.toFixed(2)}</h3>
                 <small className="text-secondary opacity-50" style={{ fontSize: '10px' }}>Total histórico</small>
               </div>
             </div>
@@ -196,7 +186,7 @@ const AccountingManagement: React.FC = () => {
             <div className="card h-100 border-0 shadow-sm" style={{ backgroundColor: '#161b22' }}>
               <div className="card-body p-3">
                 <p className="text-secondary small fw-bold mb-1 text-uppercase" style={{ fontSize: '10px' }}>Recaudado</p>
-                <h3 className="fw-bold mb-0 text-success font-monospace">S/. {stats.montoRecaudado.toFixed(2)}</h3>
+                <h3 className="fw-bold mb-0 text-success font-monospace">S/. {grandStats.montoRecaudado.toFixed(2)}</h3>
                 <small className="text-secondary opacity-50" style={{ fontSize: '10px' }}>Ingresos netos</small>
               </div>
             </div>
@@ -205,7 +195,7 @@ const AccountingManagement: React.FC = () => {
             <div className="card h-100 border-0 shadow-sm" style={{ backgroundColor: '#161b22' }}>
               <div className="card-body p-3">
                 <p className="text-secondary small fw-bold mb-1 text-uppercase" style={{ fontSize: '10px' }}>Exonerado</p>
-                <h3 className="fw-bold mb-0 text-white font-monospace">S/. {stats.montoExonerado.toFixed(2)}</h3>
+                <h3 className="fw-bold mb-0 text-white font-monospace">S/. {grandStats.montoExonerado.toFixed(2)}</h3>
                 <small className="text-secondary opacity-50" style={{ fontSize: '10px' }}>Descuentos y becas</small>
               </div>
             </div>
@@ -214,7 +204,7 @@ const AccountingManagement: React.FC = () => {
             <div className="card h-100 border-0 shadow-sm" style={{ backgroundColor: '#161b22' }}>
               <div className="card-body p-3">
                 <p className="text-secondary small fw-bold mb-1 text-uppercase" style={{ fontSize: '10px' }}>Por Recaudar</p>
-                <h3 className="fw-bold mb-0 text-danger font-monospace">S/. {stats.montoPorRecaudar.toFixed(2)}</h3>
+                <h3 className="fw-bold mb-0 text-danger font-monospace">S/. {grandStats.montoPorRecaudar.toFixed(2)}</h3>
                 <small className="text-secondary opacity-50" style={{ fontSize: '10px' }}>Saldo pendiente</small>
               </div>
             </div>
@@ -288,14 +278,14 @@ const AccountingManagement: React.FC = () => {
                       <p className="mb-0 small">Cargando...</p>
                     </td>
                   </tr>
-                ) : filteredRecibos.length === 0 ? (
+                ) : recibos.length === 0 ? (
                   <tr>
                     <td colSpan={10} className="text-center py-5">
                       <p className="text-muted mb-0 small">No se encontraron recibos</p>
                     </td>
                   </tr>
                 ) : (
-                  filteredRecibos.map((recibo) => (
+                  recibos.map((recibo) => (
                     <tr key={recibo.id} className="hover-bg-dark-lighter" style={{ transition: 'background-color 0.2s' }}>
                       <td className="ps-4 fw-bold text-white border-bottom border-secondary border-opacity-10 py-3">
                         #{recibo.id}
@@ -383,6 +373,44 @@ const AccountingManagement: React.FC = () => {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+
+        {/* Pagination Controls */}
+        <div className="d-flex align-items-center justify-content-between mt-2 gap-2">
+          <div className="d-flex align-items-center gap-3">
+            <button
+              className="btn btn-sm text-white border-secondary border-opacity-25"
+              style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              Anterior
+            </button>
+            <div className="small text-secondary">
+              Página <span className="text-white fw-bold">{currentPage}</span> de <span className="text-white fw-bold">{totalPages}</span>
+            </div>
+            <button
+              className="btn btn-sm text-white border-secondary border-opacity-25"
+              style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Siguiente
+            </button>
+          </div>
+          <div className="d-flex align-items-center gap-2">
+            <label className="text-secondary small">Mostrar:</label>
+            <select
+              value={itemsPerPage}
+              onChange={e => setItemsPerPage(Number(e.target.value))}
+              className="form-select form-select-sm border-secondary border-opacity-25 text-white"
+              style={{ backgroundColor: '#0d1117', width: 'auto' }}
+            >
+              {[5, 10, 20, 50].map(n => (
+                <option key={n} value={n} style={{ backgroundColor: '#161b22' }}>{n}</option>
+              ))}
+            </select>
           </div>
         </div>
 

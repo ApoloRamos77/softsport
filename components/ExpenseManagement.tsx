@@ -17,11 +17,25 @@ const ExpenseManagement: React.FC = () => {
   });
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalExpenses, setTotalExpenses] = useState(0);
+  const [grandTotalMonto, setGrandTotalMonto] = useState(0);
+
   const loadExpenses = async () => {
     try {
       setLoading(true);
-      const data = await apiService.getExpenses();
-      setExpenses(data);
+      const params = {
+        page: currentPage,
+        pageSize: itemsPerPage,
+        searchTerm: filters.busqueda,
+        desde: filters.desde,
+        hasta: filters.hasta
+      };
+      const result = await apiService.getExpenses(params);
+      setExpenses(result.data);
+      setTotalExpenses(result.totalCount);
+      setGrandTotalMonto((result as any).totalMonto || 0);
     } catch (error) {
       console.error('Error al cargar egresos:', error);
     } finally {
@@ -40,36 +54,11 @@ const ExpenseManagement: React.FC = () => {
 
   useEffect(() => {
     loadExpenses();
+  }, [currentPage, itemsPerPage, filters.desde, filters.hasta, filters.busqueda]);
+
+  useEffect(() => {
     loadPaymentMethods();
   }, []);
-
-  const filteredExpenses = expenses.filter(e => {
-    // Rango de fechas
-    const fecha = new Date(e.fecha);
-    const desde = new Date(filters.desde);
-    desde.setHours(0, 0, 0, 0);
-    const hasta = new Date(filters.hasta);
-    hasta.setHours(23, 59, 59, 999);
-
-    if (fecha < desde || fecha > hasta) return false;
-
-    // Método de pago (se guarda en categoria)
-    if (filters.metodoPago !== 'Todos' && e.categoria !== filters.metodoPago) return false;
-
-    // Búsqueda
-    if (filters.busqueda && !e.descripcion?.toLowerCase().includes(filters.busqueda.toLowerCase())) return false;
-
-    return true;
-  });
-
-  const calcularEstadisticas = () => {
-    const egresosBs = filteredExpenses.reduce((sum, e) => sum + e.monto, 0); // Assuming monto is in S/.
-    const egresosDolares = 0;
-    const totalRegistros = filteredExpenses.length;
-    return { egresosBs, egresosDolares, totalRegistros };
-  };
-
-  const stats = calcularEstadisticas();
 
   const handleSuccess = () => {
     setShowForm(false);
@@ -89,7 +78,6 @@ const ExpenseManagement: React.FC = () => {
       const expense = expenses.find(e => e.id === id);
       if (!expense) return;
 
-      // Assuming updateExpense handles the PUT logic
       await apiService.updateExpense(id, {
         ...expense,
         estado: 'Anulado'
@@ -102,6 +90,14 @@ const ExpenseManagement: React.FC = () => {
       alert('Error al anular el egreso');
     }
   };
+
+  // Paginación
+  const totalPages = Math.max(1, Math.ceil(totalExpenses / itemsPerPage));
+
+  // Resetear página al filtrar
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters.desde, filters.hasta, filters.busqueda, itemsPerPage]);
 
   if (showForm) {
     return <ExpenseForm expense={editingExpense} onCancel={() => { setShowForm(false); setEditingExpense(null); }} onSuccess={handleSuccess} />;
@@ -137,16 +133,7 @@ const ExpenseManagement: React.FC = () => {
             <div className="card border-0 shadow-sm h-100" style={{ backgroundColor: '#161b22' }}>
               <div className="card-body">
                 <p className="text-secondary small fw-bold mb-2">Egresos en S/.</p>
-                <h3 className="fs-2 fw-bold text-white mb-1">{stats.egresosBs.toFixed(2)} S/.</h3>
-                <p className="text-secondary small mb-0">En el rango de fechas</p>
-              </div>
-            </div>
-          </div>
-          <div className="col-12 col-md-4">
-            <div className="card border-0 shadow-sm h-100" style={{ backgroundColor: '#161b22' }}>
-              <div className="card-body">
-                <p className="text-secondary small fw-bold mb-2">Egresos en S/.</p>
-                <h3 className="fs-2 fw-bold text-white mb-1">S/. {stats.egresosDolares.toFixed(2)}</h3>
+                <h3 className="fs-2 fw-bold text-white mb-1">{grandTotalMonto.toFixed(2)} S/.</h3>
                 <p className="text-secondary small mb-0">En el rango de fechas</p>
               </div>
             </div>
@@ -155,7 +142,7 @@ const ExpenseManagement: React.FC = () => {
             <div className="card border-0 shadow-sm h-100" style={{ backgroundColor: '#161b22' }}>
               <div className="card-body">
                 <p className="text-secondary small fw-bold mb-2">Total Registros</p>
-                <h3 className="fs-2 fw-bold text-white mb-1">{stats.totalRegistros}</h3>
+                <h3 className="fs-2 fw-bold text-white mb-1">{totalExpenses}</h3>
                 <p className="text-secondary small mb-0">Egresos registrados</p>
               </div>
             </div>
@@ -243,7 +230,7 @@ const ExpenseManagement: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredExpenses.map((expense) => (
+                    {expenses.map((expense) => (
                       <tr key={expense.id} className="hover-bg-dark-lighter" style={{ transition: 'background-color 0.2s' }}>
                         <td className="ps-4 py-3 text-white border-bottom border-secondary border-opacity-10 font-bold">#{expense.id}</td>
                         <td className="py-3 text-secondary border-bottom border-secondary border-opacity-10">{expense.descripcion}</td>
@@ -284,6 +271,44 @@ const ExpenseManagement: React.FC = () => {
                 </table>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* Pagination Controls */}
+        <div className="d-flex align-items-center justify-content-between mt-2 gap-2">
+          <div className="d-flex align-items-center gap-3">
+            <button
+              className="btn btn-sm text-white border-secondary border-opacity-25"
+              style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              Anterior
+            </button>
+            <div className="small text-secondary">
+              Página <span className="text-white fw-bold">{currentPage}</span> de <span className="text-white fw-bold">{totalPages}</span>
+            </div>
+            <button
+              className="btn btn-sm text-white border-secondary border-opacity-25"
+              style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Siguiente
+            </button>
+          </div>
+          <div className="d-flex align-items-center gap-2">
+            <label className="text-secondary small">Mostrar:</label>
+            <select
+              value={itemsPerPage}
+              onChange={e => setItemsPerPage(Number(e.target.value))}
+              className="form-select form-select-sm border-secondary border-opacity-25 text-white"
+              style={{ backgroundColor: '#0d1117', width: 'auto' }}
+            >
+              {[5, 10, 20, 50].map(n => (
+                <option key={n} value={n} style={{ backgroundColor: '#161b22' }}>{n}</option>
+              ))}
+            </select>
           </div>
         </div>
       </div>

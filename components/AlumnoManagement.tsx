@@ -19,27 +19,41 @@ const AlumnoManagement: React.FC = () => {
   const [availableGroups, setAvailableGroups] = useState<{ id: number, nombre: string }[]>([]);
   const [availableCategories, setAvailableCategories] = useState<{ id: number, nombre: string }[]>([]);
 
+  const [totalAlumnos, setTotalAlumnos] = useState(0);
+
   const loadAlumnos = async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await apiService.getAlumnos();
+      // Traducir filtros a IDs si es necesario
+      const grupoId = grupoFiltro !== 'Todos los grupos'
+        ? availableGroups.find(g => g.nombre === grupoFiltro)?.id
+        : undefined;
+      const categoriaId = categoriaFiltro !== 'Todas'
+        ? availableCategories.find(c => c.nombre === categoriaFiltro)?.id
+        : undefined;
 
-      if (Array.isArray(data)) {
-        // Normalización básica para asegurar campos requeridos por la UI
-        const normalized = data.map(a => ({
-          ...a,
-          telefono: a.telefono ?? '',
-          email: a.email ?? '',
-          estado: a.estado ?? 'Activo',
-          fechaAnulacion: a.fechaAnulacion ?? null
-        }));
-        setAlumnos(normalized);
-      } else {
-        console.warn('La API no retornó un array para alumnos:', data);
-        setAlumnos([]);
-        setError('La respuesta del servidor no tiene el formato esperado.');
-      }
+      const params = {
+        page: currentPage,
+        pageSize: itemsPerPage,
+        searchTerm: searchTerm,
+        estado: estadoFiltro === 'Todos' ? undefined : (estadoFiltro === 'Activos' ? 'Activo' : 'Inactivo'),
+        grupoId: grupoId,
+        categoriaId: categoriaId
+      };
+
+      const result = await apiService.getAlumnos(params);
+
+      const normalized = result.data.map(a => ({
+        ...a,
+        telefono: a.telefono ?? '',
+        email: a.email ?? '',
+        estado: a.estado ?? 'Activo',
+        fechaAnulacion: a.fechaAnulacion ?? null
+      }));
+
+      setAlumnos(normalized);
+      setTotalAlumnos(result.totalCount);
     } catch (err) {
       console.error('Error loading alumnos:', err);
       setError('No se pudo cargar la lista de alumnos. Verifique su conexión o intente más tarde.');
@@ -61,10 +75,15 @@ const AlumnoManagement: React.FC = () => {
     }
   };
 
+  // Cargar filtros inicialmente
   useEffect(() => {
-    loadAlumnos();
     loadFilters();
   }, []);
+
+  // Cargar alumnos cuando cambian los parámetros
+  useEffect(() => {
+    loadAlumnos();
+  }, [currentPage, itemsPerPage, searchTerm, estadoFiltro, grupoFiltro, categoriaFiltro]);
 
   const handleSave = async () => {
     await loadAlumnos();
@@ -91,29 +110,9 @@ const AlumnoManagement: React.FC = () => {
     }
   };
 
-  // Filtrado
-  const filteredAlumnos = alumnos.filter(a => {
-    // Filtro por estado
-    if (estadoFiltro === 'Activos' && a.fechaAnulacion) return false;
-    if (estadoFiltro === 'Inactivos' && !a.fechaAnulacion) return false;
-
-    // Filtro por Grupo
-    if (grupoFiltro !== 'Todos los grupos' && a.grupo?.nombre !== grupoFiltro) return false;
-
-    // Filtro por Categoría
-    if (categoriaFiltro !== 'Todas' && a.categoria?.nombre !== categoriaFiltro) return false;
-
-    // Filtro por búsqueda
-    const term = searchTerm.toLowerCase();
-    const fullName = `${a.nombre} ${a.apellido}`.toLowerCase();
-    const doc = a.documento?.toLowerCase() || '';
-
-    return fullName.includes(term) || doc.includes(term);
-  });
-
   // Paginación
-  const totalPages = Math.max(1, Math.ceil(filteredAlumnos.length / itemsPerPage));
-  const paginatedAlumnos = filteredAlumnos.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(totalAlumnos / itemsPerPage));
+  const paginatedAlumnos = alumnos;
 
   // Resetear página al filtrar
   useEffect(() => {
@@ -237,7 +236,7 @@ const AlumnoManagement: React.FC = () => {
       </div>
 
       <div className="text-muted mb-3 small">
-        Mostrando {paginatedAlumnos.length} de {filteredAlumnos.length} alumnos filtrados (Total: {alumnos.length})
+        Mostrando {alumnos.length} de {totalAlumnos} alumnos
       </div>
 
       {/* Table */}

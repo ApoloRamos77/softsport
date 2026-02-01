@@ -17,7 +17,13 @@ namespace SoftSportAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<object>>> GetAbonos(int page = 1, int pageSize = 20)
+        public async Task<ActionResult<object>> GetAbonos(
+            int page = 1, 
+            int pageSize = 20, 
+            string? searchTerm = null,
+            int? paymentMethodId = null,
+            DateTime? desde = null,
+            DateTime? hasta = null)
         {
             var query = _context.Abonos
                 .Include(a => a.Recibo)
@@ -26,12 +32,41 @@ namespace SoftSportAPI.Controllers
                     .ThenInclude(r => r.Items)
                 .AsQueryable();
 
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                var lowerSearch = searchTerm.ToLower();
+                query = query.Where(a => 
+                    a.ReciboId.ToString().Contains(searchTerm) ||
+                    (a.Recibo != null && a.Recibo.Alumno != null && (a.Recibo.Alumno.Nombre.ToLower().Contains(lowerSearch) || a.Recibo.Alumno.Apellido.ToLower().Contains(lowerSearch))) ||
+                    (a.Referencia != null && a.Referencia.ToLower().Contains(lowerSearch)));
+            }
+
+            if (paymentMethodId.HasValue && paymentMethodId.Value > 0)
+            {
+                query = query.Where(a => a.PaymentMethodId == paymentMethodId.Value);
+            }
+
+            if (desde.HasValue)
+            {
+                var d = desde.Value.Date;
+                query = query.Where(a => a.Fecha >= d);
+            }
+
+            if (hasta.HasValue)
+            {
+                var h = hasta.Value.Date.AddDays(1).AddTicks(-1);
+                query = query.Where(a => a.Fecha <= h);
+            }
+
+            var totalCount = await query.CountAsync();
+
             var abonos = await query
+                .OrderByDescending(a => a.Fecha)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
 
-            return Ok(abonos.Select(a => new
+            var data = abonos.Select(a => new
             {
                 a.Id,
                 a.ReciboId,
@@ -58,7 +93,13 @@ namespace SoftSportAPI.Controllers
                         i.Total
                     }).ToList()
                 }
-            }));
+            });
+
+            return Ok(new
+            {
+                totalCount = totalCount,
+                data = data
+            });
         }
 
         [HttpGet("{id}")]

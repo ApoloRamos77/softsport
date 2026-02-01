@@ -17,14 +17,46 @@ namespace SoftSportAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Expense>>> GetExpenses(int page = 1, int pageSize = 20)
+        public async Task<ActionResult<object>> GetExpenses(
+            int page = 1, 
+            int pageSize = 20, 
+            string? searchTerm = null,
+            DateTime? desde = null,
+            DateTime? hasta = null)
         {
-            var query = _context.Expenses.OrderByDescending(e => e.Fecha).AsQueryable();
+            var query = _context.Expenses.AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                var lowerSearch = searchTerm.ToLower();
+                query = query.Where(e => e.Descripcion.ToLower().Contains(lowerSearch));
+            }
+
+            if (desde.HasValue)
+            {
+                query = query.Where(e => e.Fecha >= desde.Value);
+            }
+
+            if (hasta.HasValue)
+            {
+                query = query.Where(e => e.Fecha <= hasta.Value);
+            }
+
+            var totalCount = await query.CountAsync();
+            var totalMonto = await query.SumAsync(e => e.Monto);
+
             var expenses = await query
+                .OrderByDescending(e => e.Fecha)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
-            return Ok(expenses);
+
+            return Ok(new
+            {
+                totalCount = totalCount,
+                totalMonto = totalMonto,
+                data = expenses
+            });
         }
 
         [HttpGet("{id}")]
