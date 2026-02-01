@@ -12,7 +12,10 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
     });
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.CustomSchemaIds(type => type.FullName); // Use full name to avoid conflicts
+});
 
 // Configure DbContext - Soporte para SQL Server y PostgreSQL
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");

@@ -7,6 +7,8 @@ const GameManagement: React.FC = () => {
   const [games, setGames] = useState<Game[]>([]);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoriaFiltro, setCategoriaFiltro] = useState('Todas');
 
   useEffect(() => {
     loadGames();
@@ -101,6 +103,22 @@ const GameManagement: React.FC = () => {
     return `${game.scoreLocal} - ${game.scoreVisitante}`;
   };
 
+  const filteredGames = games.filter(g => {
+    // Buscar
+    const term = searchTerm.toLowerCase();
+    const matchSearch = g.equipoLocal?.toLowerCase().includes(term) ||
+      g.equipoVisitante?.toLowerCase().includes(term) ||
+      g.ubicacion?.toLowerCase().includes(term) ||
+      g.titulo?.toLowerCase().includes(term);
+
+    if (!matchSearch) return false;
+
+    // Categoría
+    if (categoriaFiltro !== 'Todas' && g.categoriaNombre !== categoriaFiltro) return false;
+
+    return true;
+  });
+
   if (showForm) {
     return (
       <GameForm
@@ -140,6 +158,48 @@ const GameManagement: React.FC = () => {
             >
               <i className="bi bi-plus-lg"></i> Nuevo Juego
             </button>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="card mb-2 border-secondary border-opacity-10 shadow-lg" style={{ backgroundColor: '#161b22' }}>
+          <div className="card-body p-3">
+            <div className="row g-2 align-items-center">
+              <div className="col-lg-4 col-md-5">
+                <div className="position-relative">
+                  <i className="bi bi-search position-absolute text-secondary" style={{ left: '0.8rem', top: '50%', transform: 'translateY(-50%)', fontSize: '0.85rem' }}></i>
+                  <input
+                    type="text"
+                    placeholder="Buscar equipo o ubicación..."
+                    className="form-control form-control-sm"
+                    style={{ paddingLeft: '2.3rem', height: '38px', fontSize: '13px' }}
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="col-lg-8 col-md-7">
+                <div className="d-flex gap-2 flex-wrap justify-content-lg-end">
+                  <div className="d-flex align-items-center bg-[#0d1117] border border-secondary border-opacity-25 rounded px-3" style={{ height: '38px' }}>
+                    <span className="text-secondary text-[10px] font-bold uppercase me-3 tracking-wider ps-1">Categoría</span>
+                    <select
+                      className="bg-transparent border-0 text-white text-[13px] focus:outline-none cursor-pointer pe-1"
+                      value={categoriaFiltro}
+                      onChange={e => setCategoriaFiltro(e.target.value)}
+                    >
+                      <option style={{ backgroundColor: '#161b22' }}>Todas</option>
+                      <option style={{ backgroundColor: '#161b22' }}>Sub-8</option>
+                      <option style={{ backgroundColor: '#161b22' }}>Sub-10</option>
+                      <option style={{ backgroundColor: '#161b22' }}>Sub-12</option>
+                      <option style={{ backgroundColor: '#161b22' }}>Sub-15</option>
+                      <option style={{ backgroundColor: '#161b22' }}>Sub-17</option>
+                      <option style={{ backgroundColor: '#161b22' }}>Sub-20</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -240,14 +300,14 @@ const GameManagement: React.FC = () => {
                       <p className="mb-0">Cargando...</p>
                     </td>
                   </tr>
-                ) : games.length === 0 ? (
+                ) : filteredGames.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="text-center py-5">
                       <p className="text-muted mb-0">No hay juegos registrados</p>
                     </td>
                   </tr>
                 ) : (
-                  games.map((game) => (
+                  filteredGames.map((game) => (
                     <tr key={game.id} className="hover-bg-dark-lighter" style={{ transition: 'background-color 0.2s' }}>
                       <td className="ps-4 fw-semibold text-nowrap text-secondary border-bottom border-secondary border-opacity-10 py-3">
                         {formatDate(game.fecha)}

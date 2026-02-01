@@ -12,8 +12,8 @@ const AbonoManagement: React.FC = () => {
   const [estatusFilter, setEstatusFilter] = useState('todos');
   const [atletaFilter, setAtletaFilter] = useState('todos');
   const [metodoFilter, setMetodoFilter] = useState('todos');
-  const [fechaDesde, setFechaDesde] = useState('2026-01-01');
-  const [fechaHasta, setFechaHasta] = useState('2026-01-22');
+  const [fechaDesde, setFechaDesde] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]);
+  const [fechaHasta, setFechaHasta] = useState(new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
     loadAbonos();
@@ -63,12 +63,22 @@ const AbonoManagement: React.FC = () => {
       filtered = filtered.filter(abono => abono.paymentMethodId === parseInt(metodoFilter));
     }
 
+    // Filtro de estatus (simulado o según campo si existe)
+    if (estatusFilter !== 'todos') {
+      // Por ahora todos los abonos en la lista parecen ser completados, 
+      // pero si hubiera un campo 'estado', se filtraría aquí.
+    }
+
     // Filtro de fechas
     if (fechaDesde) {
-      filtered = filtered.filter(abono => new Date(abono.fecha) >= new Date(fechaDesde));
+      const d = new Date(fechaDesde);
+      d.setHours(0, 0, 0, 0);
+      filtered = filtered.filter(abono => new Date(abono.fecha) >= d);
     }
     if (fechaHasta) {
-      filtered = filtered.filter(abono => new Date(abono.fecha) <= new Date(fechaHasta + 'T23:59:59'));
+      const h = new Date(fechaHasta);
+      h.setHours(23, 59, 59, 999);
+      filtered = filtered.filter(abono => new Date(abono.fecha) <= h);
     }
 
     setFilteredAbonos(filtered);

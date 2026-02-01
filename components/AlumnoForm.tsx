@@ -116,7 +116,8 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
         categoria: alumno.categoria?.nombre || '',
         beca: alumno.beca?.nombre || alumno.beca?.porcentaje?.toString() || '',
         estado: alumno.estado || 'Activo',
-        notas: alumno.notas || ''
+        notas: alumno.notas || '',
+        fechaRegistro: alumno.fechaRegistro || new Date().toISOString()
       });
     }
   }, [alumno]);
@@ -398,13 +399,30 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
                 </div>
                 <div className="col-md-8">
                   <label>Alergias</label>
-                  <input
-                    type="text"
-                    placeholder="Ej: Penicilina, Mani, etc."
-                    className="form-control"
+                  <select
+                    className="form-select"
                     value={formData.alergias}
                     onChange={e => setFormData({ ...formData, alergias: e.target.value })}
-                  />
+                  >
+                    <option value="">Selecciona alergia</option>
+                    <option value="Ninguna">Ninguna</option>
+                    <option value="Penicilina">Penicilina</option>
+                    <option value="Polen">Polen</option>
+                    <option value="Ácaros">Ácaros</option>
+                    <option value="Mariscos">Mariscos</option>
+                    <option value="Frutos secos">Frutos secos</option>
+                    <option value="Látex">Látex</option>
+                    <option value="Picaduras de insectos">Picaduras de insectos</option>
+                    <option value="Otro">Otro (escribir manualmente)</option>
+                  </select>
+                  {formData.alergias === 'Otro' && (
+                    <input
+                      type="text"
+                      placeholder="Especifique alergia..."
+                      className="form-control mt-2"
+                      onChange={e => setFormData({ ...formData, alergias: e.target.value })}
+                    />
+                  )}
                 </div>
                 <div className="col-md-6">
                   <label>Condiciones Médicas</label>
@@ -472,8 +490,8 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
             <div className="p-4 rounded-lg border border-secondary border-opacity-10 bg-[#0d1117] bg-opacity-30">
               <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-4 d-block border-bottom border-blue-900 border-opacity-50 pb-2">Asignación de Alumno</label>
               <div className="row g-3">
-                <div className="col-md-4">
-                  <label>Nivel / Grupo</label>
+                <div className="col-md-3">
+                  <label>Grupo</label>
                   <select
                     className="form-select"
                     value={formData.grupo}
@@ -483,7 +501,7 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
                     {grupos.map(g => <option key={g.id} value={g.nombre}>{g.nombre}</option>)}
                   </select>
                 </div>
-                <div className="col-md-4">
+                <div className="col-md-3">
                   <label>Categoría</label>
                   <select
                     className="form-select"
@@ -494,7 +512,21 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
                     {categorias.map(c => <option key={c.id} value={c.nombre}>{c.nombre}</option>)}
                   </select>
                 </div>
-                <div className="col-md-4">
+                <div className="col-md-3">
+                  <label>Posición</label>
+                  <select
+                    className="form-select"
+                    value={formData.posicion}
+                    onChange={e => setFormData({ ...formData, posicion: e.target.value })}
+                  >
+                    <option value="">Seleccionar</option>
+                    <option value="Portero">Portero</option>
+                    <option value="Defensa">Defensa</option>
+                    <option value="Mediocampista">Mediocampista</option>
+                    <option value="Delantero">Delantero</option>
+                  </select>
+                </div>
+                <div className="col-md-3">
                   <label>Beca Aplicada</label>
                   <select
                     className="form-select"

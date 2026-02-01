@@ -11,22 +11,20 @@ const PaymentMethodForm: React.FC<PaymentMethodFormProps> = ({ paymentMethod, on
   const isEditMode = !!paymentMethod;
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
-  const [moneda, setMoneda] = useState('USD');
+  const [moneda, setMoneda] = useState('PEN');
   const [isActive, setIsActive] = useState(true);
   const [loading, setLoading] = useState(false);
 
   const monedasOptions = [
-    { value: 'USD', label: 'Dólares ($)' },
     { value: 'PEN', label: 'Soles (S/.)' },
-    { value: 'VES', label: 'Bolívares (Bs.)' },
-    { value: 'EUR', label: 'Euros (€)' }
+    { value: 'USD', label: 'Dólares ($)' }
   ];
 
   useEffect(() => {
     if (paymentMethod) {
       setNombre(paymentMethod.nombre || '');
       setDescripcion(paymentMethod.descripcion || '');
-      setMoneda(paymentMethod.moneda || 'USD');
+      setMoneda(paymentMethod.moneda || 'PEN');
       setIsActive(paymentMethod.estado === 'Activo');
     }
   }, [paymentMethod]);

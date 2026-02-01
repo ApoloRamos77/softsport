@@ -1,69 +1,69 @@
-
 import React, { useState, useEffect } from 'react';
 import AlumnoForm from './AlumnoForm';
 import { Alumno, apiService } from '../services/api';
 
 const AlumnoManagement: React.FC = () => {
-    // Paginación
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(10);
-    // Log visual de fetch y estados
-    const [rawFetchResult, setRawFetchResult] = useState<any>(null);
-    const [fetchError, setFetchError] = useState<any>(null);
+  // Paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
   const [showForm, setShowForm] = useState(false);
   const [editingAlumno, setEditingAlumno] = useState<Alumno | null>(null);
   const [alumnos, setAlumnos] = useState<Alumno[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [estadoFiltro, setEstadoFiltro] = useState<'Activos' | 'Inactivos' | 'Todos'>('Activos');
+  const [grupoFiltro, setGrupoFiltro] = useState('Todos los grupos');
+  const [categoriaFiltro, setCategoriaFiltro] = useState('Todas');
+  const [availableGroups, setAvailableGroups] = useState<{ id: number, nombre: string }[]>([]);
+  const [availableCategories, setAvailableCategories] = useState<{ id: number, nombre: string }[]>([]);
 
   const loadAlumnos = async () => {
     setLoading(true);
-    setFetchError(null);
-    setRawFetchResult(null);
+    setError(null);
     try {
-      let data;
-      try {
-        data = await apiService.getAll('alumnos');
-      } catch (fetchError) {
-        setFetchError(fetchError);
-        setLoading(false);
-        return;
+      const data = await apiService.getAlumnos();
+
+      if (Array.isArray(data)) {
+        // Normalización básica para asegurar campos requeridos por la UI
+        const normalized = data.map(a => ({
+          ...a,
+          telefono: a.telefono ?? '',
+          email: a.email ?? '',
+          estado: a.estado ?? 'Activo',
+          fechaAnulacion: a.fechaAnulacion ?? null
+        }));
+        setAlumnos(normalized);
+      } else {
+        console.warn('La API no retornó un array para alumnos:', data);
+        setAlumnos([]);
+        setError('La respuesta del servidor no tiene el formato esperado.');
       }
-      setRawFetchResult(data);
-      if (!Array.isArray(data)) {
-        setFetchError('La respuesta del backend no es un array. Puede que sea demasiado grande o esté malformateada.');
-        setLoading(false);
-        return;
-      }
-      if (data.length > 10000) {
-        setFetchError('La respuesta contiene demasiados alumnos (' + data.length + '). Prueba limitar la consulta en el backend.');
-        setLoading(false);
-        return;
-      }
-      // Normalizar campos nulos en cada alumno
-      const normalized = data.map(a => ({
-        ...a,
-        fechaAnulacion: a.hasOwnProperty('fechaAnulacion') ? a.fechaAnulacion : null,
-        telefono: a.telefono ?? '',
-        email: a.email ?? '',
-        posicion: a.posicion ?? '',
-        grupo: a.grupo ?? null,
-        categoria: a.categoria ?? null,
-        beca: a.beca ?? null,
-        estado: a.estado ?? 'Activo',
-      }));
-      setAlumnos(normalized);
-    } catch (error) {
-      setFetchError('Error de parsing o memoria: ' + (error instanceof Error ? error.message : String(error)));
-      console.error('Error loading alumnos:', error);
+    } catch (err) {
+      console.error('Error loading alumnos:', err);
+      setError('No se pudo cargar la lista de alumnos. Verifique su conexión o intente más tarde.');
     } finally {
       setLoading(false);
     }
   };
 
+  const loadFilters = async () => {
+    try {
+      const [groups, categories] = await Promise.all([
+        apiService.getGrupos(),
+        apiService.getCategorias()
+      ]);
+      setAvailableGroups(groups.map(g => ({ id: g.id!, nombre: g.nombre })));
+      setAvailableCategories(categories.map(c => ({ id: c.id!, nombre: c.nombre })));
+    } catch (err) {
+      console.error('Error loading filters:', err);
+    }
+  };
+
   useEffect(() => {
     loadAlumnos();
+    loadFilters();
   }, []);
 
   const handleSave = async () => {
@@ -83,7 +83,7 @@ const AlumnoManagement: React.FC = () => {
     }
 
     try {
-      await apiService.delete('alumnos', alumno.id!);
+      if (alumno.id) await apiService.deleteAlumno(alumno.id);
       loadAlumnos();
     } catch (error) {
       console.error('Error al anular alumno:', error);
@@ -91,22 +91,34 @@ const AlumnoManagement: React.FC = () => {
     }
   };
 
+  // Filtrado
   const filteredAlumnos = alumnos.filter(a => {
     // Filtro por estado
     if (estadoFiltro === 'Activos' && a.fechaAnulacion) return false;
     if (estadoFiltro === 'Inactivos' && !a.fechaAnulacion) return false;
+
+    // Filtro por Grupo
+    if (grupoFiltro !== 'Todos los grupos' && a.grupo?.nombre !== grupoFiltro) return false;
+
+    // Filtro por Categoría
+    if (categoriaFiltro !== 'Todas' && a.categoria?.nombre !== categoriaFiltro) return false;
+
     // Filtro por búsqueda
-    return `${a.nombre} ${a.apellido}`.toLowerCase().includes(searchTerm.toLowerCase());
+    const term = searchTerm.toLowerCase();
+    const fullName = `${a.nombre} ${a.apellido}`.toLowerCase();
+    const doc = a.documento?.toLowerCase() || '';
+
+    return fullName.includes(term) || doc.includes(term);
   });
 
-  // Paginación en memoria
+  // Paginación
   const totalPages = Math.max(1, Math.ceil(filteredAlumnos.length / itemsPerPage));
   const paginatedAlumnos = filteredAlumnos.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  // Resetear página si cambia el filtro o búsqueda
+  // Resetear página al filtrar
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, estadoFiltro, itemsPerPage]);
+  }, [searchTerm, estadoFiltro, grupoFiltro, categoriaFiltro, itemsPerPage]);
 
   if (showForm) {
     return (
@@ -146,6 +158,15 @@ const AlumnoManagement: React.FC = () => {
         </div>
       </div>
 
+      {/* Error Message */}
+      {error && (
+        <div className="alert alert-danger border-left-danger mb-4 mx-4" role="alert">
+          <i className="bi bi-exclamation-triangle-fill me-2"></i>
+          {error}
+          <button className="btn btn-link btn-sm ms-2" onClick={loadAlumnos}>Reintentar</button>
+        </div>
+      )}
+
       {/* Filters */}
       <div className="card mb-4 border-secondary border-opacity-10 shadow-lg" style={{ backgroundColor: '#161b22' }}>
         <div className="card-body p-3">
@@ -166,35 +187,47 @@ const AlumnoManagement: React.FC = () => {
 
             <div className="col-lg-9 col-md-8">
               <div className="d-flex gap-2 flex-wrap justify-content-lg-end">
-                <div className="d-flex align-items-center bg-[#0d1117] border border-secondary border-opacity-25 rounded px-3" style={{ height: '38px' }}>
-                  <span className="text-secondary text-[10px] font-bold uppercase me-3 tracking-wider">Estado</span>
-                  <select className="bg-transparent border-0 text-white text-[13px] focus:outline-none cursor-pointer" value={estadoFiltro} onChange={e => setEstadoFiltro(e.target.value as any)}>
-                    <option value="Activos">Activos</option>
-                    <option value="Inactivos">Inactivos</option>
-                    <option value="Todos">Todos</option>
+                <div className="d-flex align-items-center bg-dark border border-secondary border-opacity-25 rounded px-2" style={{ height: '38px', backgroundColor: '#0d1117' }}>
+                  <span className="text-secondary text-[10px] font-bold uppercase me-2 tracking-wider ps-2">Estado</span>
+                  <select
+                    className="bg-transparent border-0 text-white text-[13px] focus:outline-none cursor-pointer pe-2"
+                    value={estadoFiltro}
+                    onChange={e => setEstadoFiltro(e.target.value as any)}
+                    style={{ backgroundColor: '#0d1117', color: 'white' }}
+                  >
+                    <option value="Activos" style={{ backgroundColor: '#161b22', color: 'white' }}>Activos</option>
+                    <option value="Inactivos" style={{ backgroundColor: '#161b22', color: 'white' }}>Inactivos</option>
+                    <option value="Todos" style={{ backgroundColor: '#161b22', color: 'white' }}>Todos</option>
                   </select>
                 </div>
 
-                <div className="d-flex align-items-center bg-[#0d1117] border border-secondary border-opacity-25 rounded px-3" style={{ height: '38px' }}>
-                  <span className="text-secondary text-[10px] font-bold uppercase me-3 tracking-wider">Nivel</span>
-                  <select className="bg-transparent border-0 text-white text-[13px] focus:outline-none cursor-pointer">
-                    <option>Todos los niveles</option>
-                    <option>Básico</option>
-                    <option>Intermedio</option>
-                    <option>Avanzado</option>
+                <div className="d-flex align-items-center bg-dark border border-secondary border-opacity-25 rounded px-2" style={{ height: '38px', backgroundColor: '#0d1117' }}>
+                  <span className="text-secondary text-[10px] font-bold uppercase me-2 tracking-wider ps-2">Grupo</span>
+                  <select
+                    className="bg-transparent border-0 text-white text-[13px] focus:outline-none cursor-pointer pe-2"
+                    style={{ backgroundColor: '#0d1117', color: 'white' }}
+                    value={grupoFiltro}
+                    onChange={e => setGrupoFiltro(e.target.value)}
+                  >
+                    <option style={{ backgroundColor: '#161b22', color: 'white' }}>Todos los grupos</option>
+                    {availableGroups.map(g => (
+                      <option key={g.id} value={g.nombre} style={{ backgroundColor: '#161b22', color: 'white' }}>{g.nombre}</option>
+                    ))}
                   </select>
                 </div>
 
-                <div className="d-flex align-items-center bg-[#0d1117] border border-secondary border-opacity-25 rounded px-3" style={{ height: '38px' }}>
-                  <span className="text-secondary text-[10px] font-bold uppercase me-3 tracking-wider">Categoría</span>
-                  <select className="bg-transparent border-0 text-white text-[13px] focus:outline-none cursor-pointer">
-                    <option>Todas</option>
-                    <option>Sub-8</option>
-                    <option>Sub-10</option>
-                    <option>Sub-12</option>
-                    <option>Sub-15</option>
-                    <option>Sub-17</option>
-                    <option>Sub-20</option>
+                <div className="d-flex align-items-center bg-dark border border-secondary border-opacity-25 rounded px-2" style={{ height: '38px', backgroundColor: '#0d1117' }}>
+                  <span className="text-secondary text-[10px] font-bold uppercase me-2 tracking-wider ps-2">Categoría</span>
+                  <select
+                    className="bg-transparent border-0 text-white text-[13px] focus:outline-none cursor-pointer pe-2"
+                    style={{ backgroundColor: '#0d1117', color: 'white' }}
+                    value={categoriaFiltro}
+                    onChange={e => setCategoriaFiltro(e.target.value)}
+                  >
+                    <option style={{ backgroundColor: '#161b22', color: 'white' }}>Todas</option>
+                    {availableCategories.map(c => (
+                      <option key={c.id} value={c.nombre} style={{ backgroundColor: '#161b22', color: 'white' }}>{c.nombre}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -205,28 +238,6 @@ const AlumnoManagement: React.FC = () => {
 
       <div className="text-muted mb-3 small">
         Mostrando {paginatedAlumnos.length} de {filteredAlumnos.length} alumnos filtrados (Total: {alumnos.length})
-        <div style={{color: 'lime', fontWeight: 'bold', marginTop: '8px'}}>VALIDACIÓN: El frontend se está actualizando correctamente.</div>
-        {/* LOG VISUAL: Mostrar el contenido de filteredAlumnos para depuración */}
-        <div style={{ color: 'yellow', background: '#222', padding: '8px', marginTop: '8px', fontSize: '12px' }}>
-          <strong>LOG VISUAL (filteredAlumnos):</strong>
-          <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{JSON.stringify(filteredAlumnos, null, 2)}</pre>
-        </div>
-        {/* LOG VISUAL: Mostrar el contenido de alumnos para depuración */}
-        <div style={{ color: 'orange', background: '#222', padding: '8px', marginTop: '8px', fontSize: '12px' }}>
-          <strong>LOG VISUAL (alumnos):</strong>
-          <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{JSON.stringify(alumnos, null, 2)}</pre>
-        </div>
-        {/* LOG VISUAL: Mostrar el resultado bruto del fetch */}
-        <div style={{ color: 'cyan', background: '#222', padding: '8px', marginTop: '8px', fontSize: '12px' }}>
-          <strong>LOG VISUAL (rawFetchResult):</strong>
-          <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{JSON.stringify(rawFetchResult, null, 2)}</pre>
-        </div>
-        {/* LOG VISUAL: Mostrar estados de loading y error */}
-        <div style={{ color: loading ? 'yellow' : fetchError ? 'red' : 'lime', background: '#222', padding: '8px', marginTop: '8px', fontSize: '12px' }}>
-          <strong>LOG VISUAL (loading/error):</strong>
-          <div>loading: {JSON.stringify(loading)}</div>
-          <div>fetchError: {fetchError ? fetchError.toString() : 'null'}</div>
-        </div>
       </div>
 
       {/* Table */}
@@ -247,7 +258,16 @@ const AlumnoManagement: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {paginatedAlumnos.length > 0 ? paginatedAlumnos.map((a, i) => (
+              {loading ? (
+                <tr>
+                  <td colSpan={9} className="text-center py-5 text-secondary">
+                    <div className="spinner-border text-primary mb-2" role="status">
+                      <span className="visually-hidden">Cargando...</span>
+                    </div>
+                    <p className="mb-0">Cargando alumnos...</p>
+                  </td>
+                </tr>
+              ) : paginatedAlumnos.length > 0 ? paginatedAlumnos.map((a, i) => (
                 <tr key={a.id} className="hover-bg-dark-lighter" style={{ transition: 'background-color 0.2s' }}>
                   <td className="ps-4 text-secondary border-bottom border-secondary border-opacity-10 py-3">{(currentPage - 1) * itemsPerPage + i + 1}</td>
                   <td className="border-bottom border-secondary border-opacity-10 py-3">
@@ -302,7 +322,7 @@ const AlumnoManagement: React.FC = () => {
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan={12} className="text-center py-5">
+                  <td colSpan={9} className="text-center py-5">
                     <div className="d-flex flex-column align-items-center">
                       <i className="bi bi-people text-secondary display-4 mb-3"></i>
                       <p className="text-muted fw-medium mb-1">No se encontraron alumnos</p>

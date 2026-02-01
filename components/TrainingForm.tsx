@@ -2,26 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import TacticalPlaysModal from './TacticalPlaysModal';
 import DatePicker from './DatePicker';
-import { apiService } from '../services/api';
-
-interface Categoria {
-  id: number;
-  nombre: string;
-}
-
-interface Training {
-  id?: number;
-  titulo: string;
-  descripcion?: string;
-  fecha?: string;
-  horaInicio?: string;
-  horaFin?: string;
-  ubicacion?: string;
-  categoriaId?: number;
-  categoria?: Categoria;
-  tipo?: string;
-  estado: string;
-}
+import { apiService, Categoria, Training } from '../services/api';
 
 interface TrainingFormProps {
   training?: Training | null;

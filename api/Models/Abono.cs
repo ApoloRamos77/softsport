@@ -29,6 +29,7 @@ namespace SoftSportAPI.Models
 
         // Navigation property
         [ForeignKey("ReciboId")]
+        [System.Text.Json.Serialization.JsonIgnore]
         public Recibo? Recibo { get; set; }
     }
 }

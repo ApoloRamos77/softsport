@@ -5511,11 +5511,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Proyecto_2026\\Soft_Sport\\api\\SoftSportAPI.csproj",
+      "projectUniqueName": "c:\\Proyecto_2026\\Soft_Sport\\api\\SoftSportAPI.csproj",
       "projectName": "SoftSportAPI",
-      "projectPath": "C:\\Proyecto_2026\\Soft_Sport\\api\\SoftSportAPI.csproj",
+      "projectPath": "c:\\Proyecto_2026\\Soft_Sport\\api\\SoftSportAPI.csproj",
       "packagesPath": "C:\\Users\\aramos\\.nuget\\packages\\",
-      "outputPath": "C:\\Proyecto_2026\\Soft_Sport\\api\\obj\\",
+      "outputPath": "c:\\Proyecto_2026\\Soft_Sport\\api\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\DevExpress 24.2\\Components\\Offline Packages",

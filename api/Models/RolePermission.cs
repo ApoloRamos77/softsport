@@ -12,6 +12,7 @@ namespace SoftSportAPI.Models
         public bool Eliminar { get; set; }
         
         // Navegación
+        [System.Text.Json.Serialization.JsonIgnore]
         public Role? Role { get; set; }
     }
 }

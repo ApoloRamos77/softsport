@@ -1,0 +1,75 @@
+﻿Usando la configuraci├│n de inicio de Properties\launchSettings.json...
+Compilando...
+[DEBUG] Using Postgres: True
+[DEBUG] Connection String (masked): Host=76.13.164.224;Port=5432;Database=sys_academia;Username=postgres;Password=***;SslMode=Prefer
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (129ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT CASE WHEN COUNT(*) = 0 THEN FALSE ELSE TRUE END
+FROM pg_class AS cls
+JOIN pg_namespace AS ns ON ns.oid = cls.relnamespace
+WHERE
+        cls.relkind IN ('r', 'v', 'm', 'f', 'p') AND
+        ns.nspname NOT IN ('pg_catalog', 'information_schema') AND
+        -- Exclude tables which are members of PG extensions
+        NOT EXISTS (
+            SELECT 1 FROM pg_depend WHERE
+                classid=(
+                    SELECT cls.oid
+                    FROM pg_class AS cls
+                             JOIN pg_namespace AS ns ON ns.oid = cls.relnamespace
+                    WHERE relname='pg_class' AND ns.nspname='pg_catalog'
+                ) AND
+                objid=cls.oid AND
+                deptype IN ('e', 'x')
+        )
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (103ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      
+                      -- 1. Create table for Landing Page Gallery
+                      CREATE TABLE IF NOT EXISTS landing_galleries (
+                          id SERIAL PRIMARY KEY,
+                          tipo VARCHAR(50) NOT NULL,
+                          image_url TEXT NOT NULL,
+                          titulo VARCHAR(200),
+                          descripcion TEXT,
+                          fecha TIMESTAMP,
+                          fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                          usuario_creacion VARCHAR(100) DEFAULT 'System',
+                          fecha_modificacion TIMESTAMP,
+                          usuario_modificacion VARCHAR(100),
+                          fecha_anulacion TIMESTAMP,
+                          usuario_anulacion VARCHAR(100)
+                      );
+      
+                      -- 2. Create table for Contact Messages
+                      CREATE TABLE IF NOT EXISTS contact_messages (
+                          id SERIAL PRIMARY KEY,
+                          nombres VARCHAR(200) NOT NULL,
+                          apellidos VARCHAR(200) NOT NULL,
+                          email VARCHAR(200) NOT NULL,
+                          celular VARCHAR(50) NOT NULL,
+                          mensaje TEXT,
+                          fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                          usuario_creacion VARCHAR(100) DEFAULT 'System',
+                          fecha_modificacion TIMESTAMP,
+                          usuario_modificacion VARCHAR(100),
+                          fecha_anulacion TIMESTAMP,
+                          usuario_anulacion VARCHAR(100)
+                      );
+      
+                      -- 3. Add image_url to productos table logic
+                      DO $$ 
+                      BEGIN 
+                          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='productos' AND column_name='imagen_url') THEN
+                              ALTER TABLE productos ADD COLUMN imagen_url TEXT;
+                          END IF;
+                      END $$;
+[INFO] Usando carpeta wwwroot existente en: C:\Proyecto_2026\Soft_Sport\api\wwwroot
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:5081
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: C:\Proyecto_2026\Soft_Sport\api

@@ -13,22 +13,19 @@ const RepresentativeManagement: React.FC = () => {
 
   const loadRepresentatives = async () => {
     setLoading(true);
-    console.log('[RepresentativeManagement] Iniciando carga de representantes...');
     try {
-      const [repsData, alumnosData] = await Promise.all([
+      const [reprData, alumnosData] = await Promise.all([
         apiService.getRepresentantes(),
         apiService.getAlumnos()
       ]);
-      console.log('[RepresentativeManagement] Datos de representantes recibidos:', repsData);
-      console.log('[RepresentativeManagement] Datos de alumnos recibidos:', alumnosData);
-      setRepresentatives(repsData);
-      setAlumnos(alumnosData);
+
+      if (Array.isArray(reprData)) setRepresentatives(reprData);
+      if (Array.isArray(alumnosData)) setAlumnos(alumnosData);
     } catch (error) {
-      console.error('[RepresentativeManagement] Error loading representatives:', error);
-      alert('Error al cargar los representantes: ' + (error instanceof Error ? error.message : error));
+      console.error('Error loading data:', error);
+      alert('Error al cargar la información');
     } finally {
       setLoading(false);
-      console.log('[RepresentativeManagement] loading actualizado a false');
     }
   };
 
@@ -78,13 +75,12 @@ const RepresentativeManagement: React.FC = () => {
   };
 
   const filteredData = representatives.filter(r =>
-    !r.fechaAnulacion && // Excluir registros anulados
+    !r.fechaAnulacion &&
     (`${r.nombre} ${r.apellido}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (r.documento && r.documento.includes(searchTerm)))
   );
 
   if (showForm) {
-    console.log('[RepresentativeManagement] Mostrando formulario de representante');
     return (
       <RepresentativeForm
         representative={editingRepresentative}
@@ -173,10 +169,12 @@ const RepresentativeManagement: React.FC = () => {
                     <td className="text-secondary border-bottom border-secondary border-opacity-10 py-3">{r.documento || '-'}</td>
                     <td className="text-secondary border-bottom border-secondary border-opacity-10 py-3">{r.telefono || '-'}</td>
                     <td className="border-bottom border-secondary border-opacity-10 py-3">
-                      <span className="badge bg-secondary bg-opacity-20 text-white border border-secondary border-opacity-30 px-2 py-1">{r.parentesco}</span>
+                      <span className="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-1" style={{ fontSize: '11px' }}>
+                        {r.parentesco}
+                      </span>
                     </td>
                     <td className="text-center border-bottom border-secondary border-opacity-10 py-3">
-                      <span className="badge bg-primary bg-opacity-20 text-white rounded-pill px-3 border border-primary border-opacity-30">
+                      <span className="badge bg-primary bg-opacity-20 text-blue-400 rounded-pill px-3 border border-primary border-opacity-30">
                         {alumnos.filter(a => a.representanteId === r.id).length}
                       </span>
                     </td>

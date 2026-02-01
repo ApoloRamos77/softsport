@@ -24,6 +24,7 @@ namespace SoftSportAPI.Models
         public string? Descripcion { get; set; }
 
         // Navigation property
+        [System.Text.Json.Serialization.JsonIgnore]
         public ICollection<Alumno> Alumnos { get; set; } = new List<Alumno>();
     }
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DatePicker from './DatePicker';
-import { apiService, Alumno } from '../services/api';
+import { apiService, Alumno, Categoria } from '../services/api';
 
 interface GameFormProps {
   onCancel: () => void;
@@ -8,13 +8,6 @@ interface GameFormProps {
   initialData?: any;
   isEditing?: boolean;
 }
-
-interface Categoria {
-  id: number;
-  nombre: string;
-}
-
-// Alumno interface is now imported from ../services/api
 
 const GameForm: React.FC<GameFormProps> = ({ onCancel, onSubmit, initialData, isEditing = false }) => {
   const [isHomeGame, setIsHomeGame] = useState(true);

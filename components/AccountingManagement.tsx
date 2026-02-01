@@ -22,7 +22,11 @@ interface Recibo {
 
 const AccountingManagement: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
-  const [filters, setFilters] = useState({ desde: '01/01/2026', hasta: '22/01/2026' });
+  const [filters, setFilters] = useState({
+    desde: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
+    hasta: new Date().toISOString().split('T')[0]
+  });
+  const [searchTerm, setSearchTerm] = useState('');
   const [recibos, setRecibos] = useState<Recibo[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRecibo, setSelectedRecibo] = useState<Recibo | null>(null);
@@ -111,17 +115,36 @@ const AccountingManagement: React.FC = () => {
     loadRecibos();
   };
 
-  if (showForm) {
-    return <ReceiptForm recibo={editingRecibo} onCancel={handleFormClose} />;
-  }
+  const filteredRecibos = recibos.filter(r => {
+    // Rango de fechas
+    const fecha = new Date(r.fecha);
+    const desde = new Date(filters.desde);
+    desde.setHours(0, 0, 0, 0);
+    const hasta = new Date(filters.hasta);
+    hasta.setHours(23, 59, 59, 999);
+
+    if (fecha < desde || fecha > hasta) return false;
+
+    // Búsqueda
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      const alumno = (r.AlumnoNombre || r.alumnoNombre || '').toLowerCase();
+      const id = r.id.toString();
+      const items = r.items?.map((i: any) => i.nombre || i.Nombre || i.descripcion).join(' ').toLowerCase() || '';
+
+      if (!alumno.includes(term) && !id.includes(term) && !items.includes(term)) return false;
+    }
+
+    return true;
+  });
 
   const calcularEstadisticas = () => {
-    const montoFacturado = recibos.reduce((sum, r) => sum + r.subtotal, 0);
-    const montoRecaudado = recibos
+    const montoFacturado = filteredRecibos.reduce((sum, r) => sum + r.subtotal, 0);
+    const montoRecaudado = filteredRecibos
       .filter(r => r.estado === 'Pagado')
       .reduce((sum, r) => sum + r.total, 0);
-    const montoExonerado = recibos.reduce((sum, r) => sum + r.descuento, 0);
-    const montoPorRecaudar = recibos
+    const montoExonerado = filteredRecibos.reduce((sum, r) => sum + r.descuento, 0);
+    const montoPorRecaudar = filteredRecibos
       .filter(r => r.estado === 'Pendiente')
       .reduce((sum, r) => sum + r.total, 0);
 
@@ -129,6 +152,11 @@ const AccountingManagement: React.FC = () => {
   };
 
   const stats = calcularEstadisticas();
+
+  if (showForm) {
+    return <ReceiptForm recibo={editingRecibo} onCancel={handleFormClose} />;
+  }
+
   return (
     <div className="animate-fadeIn" style={{ backgroundColor: '#0d1117', minHeight: '80vh' }}>
       <div className="max-w-7xl mx-auto px-4 py-4 d-flex flex-column gap-4">
@@ -202,7 +230,9 @@ const AccountingManagement: React.FC = () => {
               <input
                 type="text"
                 className="form-control bg-[#0d1117] border-secondary border-opacity-25 text-white placeholder-secondary"
-                placeholder="Buscar recibos..."
+                placeholder="Buscar por ID, alumno o concepto..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
 
@@ -211,22 +241,22 @@ const AccountingManagement: React.FC = () => {
                 <i className="bi bi-calendar-range text-secondary small"></i>
                 <span className="text-secondary small fw-bold" style={{ fontSize: '10px' }}>Desde:</span>
                 <input
-                  type="text"
+                  type="date"
                   value={filters.desde}
                   onChange={(e) => setFilters({ ...filters, desde: e.target.value })}
                   className="bg-transparent border-0 text-white small focus-none"
-                  style={{ width: '80px', fontSize: '11px' }}
+                  style={{ width: '120px', fontSize: '11px' }}
                 />
               </div>
               <div className="d-flex align-items-center gap-2 bg-[#0d1117] border border-secondary border-opacity-10 rounded px-2 py-1">
                 <i className="bi bi-calendar-range text-secondary small"></i>
                 <span className="text-secondary small fw-bold" style={{ fontSize: '10px' }}>Hasta:</span>
                 <input
-                  type="text"
+                  type="date"
                   value={filters.hasta}
                   onChange={(e) => setFilters({ ...filters, hasta: e.target.value })}
                   className="bg-transparent border-0 text-white small focus-none"
-                  style={{ width: '80px', fontSize: '11px' }}
+                  style={{ width: '120px', fontSize: '11px' }}
                 />
               </div>
             </div>
@@ -258,14 +288,14 @@ const AccountingManagement: React.FC = () => {
                       <p className="mb-0 small">Cargando...</p>
                     </td>
                   </tr>
-                ) : recibos.length === 0 ? (
+                ) : filteredRecibos.length === 0 ? (
                   <tr>
                     <td colSpan={10} className="text-center py-5">
                       <p className="text-muted mb-0 small">No se encontraron recibos</p>
                     </td>
                   </tr>
                 ) : (
-                  recibos.map((recibo) => (
+                  filteredRecibos.map((recibo) => (
                     <tr key={recibo.id} className="hover-bg-dark-lighter" style={{ transition: 'background-color 0.2s' }}>
                       <td className="ps-4 fw-bold text-white border-bottom border-secondary border-opacity-10 py-3">
                         #{recibo.id}

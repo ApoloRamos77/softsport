@@ -2,6 +2,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace SoftSportAPI.Controllers
 {
+    public class FileUploadDto
+    {
+        public IFormFile File { get; set; } = null!;
+    }
+
     [ApiController]
     [Route("api/[controller]")]
     public class FilesController : ControllerBase
@@ -14,8 +19,10 @@ namespace SoftSportAPI.Controllers
         }
 
         [HttpPost("upload")]
-        public async Task<IActionResult> Upload([FromForm] IFormFile file, [FromQuery] string type = "general")
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> Upload([FromForm] FileUploadDto model, [FromQuery] string type = "general")
         {
+            var file = model.File;
             if (file == null || file.Length == 0)
                 return BadRequest("No se ha proporcionado ningún archivo");
 
@@ -29,7 +36,7 @@ namespace SoftSportAPI.Controllers
             // Usamos GetCurrentDirectory() explícitamente para coincidir con la config de static files en Program.cs
             var webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
             
-            // Log para debug (si tuvieramos acceso a logs)
+            // Log para debug
             Console.WriteLine($"[UPLOAD] Guardando archivo en root: {webRootPath}");
             
             // Crear directorio si no existe
@@ -48,18 +55,13 @@ namespace SoftSportAPI.Controllers
             }
 
             // Retornar URL
-            // Determinar esquema correcto (http vs https) pensando en proxies
             var scheme = Request.Scheme;
-            
-            // Si hay header X-Forwarded-Proto, usarlo (aunque el middleware ya debería manejarlo)
             if (Request.Headers.ContainsKey("X-Forwarded-Proto"))
             {
                 scheme = Request.Headers["X-Forwarded-Proto"].ToString();
             }
             
             var host = Request.Host.ToString();
-            
-            // Forzar HTTPS si estamos en easypanel (patch de seguridad visual)
             if (host.Contains("easypanel.host") && scheme == "http")
             {
                 scheme = "https";

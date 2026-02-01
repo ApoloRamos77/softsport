@@ -1,6 +1,6 @@
 // API service for interacting with the C# backend
-// Temporalmente usar siempre Easypanel hasta que se levante el backend local
-const API_BASE_URL = 'https://softsport77-api.scuiaw.easypanel.host/api';
+// Usar ruta relativa para aprovechar el proxy de Vite
+const API_BASE_URL = '/api';
 
 export interface Alumno {
   id?: number;

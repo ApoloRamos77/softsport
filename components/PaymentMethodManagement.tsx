@@ -12,10 +12,8 @@ const PaymentMethodManagement: React.FC = () => {
   const [editingMethod, setEditingMethod] = useState<PaymentMethod | null>(null);
 
   const monedasLabels: { [key: string]: string } = {
-    'USD': 'Dólares ($)',
     'PEN': 'Soles (S/.)',
-    'VES': 'Bolívares (Bs.)',
-    'EUR': 'Euros (€)'
+    'USD': 'Dólares ($)'
   };
 
   const getMonedaLabel = (codigo: string) => {

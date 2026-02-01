@@ -1,32 +1,18 @@
 
 import React, { useState, useEffect } from 'react';
 import TrainingForm from './TrainingForm';
-import { apiService } from '../services/api';
-
-interface Categoria {
-  id: number;
-  nombre: string;
-}
-
-interface Training {
-  id: number;
-  titulo: string;
-  descripcion?: string;
-  fecha?: string;
-  horaInicio?: string;
-  horaFin?: string;
-  ubicacion?: string;
-  categoriaId?: number;
-  categoria?: Categoria;
-  tipo?: string;
-  estado: string;
-}
+import { apiService, Categoria, Training } from '../services/api';
 
 const TrainingManagement: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [trainings, setTrainings] = useState<Training[]>([]);
   const [editingTraining, setEditingTraining] = useState<Training | null>(null);
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [temporadaFiltro, setTemporadaFiltro] = useState('Todas');
+  const [categoriaFiltro, setCategoriaFiltro] = useState('Todas');
+  const [tipoFiltro, setTipoFiltro] = useState('Todos');
+  const [availableCategories, setAvailableCategories] = useState<Categoria[]>([]);
 
   const loadTrainings = async () => {
     try {
@@ -40,8 +26,18 @@ const TrainingManagement: React.FC = () => {
     }
   };
 
+  const loadFilters = async () => {
+    try {
+      const data = await apiService.getCategorias();
+      setAvailableCategories(data);
+    } catch (error) {
+      console.error('Error loading filters:', error);
+    }
+  };
+
   useEffect(() => {
     loadTrainings();
+    loadFilters();
   }, []);
 
   const handleSave = async () => {
@@ -83,6 +79,24 @@ const TrainingManagement: React.FC = () => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' });
   };
+
+  const filteredTrainings = trainings.filter(t => {
+    // Buscar
+    const term = searchTerm.toLowerCase();
+    const matchSearch = t.titulo?.toLowerCase().includes(term) ||
+      t.descripcion?.toLowerCase().includes(term) ||
+      t.ubicacion?.toLowerCase().includes(term);
+
+    if (!matchSearch) return false;
+
+    // Tipo
+    if (tipoFiltro !== 'Todos' && t.tipo !== tipoFiltro) return false;
+
+    // Categoría
+    if (categoriaFiltro !== 'Todas' && t.categoria?.nombre !== categoriaFiltro) return false;
+
+    return true;
+  });
 
   if (showForm) {
     return (
@@ -128,6 +142,8 @@ const TrainingManagement: React.FC = () => {
                     placeholder="Buscar entrenamiento..."
                     className="form-control form-control-sm"
                     style={{ paddingLeft: '2.3rem', height: '38px', fontSize: '13px' }}
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
                   />
                 </div>
               </div>
@@ -136,25 +152,42 @@ const TrainingManagement: React.FC = () => {
                 <div className="d-flex gap-2 flex-wrap justify-content-lg-end">
                   <div className="d-flex align-items-center bg-[#0d1117] border border-secondary border-opacity-25 rounded px-3" style={{ height: '38px' }}>
                     <span className="text-secondary text-[10px] font-bold uppercase me-3 tracking-wider">Temporada</span>
-                    <select className="bg-transparent border-0 text-white text-[13px] focus:outline-none cursor-pointer">
-                      <option>Todas</option>
+                    <select
+                      className="bg-transparent border-0 text-white text-[13px] focus:outline-none cursor-pointer"
+                      value={temporadaFiltro}
+                      onChange={e => setTemporadaFiltro(e.target.value)}
+                    >
+                      <option style={{ backgroundColor: '#161b22' }}>Todas</option>
+                      <option style={{ backgroundColor: '#161b22' }}>Temporada 2024</option>
+                      <option style={{ backgroundColor: '#161b22' }}>Temporada 2025</option>
                     </select>
                   </div>
 
                   <div className="d-flex align-items-center bg-[#0d1117] border border-secondary border-opacity-25 rounded px-3" style={{ height: '38px' }}>
-                    <span className="text-secondary text-[10px] font-bold uppercase me-3 tracking-wider">Grupo</span>
-                    <select className="bg-transparent border-0 text-white text-[13px] focus:outline-none cursor-pointer">
-                      <option>Todos</option>
+                    <span className="text-secondary text-[10px] font-bold uppercase me-3 tracking-wider">Categoría</span>
+                    <select
+                      className="bg-transparent border-0 text-white text-[13px] focus:outline-none cursor-pointer"
+                      value={categoriaFiltro}
+                      onChange={e => setCategoriaFiltro(e.target.value)}
+                    >
+                      <option style={{ backgroundColor: '#161b22' }}>Todas</option>
+                      {availableCategories.map(cat => (
+                        <option key={cat.id} value={cat.nombre} style={{ backgroundColor: '#161b22' }}>{cat.nombre}</option>
+                      ))}
                     </select>
                   </div>
 
                   <div className="d-flex align-items-center bg-[#0d1117] border border-secondary border-opacity-25 rounded px-3" style={{ height: '38px' }}>
                     <span className="text-secondary text-[10px] font-bold uppercase me-3 tracking-wider">Tipo</span>
-                    <select className="bg-transparent border-0 text-white text-[13px] focus:outline-none cursor-pointer">
-                      <option>Todos</option>
-                      <option>Técnico</option>
-                      <option>Físico</option>
-                      <option>Táctico</option>
+                    <select
+                      className="bg-transparent border-0 text-white text-[13px] focus:outline-none cursor-pointer"
+                      value={tipoFiltro}
+                      onChange={e => setTipoFiltro(e.target.value)}
+                    >
+                      <option style={{ backgroundColor: '#161b22' }}>Todos</option>
+                      <option style={{ backgroundColor: '#161b22' }}>Técnico</option>
+                      <option style={{ backgroundColor: '#161b22' }}>Físico</option>
+                      <option style={{ backgroundColor: '#161b22' }}>Táctico</option>
                     </select>
                   </div>
                 </div>
@@ -246,7 +279,7 @@ const TrainingManagement: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {trainings.length === 0 ? (
+                {filteredTrainings.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="text-center py-5">
                       <div className="d-flex flex-column items-center justify-center">
@@ -256,7 +289,7 @@ const TrainingManagement: React.FC = () => {
                     </td>
                   </tr>
                 ) : (
-                  trainings.map((training) => (
+                  filteredTrainings.map((training) => (
                     <tr key={training.id} className="hover-bg-dark-lighter" style={{ transition: 'background-color 0.2s' }}>
                       <td className="ps-4 fw-semibold text-secondary border-bottom border-secondary border-opacity-10 py-3">{formatDate(training.fecha)}</td>
                       <td className="border-bottom border-secondary border-opacity-10 py-3">

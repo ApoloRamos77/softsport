@@ -44,6 +44,7 @@ namespace SoftSportAPI.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation property
+        [System.Text.Json.Serialization.JsonIgnore]
         public ICollection<Alumno> Alumnos { get; set; } = new List<Alumno>();
     }
 }

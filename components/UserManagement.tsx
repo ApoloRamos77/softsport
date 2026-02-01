@@ -178,7 +178,7 @@ const UserManagement: React.FC = () => {
                             {user.updatedAt ? new Date(user.updatedAt).toLocaleString('es-ES') : '-'}
                           </td>
                           <td className="border-bottom border-secondary border-opacity-10 py-3">
-                            <span className="badge bg-secondary bg-opacity-20 text-white border border-secondary border-opacity-30 rounded-pill px-3">
+                            <span className="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-3" style={{ fontSize: '11px' }}>
                               {user.role}
                             </span>
                           </td>

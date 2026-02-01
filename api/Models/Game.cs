@@ -72,6 +72,7 @@ namespace SoftSportAPI.Models
 
         // Relaciones
         [ForeignKey("GameId")]
+        [System.Text.Json.Serialization.JsonIgnore]
         public Game? Game { get; set; }
 
         [ForeignKey("AlumnoId")]

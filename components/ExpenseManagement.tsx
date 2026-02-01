@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { apiService, Expense } from '../services/api';
+import { apiService, Expense, PaymentMethod } from '../services/api';
 import ExpenseForm from './ExpenseForm';
 import DatePicker from './DatePicker';
 
@@ -10,10 +10,12 @@ const ExpenseManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [filters, setFilters] = useState({
-    desde: new Date().toISOString().split('T')[0],
+    desde: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
     hasta: new Date().toISOString().split('T')[0],
-    metodoPago: 'Todos'
+    metodoPago: 'Todos',
+    busqueda: ''
   });
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
 
   const loadExpenses = async () => {
     try {
@@ -27,14 +29,43 @@ const ExpenseManagement: React.FC = () => {
     }
   };
 
+  const loadPaymentMethods = async () => {
+    try {
+      const data = await apiService.getPaymentMethods();
+      setPaymentMethods(data);
+    } catch (error) {
+      console.error('Error al cargar métodos de pago:', error);
+    }
+  };
+
   useEffect(() => {
     loadExpenses();
+    loadPaymentMethods();
   }, []);
 
+  const filteredExpenses = expenses.filter(e => {
+    // Rango de fechas
+    const fecha = new Date(e.fecha);
+    const desde = new Date(filters.desde);
+    desde.setHours(0, 0, 0, 0);
+    const hasta = new Date(filters.hasta);
+    hasta.setHours(23, 59, 59, 999);
+
+    if (fecha < desde || fecha > hasta) return false;
+
+    // Método de pago (se guarda en categoria)
+    if (filters.metodoPago !== 'Todos' && e.categoria !== filters.metodoPago) return false;
+
+    // Búsqueda
+    if (filters.busqueda && !e.descripcion?.toLowerCase().includes(filters.busqueda.toLowerCase())) return false;
+
+    return true;
+  });
+
   const calcularEstadisticas = () => {
-    const egresosBs = expenses.reduce((sum, e) => sum + e.monto, 0); // Assuming monto is in Bs or base currency
-    const egresosDolares = 0; // Placeholder as per original code
-    const totalRegistros = expenses.length;
+    const egresosBs = filteredExpenses.reduce((sum, e) => sum + e.monto, 0); // Assuming monto is in S/.
+    const egresosDolares = 0;
+    const totalRegistros = filteredExpenses.length;
     return { egresosBs, egresosDolares, totalRegistros };
   };
 
@@ -164,9 +195,24 @@ const ExpenseManagement: React.FC = () => {
                   style={{ backgroundColor: '#0d1117' }}
                 >
                   <option value="Todos">Todos</option>
-                  <option value="Efectivo">Efectivo</option>
-                  <option value="Transferencia">Transferencia</option>
+                  {paymentMethods.map(pm => (
+                    <option key={pm.id} value={pm.nombre}>{pm.nombre}</option>
+                  ))}
                 </select>
+              </div>
+              <div className="col-12">
+                <label className="form-label text-secondary small">Buscar por Concepto</label>
+                <div className="position-relative">
+                  <i className="bi bi-search position-absolute text-secondary" style={{ left: '0.8rem', top: '50%', transform: 'translateY(-50%)', fontSize: '0.85rem' }}></i>
+                  <input
+                    type="text"
+                    placeholder="Escriba para buscar..."
+                    className="form-control border-secondary border-opacity-25 text-white"
+                    style={{ backgroundColor: '#0d1117', paddingLeft: '2.5rem' }}
+                    value={filters.busqueda}
+                    onChange={(e) => setFilters({ ...filters, busqueda: e.target.value })}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -197,7 +243,7 @@ const ExpenseManagement: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {expenses.map((expense) => (
+                    {filteredExpenses.map((expense) => (
                       <tr key={expense.id} className="hover-bg-dark-lighter" style={{ transition: 'background-color 0.2s' }}>
                         <td className="ps-4 py-3 text-white border-bottom border-secondary border-opacity-10 font-bold">#{expense.id}</td>
                         <td className="py-3 text-secondary border-bottom border-secondary border-opacity-10">{expense.descripcion}</td>

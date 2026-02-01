@@ -26,6 +26,7 @@ namespace SoftSportAPI.Models
         public int? EdadMax { get; set; }
 
         // Navigation property
+        [System.Text.Json.Serialization.JsonIgnore]
         public ICollection<Alumno> Alumnos { get; set; } = new List<Alumno>();
     }
 }
