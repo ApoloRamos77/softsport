@@ -1,7 +1,16 @@
+C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\publish\web.config
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\appsettings.Development.json
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\appsettings.json
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\appsettings.PostgreSQL.json
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\appsettings.Production.json
+C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\publish\appsettings.Development.json
+C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\publish\appsettings.json
+C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\publish\appsettings.PostgreSQL.json
+C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\publish\appsettings.Production.json
+C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\publish\SoftSportAPI.deps.json
+C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\publish\SoftSportAPI.runtimeconfig.json
+C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\publish\SoftSportAPI.staticwebassets.endpoints.json
+C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\publish\test_swagger.json
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\test_swagger.json
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\SoftSportAPI.staticwebassets.runtime.json
 C:\Proyecto_2026\Soft_Sport\api\bin\Release\net9.0\SoftSportAPI.staticwebassets.endpoints.json
