@@ -14,13 +14,14 @@ const CalendarManagement: React.FC = () => {
     setLoading(true);
     try {
       // Load each data source independently - don't fail completely if one fails
-      const alumnosPromise = apiService.getAll<Alumno>('alumnos')
+      // NOTE: For birthdays, we need ALL students, not just the first page
+      // Use direct fetch with pageSize parameter since getAll() doesn't support it
+      const alumnosPromise = fetch('/api/alumnos?pageSize=1000')
+        .then(response => response.json())
         .then(data => {
-          // Handle both array and paginated response
-          if (Array.isArray(data)) {
-            return data;
-          } else if (data && typeof data === 'object' && 'data' in data) {
-            return (data as any).data || [];
+          // Handle paginated response
+          if (data && typeof data === 'object' && 'data' in data) {
+            return data.data || [];
           }
           return [];
         })
@@ -66,7 +67,8 @@ const CalendarManagement: React.FC = () => {
       ]);
 
       // Ensure all are arrays before setting state
-      setAlumnos(Array.isArray(alumnosData) ? alumnosData.filter(a => !a.fechaAnulacion) : []);
+      // NOTE: We DON'T filter by fechaAnulacion for birthdays - we want to show all student birthdays
+      setAlumnos(Array.isArray(alumnosData) ? alumnosData : []);
       setTrainings(Array.isArray(trainingsData) ? trainingsData : []);
       setGames(Array.isArray(gamesData) ? gamesData : []);
 
@@ -75,6 +77,23 @@ const CalendarManagement: React.FC = () => {
       const gamesCount = Array.isArray(gamesData) ? gamesData.length : 0;
 
       console.log(`Loaded ${alumnosCount} alumnos, ${trainingsCount} trainings, ${gamesCount} games`);
+
+      // DEBUG: Check if Nory (ID 22) is in the loaded data
+      if (Array.isArray(alumnosData)) {
+        const nory = alumnosData.find(a => a.id === 22);
+        if (nory) {
+          console.log('✅ NORY FOUND IN LOADED DATA:', {
+            id: nory.id,
+            nombre: nory.nombre,
+            apellido: nory.apellido,
+            fechaNacimiento: nory.fechaNacimiento,
+            fechaAnulacion: nory.fechaAnulacion
+          });
+        } else {
+          console.log('❌ NORY (ID 22) NOT FOUND IN API RESPONSE');
+          console.log('   Student IDs in response:', alumnosData.map(a => a.id).sort((a, b) => a - b));
+        }
+      }
     } catch (error) {
       console.error('Error loading calendar data:', error);
     } finally {
@@ -89,17 +108,81 @@ const CalendarManagement: React.FC = () => {
   // Debug: Log all students with birth dates when data changes
   useEffect(() => {
     if (alumnos.length > 0) {
-      console.log('=== STUDENTS WITH BIRTH DATES ===');
+      console.log('\n========================================');
+      console.log('STUDENTS WITH BIRTH DATES');
+      console.log('========================================');
       const studentsWithBirthdays = alumnos.filter(a => a.fechaNacimiento);
       console.log(`Total students: ${alumnos.length}, With birthdays: ${studentsWithBirthdays.length}`);
+      console.log('----------------------------------------');
 
-      studentsWithBirthdays.forEach(a => {
-        const bday = new Date(a.fechaNacimiento!);
-        console.log(`${a.nombre} ${a.apellido}: ${a.fechaNacimiento} → Month: ${bday.getMonth() + 1}, Day: ${bday.getDate()}`);
-      });
-      console.log('================================');
+      if (studentsWithBirthdays.length === 0) {
+        console.warn('⚠️ NO STUDENTS HAVE BIRTH DATES!');
+      } else {
+        const currentMonth = currentDate.getMonth(); // 0=enero, 1=febrero, etc.
+        console.log(`\n📅 Current calendar month: ${currentMonth + 1} (${['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][currentMonth]})`);
+
+        // SPECIAL DEBUG: List February birthdays FIRST
+        console.log('\n🎂🎂🎂 FEBRUARY BIRTHDAYS (Month 1 in 0-11 index) 🎂🎂🎂');
+        const febStudents = studentsWithBirthdays.filter(a => {
+          const bday = new Date(a.fechaNacimiento!);
+          return bday.getUTCMonth() === 1;  // February is index 1
+        });
+
+        if (febStudents.length === 0) {
+          console.log('  ❌ NO FEBRUARY BIRTHDAYS FOUND IN DATABASE');
+        } else {
+          console.log(`  ✅ Found ${febStudents.length} student(s) with February birthdays:`);
+          febStudents.forEach(a => {
+            const bday = new Date(a.fechaNacimiento!);
+            console.log(`     • ${a.nombre} ${a.apellido} - Feb ${bday.getUTCDate()}`);
+          });
+        }
+        console.log('🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂\n');
+
+        console.log('\nAll students with birthdays:');
+
+        studentsWithBirthdays.forEach(a => {
+          const bday = new Date(a.fechaNacimiento!);
+          const monthUTC = bday.getUTCMonth();
+          const dayUTC = bday.getUTCDate();
+          const monthLocal = bday.getMonth();
+          const dayLocal = bday.getDate();
+          const isCurrentMonth = monthUTC === currentMonth;
+
+          // Highlight February birthdays specifically
+          const isFeb = monthUTC === 1;  // February is index 1
+          const prefix = isFeb ? '🎂 FEB >>> ' : (isCurrentMonth ? '🎂 ' : '  ');
+
+          console.log(`${prefix}${a.nombre} ${a.apellido}:`, {
+            raw: a.fechaNacimiento,
+            'UTC Month (0-11)': monthUTC,
+            'UTC Month (1-12)': monthUTC + 1,
+            'UTC Day': dayUTC,
+            'Local Month (0-11)': monthLocal,
+            'Local Day': dayLocal,
+            inCurrentMonth: isCurrentMonth,
+            IS_FEBRUARY: isFeb
+          });
+        });
+
+        console.log('\n🎯 Birthdays THIS MONTH:');
+        const thisMonthBirthdays = studentsWithBirthdays.filter(a => {
+          const bday = new Date(a.fechaNacimiento!);
+          return bday.getUTCMonth() === currentMonth;
+        });
+
+        if (thisMonthBirthdays.length === 0) {
+          console.log('  ❌ None');
+        } else {
+          thisMonthBirthdays.forEach(a => {
+            const bday = new Date(a.fechaNacimiento!);
+            console.log(`  ✅ ${a.nombre} ${a.apellido} - Day ${bday.getUTCDate()}`);
+          });
+        }
+      }
+      console.log('========================================\n');
     }
-  }, [alumnos]);
+  }, [alumnos, currentDate]);
 
   const daysOfWeek = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
   const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -148,7 +231,13 @@ const CalendarManagement: React.FC = () => {
     const dayTrainings = trainings.filter(t => t.fecha && t.fecha.startsWith(dateStr));
     const dayGames = games.filter(g => g.fecha && g.fecha.startsWith(dateStr));
 
+    // Get the current month being viewed in the calendar
+    const currentCalendarMonth = currentDate.getMonth(); // The month the user is looking at
+    const currentCalendarYear = currentDate.getFullYear();
+
     // Birthdays (ignoring year, only comparing month and day)
+    // IMPORTANT: Only show birthdays when viewing the CURRENT CALENDAR MONTH
+    // This prevents showing birthdays in the gray "next month" / "prev month" cells
     const dayBirthdays = alumnos.filter(a => {
       if (!a.fechaNacimiento) return false;
 
@@ -170,20 +259,41 @@ const CalendarManagement: React.FC = () => {
         const birthdayMonth = bday.getUTCMonth();
         const birthdayDay = bday.getUTCDate();
 
-        const matches = birthdayMonth === month && birthdayDay === day;
+        // KEY FIX: Only show birthdays when:
+        // 1. The birthday month matches the CELL'S month
+        // 2. The birthday day matches the CELL'S day
+        // 3. The cell is in the CURRENT CALENDAR MONTH being viewed (prevents showing in gray prev/next month cells)
+        // NOTE: We don't check year - birthdays repeat every year!
+        const isCurrentMonthCell = month === currentCalendarMonth;
+        const matches = birthdayMonth === month && birthdayDay === day && isCurrentMonthCell;
 
-        // Debug log for ALL months, not just current month
-        if (matches || (month === 1 && day === 15)) {
-          console.log(`[Birthday Check] ${a.nombre} ${a.apellido}:`, {
+        // Enhanced Debug log - log for february birthdays specifically
+        if (birthdayMonth === 1) {  // February is month index 1
+          console.log(`🔍 [Feb Birthday Debug] ${a.nombre} ${a.apellido}:`, {
             fechaNacimiento: a.fechaNacimiento,
-            parsedDate: bday.toISOString(),
-            birthdayMonth_UTC: birthdayMonth,
+            birthdayMonth_UTC: birthdayMonth,  // 0-11
             birthdayDay_UTC: birthdayDay,
-            birthdayMonth_LOCAL: bday.getMonth(),
-            birthdayDay_LOCAL: bday.getDate(),
-            targetMonth: month,
-            targetDay: day,
-            matches
+            cellMonth: month,  // 0-11
+            cellDay: day,
+            currentCalendarMonth: currentCalendarMonth,  // 0-11
+            isCurrentMonthCell: isCurrentMonthCell,
+            monthMatches: birthdayMonth === month,
+            dayMatches: birthdayDay === day,
+            FINAL_matches: matches
+          });
+        }
+
+        // Log successful matches
+        if (matches) {
+          console.log(`🎂 [Birthday Match] ${a.nombre} ${a.apellido}:`, {
+            fechaNacimiento: a.fechaNacimiento,
+            birthdayMonth_UTC: birthdayMonth + 1,  // +1 for human-readable month
+            birthdayDay_UTC: birthdayDay,
+            cellMonth: month + 1,  // +1 for human-readable month
+            cellDay: day,
+            cellYear: year,
+            isCurrentMonthCell: isCurrentMonthCell,
+            currentViewingMonth: currentCalendarMonth + 1
           });
         }
 

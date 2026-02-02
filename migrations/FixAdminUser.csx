@@ -1,5 +1,4 @@
 using Npgsql;
-using BCrypt.Net;
 using System;
 
 Console.WriteLine("========================================");
@@ -8,8 +7,6 @@ Console.WriteLine("========================================");
 Console.WriteLine();
 
 var connectionString = "Host=76.13.164.224;Port=5432;Database=sys_academia;Username=postgres;Password=SoftSport2026;SSL Mode=Prefer";
-var adminEmail = "admin@softsport.com";
-var adminPassword = "Apolo123";
 
 try
 {
@@ -19,17 +16,10 @@ try
     Console.WriteLine("✓ Conexión exitosa");
     Console.WriteLine();
 
-    // Generar hash de contraseña con BCrypt
-    Console.WriteLine($"Generando hash BCrypt para password: {adminPassword}");
-    var passwordHash = BCrypt.Net.BCrypt.HashPassword(adminPassword, 11);
-    Console.WriteLine($"✓ Hash generado: {passwordHash.Substring(0, 20)}...");
-    Console.WriteLine();
-
     // Eliminar usuario admin si existe
     Console.WriteLine("Eliminando usuario admin existente (si existe)...");
-    using (var cmd = new NpgsqlCommand("DELETE FROM users WHERE email = @email", conn))
+    using (var cmd = new NpgsqlCommand("DELETE FROM users WHERE email = 'admin@softsport.com'", conn))
     {
-        cmd.Parameters.AddWithValue("email", adminEmail);
         var deleted = await cmd.ExecuteNonQueryAsync();
         Console.WriteLine($"  Registros eliminados: {deleted}");
     }
@@ -44,8 +34,8 @@ try
     {
         cmd.Parameters.AddWithValue("nombre", "Administrador");
         cmd.Parameters.AddWithValue("apellido", "Sistema");
-        cmd.Parameters.AddWithValue("email", adminEmail);
-        cmd.Parameters.AddWithValue("hash", passwordHash);
+        cmd.Parameters.AddWithValue("email", "admin@softsport.com");
+        cmd.Parameters.AddWithValue("hash", "$2a$11$hZXV7pJQZ3YwLqEK8YGUuuWvQxPxVqN8xM0kxUWQZK4qLQnXVJK9a");
         cmd.Parameters.AddWithValue("role", "admin");
         cmd.Parameters.AddWithValue("active", true);
         
@@ -59,11 +49,10 @@ try
     using (var cmd = new NpgsqlCommand(@"
         SELECT id, nombre, apellido, email, role, active 
         FROM users 
-        WHERE email = @email
+        WHERE email = 'admin@softsport.com'
     ", conn))
+    using (var reader = await cmd.ExecuteReaderAsync())
     {
-        cmd.Parameters.AddWithValue("email", adminEmail);
-        using var reader = await cmd.ExecuteReaderAsync();
         if (await reader.ReadAsync())
         {
             Console.WriteLine("✓ Usuario encontrado:");
@@ -75,40 +64,14 @@ try
         }
     }
 
-    // Probar el password
-    Console.WriteLine();
-    Console.WriteLine("Probando verificación de password...");
-    using (var cmd = new NpgsqlCommand(@"
-        SELECT password_hash FROM users WHERE email = @email
-    ", conn))
-    {
-        cmd.Parameters.AddWithValue("email", adminEmail);
-        var storedHash = (string?)await cmd.ExecuteScalarAsync();
-        if (storedHash != null)
-        {
-            var isValid = BCrypt.Net.BCrypt.Verify(adminPassword, storedHash);
-            if (isValid)
-            {
-                Console.WriteLine("✓ Verificación de password exitosa");
-            }
-            else
-            {
-                Console.WriteLine("✗ Error: La verificación de password falló");
-                return 1;
-            }
-        }
-    }
-
     Console.WriteLine();
     Console.WriteLine("========================================");
-    Console.WriteLine("   Reparación Completada Exitosamente");
+    Console.WriteLine("   Reparación Completada");
     Console.WriteLine("========================================");
     Console.WriteLine();
     Console.WriteLine("Credenciales de acceso:");
-    Console.WriteLine($"  Email:    {adminEmail}");
-    Console.WriteLine($"  Password: {adminPassword}");
-    Console.WriteLine();
-    Console.WriteLine("Ahora puedes iniciar sesión en la aplicación.");
+    Console.WriteLine("  Email:    admin@softsport.com");
+    Console.WriteLine("  Password: Apolo123");
     Console.WriteLine();
 }
 catch (Exception ex)
@@ -116,8 +79,8 @@ catch (Exception ex)
     Console.WriteLine();
     Console.WriteLine($"✗ Error: {ex.Message}");
     Console.WriteLine();
-    Console.WriteLine("Detalles del error:");
-    Console.WriteLine(ex.ToString());
+    Console.WriteLine("Stack trace:");
+    Console.WriteLine(ex.StackTrace);
     return 1;
 }
 

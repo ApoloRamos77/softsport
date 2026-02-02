@@ -180,3 +180,12 @@ C:\Proyecto_2026\Soft_Sport\api\obj\Debug\net9.0\refint\SoftSportAPI.dll
 C:\Proyecto_2026\Soft_Sport\api\obj\Debug\net9.0\SoftSportAPI.pdb
 C:\Proyecto_2026\Soft_Sport\api\obj\Debug\net9.0\SoftSportAPI.genruntimeconfig.cache
 C:\Proyecto_2026\Soft_Sport\api\obj\Debug\net9.0\ref\SoftSportAPI.dll
+C:\Proyecto_2026\Soft_Sport\api\bin\Debug\net9.0\publish\publish\web.config
+C:\Proyecto_2026\Soft_Sport\api\bin\Debug\net9.0\publish\publish\appsettings.Development.json
+C:\Proyecto_2026\Soft_Sport\api\bin\Debug\net9.0\publish\publish\appsettings.json
+C:\Proyecto_2026\Soft_Sport\api\bin\Debug\net9.0\publish\publish\appsettings.PostgreSQL.json
+C:\Proyecto_2026\Soft_Sport\api\bin\Debug\net9.0\publish\publish\appsettings.Production.json
+C:\Proyecto_2026\Soft_Sport\api\bin\Debug\net9.0\publish\publish\SoftSportAPI.deps.json
+C:\Proyecto_2026\Soft_Sport\api\bin\Debug\net9.0\publish\publish\SoftSportAPI.runtimeconfig.json
+C:\Proyecto_2026\Soft_Sport\api\bin\Debug\net9.0\publish\publish\SoftSportAPI.staticwebassets.endpoints.json
+C:\Proyecto_2026\Soft_Sport\api\bin\Debug\net9.0\publish\publish\test_swagger.json
