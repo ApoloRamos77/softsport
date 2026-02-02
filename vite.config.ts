@@ -18,6 +18,7 @@ export default defineConfig(({ mode }) => {
       }
     },
     plugins: [react()],
+    base: './', // Use relative paths for assets (required for Easypanel)
     build: {
       outDir: 'publish/frontend', // Ruta de compilación para Easypanel
     },
