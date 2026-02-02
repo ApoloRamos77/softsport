@@ -72,22 +72,46 @@ builder.Services.AddCors(options =>
                     "http://192.168.100.4:3001",
                     "http://192.168.100.4:3002")
                   .AllowAnyHeader()
-                  .AllowAnyMethod();
+                  .AllowAnyMethod()
+                  .AllowCredentials();
         }
         else
         {
-            // En producción, permitir todos los orígenes de Easypanel y también IPs locales para desarrollo
+            // En producción, permitir todos los orígenes de Easypanel
             policy.SetIsOriginAllowed(origin =>
                 {
-                    if (string.IsNullOrEmpty(origin)) return false;
-                    var uri = new Uri(origin);
-                    // Permitir localhost, easypanel.host, scuiaw.easypanel.host y también IPs locales privadas
-                    return uri.Host == "localhost" ||
-                           uri.Host.EndsWith(".easypanel.host") ||
-                           uri.Host.EndsWith(".scuiaw.easypanel.host") ||
-                           uri.Host.StartsWith("192.168.") ||
-                           uri.Host.StartsWith("172.16.") ||
-                           uri.Host.StartsWith("10.");
+                    if (string.IsNullOrEmpty(origin))
+                    {
+                        Console.WriteLine("[CORS] Rechazado: origen vacío");
+                        return false;
+                    }
+                    
+                    try
+                    {
+                        var uri = new Uri(origin);
+                        var allowed = uri.Host == "localhost" ||
+                                    uri.Host.EndsWith(".easypanel.host") ||
+                                    uri.Host.EndsWith(".scuiaw.easypanel.host") ||
+                                    uri.Host.StartsWith("192.168.") ||
+                                    uri.Host.StartsWith("172.16.") ||
+                                    uri.Host.StartsWith("10.");
+                        
+                        if (allowed)
+                        {
+                            Console.WriteLine($"[CORS] Permitido: {origin}");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[CORS] Rechazado: {origin} (host: {uri.Host})");
+                        }
+                        
+                        return allowed;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[CORS] Error parseando origen '{origin}': {ex.Message}");
+                        return false;
+                    }
                 })
                 .AllowAnyHeader()
                 .AllowAnyMethod()
