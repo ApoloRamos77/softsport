@@ -17,12 +17,22 @@ const CalendarManagement: React.FC = () => {
       // NOTE: For birthdays, we need ALL students, not just the first page
       // Use direct fetch with pageSize parameter since getAll() doesn't support it
       const alumnosPromise = fetch('/api/alumnos?pageSize=1000')
-        .then(response => response.json())
-        .then(data => {
-          // Handle paginated response
-          if (data && typeof data === 'object' && 'data' in data) {
-            return data.data || [];
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
           }
+          return response.json();
+        })
+        .then(data => {
+          // Handle paginated response - ensure we always return an array
+          if (data && typeof data === 'object' && 'data' in data && Array.isArray(data.data)) {
+            return data.data;
+          }
+          // Fallback: if it's already an array, return it
+          if (Array.isArray(data)) {
+            return data;
+          }
+          console.warn('Unexpected alumnos response format:', data);
           return [];
         })
         .catch(error => {
