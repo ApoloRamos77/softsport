@@ -1,35 +1,53 @@
-# Dockerfile para ADHSOFT SPORT Backend - .NET 9.0
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
-WORKDIR /src
+# Multi-stage build for React + Vite frontend
+# Stage 1: Build
+FROM node:18-alpine AS builder
 
-# Copiar archivos de proyecto y restaurar dependencias
-COPY api/SoftSportAPI.csproj api/
-RUN dotnet restore "api/SoftSportAPI.csproj"
-
-# Copiar todo el código fuente
-COPY api/ api/
-
-# Compilar y publicar la aplicación
-WORKDIR /src/api
-RUN dotnet publish "SoftSportAPI.csproj" -c Release -o /app/publish
-
-# Eliminar launchSettings.json si existe en el publish
-RUN rm -f /app/publish/Properties/launchSettings.json
-
-# Imagen final optimizada
-FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
 
-# Copiar los archivos publicados desde la etapa de build
-COPY --from=build /app/publish .
+# Copy package files
+COPY package*.json ./
 
-# Exponer el puerto (Easypanel puede usar cualquier puerto)
-EXPOSE 8080
+# Install dependencies
+RUN npm ci
 
-# Variables de entorno por defecto - IMPORTANTE: Deshabilitar launchSettings.json
-ENV ASPNETCORE_URLS=http://+:8080
-ENV ASPNETCORE_ENVIRONMENT=Production
-ENV DOTNET_LAUNCH_PROFILE=""
+# Copy source code
+COPY . .
 
-# Comando de inicio
-ENTRYPOINT ["dotnet", "SoftSportAPI.dll"]
+# Build the application
+RUN npm run build
+
+# Stage 2: Production server with nginx
+FROM nginx:alpine
+
+# Copy built files from builder stage
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copy nginx configuration
+COPY <<EOF /etc/nginx/conf.d/default.conf
+server {
+    listen 80;
+    server_name _;
+    
+    root /usr/share/nginx/html;
+    index index.html;
+    
+    # Enable gzip compression
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+    
+    # SPA routing - serve index.html for all routes
+    location / {
+        try_files \$uri \$uri/ /index.html;
+    }
+    
+    # Cache static assets
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+}
+EOF
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
