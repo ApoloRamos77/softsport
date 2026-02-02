@@ -13,14 +13,68 @@ const CalendarManagement: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
+      // Load each data source independently - don't fail completely if one fails
+      const alumnosPromise = apiService.getAll<Alumno>('alumnos')
+        .then(data => {
+          // Handle both array and paginated response
+          if (Array.isArray(data)) {
+            return data;
+          } else if (data && typeof data === 'object' && 'data' in data) {
+            return (data as any).data || [];
+          }
+          return [];
+        })
+        .catch(error => {
+          console.error('Error loading alumnos:', error);
+          return [];
+        });
+
+      const trainingsPromise = apiService.getAll<Training>('trainings')
+        .then(data => {
+          // Handle both array and paginated response
+          if (Array.isArray(data)) {
+            return data;
+          } else if (data && typeof data === 'object' && 'data' in data) {
+            return (data as any).data || [];
+          }
+          return [];
+        })
+        .catch(error => {
+          console.error('Error loading trainings:', error);
+          return [];
+        });
+
+      const gamesPromise = apiService.getAll<Game>('games')
+        .then(data => {
+          // Handle both array and paginated response
+          if (Array.isArray(data)) {
+            return data;
+          } else if (data && typeof data === 'object' && 'data' in data) {
+            return (data as any).data || [];
+          }
+          return [];
+        })
+        .catch(error => {
+          console.error('Error loading games:', error);
+          return [];
+        });
+
       const [alumnosData, trainingsData, gamesData] = await Promise.all([
-        apiService.getAll<Alumno>('alumnos'),
-        apiService.getAll<Training>('trainings'),
-        apiService.getAll<Game>('games')
+        alumnosPromise,
+        trainingsPromise,
+        gamesPromise
       ]);
-      setAlumnos(alumnosData.filter(a => !a.fechaAnulacion));
-      setTrainings(trainingsData);
-      setGames(gamesData);
+
+      // Ensure all are arrays before setting state
+      setAlumnos(Array.isArray(alumnosData) ? alumnosData.filter(a => !a.fechaAnulacion) : []);
+      setTrainings(Array.isArray(trainingsData) ? trainingsData : []);
+      setGames(Array.isArray(gamesData) ? gamesData : []);
+
+      const alumnosCount = Array.isArray(alumnosData) ? alumnosData.length : 0;
+      const trainingsCount = Array.isArray(trainingsData) ? trainingsData.length : 0;
+      const gamesCount = Array.isArray(gamesData) ? gamesData.length : 0;
+
+      console.log(`Loaded ${alumnosCount} alumnos, ${trainingsCount} trainings, ${gamesCount} games`);
     } catch (error) {
       console.error('Error loading calendar data:', error);
     } finally {
@@ -31,6 +85,21 @@ const CalendarManagement: React.FC = () => {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Debug: Log all students with birth dates when data changes
+  useEffect(() => {
+    if (alumnos.length > 0) {
+      console.log('=== STUDENTS WITH BIRTH DATES ===');
+      const studentsWithBirthdays = alumnos.filter(a => a.fechaNacimiento);
+      console.log(`Total students: ${alumnos.length}, With birthdays: ${studentsWithBirthdays.length}`);
+
+      studentsWithBirthdays.forEach(a => {
+        const bday = new Date(a.fechaNacimiento!);
+        console.log(`${a.nombre} ${a.apellido}: ${a.fechaNacimiento} → Month: ${bday.getMonth() + 1}, Day: ${bday.getDate()}`);
+      });
+      console.log('================================');
+    }
+  }, [alumnos]);
 
   const daysOfWeek = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
   const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -79,11 +148,50 @@ const CalendarManagement: React.FC = () => {
     const dayTrainings = trainings.filter(t => t.fecha && t.fecha.startsWith(dateStr));
     const dayGames = games.filter(g => g.fecha && g.fecha.startsWith(dateStr));
 
-    // Birthdays (ignoring year)
+    // Birthdays (ignoring year, only comparing month and day)
     const dayBirthdays = alumnos.filter(a => {
       if (!a.fechaNacimiento) return false;
-      const bday = new Date(a.fechaNacimiento);
-      return bday.getMonth() === month && bday.getDate() === day;
+
+      // Parse fecha de nacimiento - handle different date formats
+      let bday: Date;
+      try {
+        // Try parsing as ISO string first
+        bday = new Date(a.fechaNacimiento);
+
+        // Check if date is valid
+        if (isNaN(bday.getTime())) {
+          console.warn(`Invalid birth date for ${a.nombre}: ${a.fechaNacimiento}`);
+          return false;
+        }
+
+        // USE UTC METHODS to avoid timezone shifting the day
+        // When you have "1984-02-15T05:00:00.000Z", getDate() might return 14 in some timezones
+        // getUTCDate() always gives the correct day regardless of timezone
+        const birthdayMonth = bday.getUTCMonth();
+        const birthdayDay = bday.getUTCDate();
+
+        const matches = birthdayMonth === month && birthdayDay === day;
+
+        // Debug log for ALL months, not just current month
+        if (matches || (month === 1 && day === 15)) {
+          console.log(`[Birthday Check] ${a.nombre} ${a.apellido}:`, {
+            fechaNacimiento: a.fechaNacimiento,
+            parsedDate: bday.toISOString(),
+            birthdayMonth_UTC: birthdayMonth,
+            birthdayDay_UTC: birthdayDay,
+            birthdayMonth_LOCAL: bday.getMonth(),
+            birthdayDay_LOCAL: bday.getDate(),
+            targetMonth: month,
+            targetDay: day,
+            matches
+          });
+        }
+
+        return matches;
+      } catch (error) {
+        console.error(`Error parsing birth date for ${a.nombre}: ${a.fechaNacimiento}`, error);
+        return false;
+      }
     });
 
     return {
@@ -202,6 +310,11 @@ const CalendarManagement: React.FC = () => {
                       {calendarDays.slice(weekIdx * 7, weekIdx * 7 + 7).map((d, dayIdx) => {
                         const { trainings, games, birthdays } = getEventsForDay(d.day, d.month, d.year);
                         const today = isToday(d.day, d.month, d.year);
+
+                        // Debug: Log if there are birthdays for this day
+                        if (birthdays.length > 0) {
+                          console.log(`📅 Rendering day ${d.month + 1}/${d.day}/${d.year}: ${birthdays.length} birthdays`, birthdays.map(b => b.nombre));
+                        }
 
                         return (
                           <td
