@@ -20,39 +20,48 @@ namespace SoftSportAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<object>>> GetGames(int page = 1, int pageSize = 20)
         {
-            var query = _context.Games
-                .Include(g => g.Categoria)
-                .Include(g => g.AlumnosConvocados)
-                    .ThenInclude(ga => ga.Alumno)
-                .Select(g => new
-                {
-                    g.Id,
-                    g.Titulo,
-                    g.Fecha,
-                    g.CategoriaId,
-                    CategoriaNombre = g.Categoria != null ? g.Categoria.Nombre : null,
-                    g.EsLocal,
-                    g.EquipoLocal,
-                    g.EquipoVisitante,
-                    g.Ubicacion,
-                    g.Observaciones,
-                    g.Rival,
-                    g.ScoreLocal,
-                    g.ScoreVisitante,
-                    AlumnosConvocados = g.AlumnosConvocados.Select(ga => new
+            try
+            {
+                var query = _context.Games
+                    .Include(g => g.Categoria)
+                    .Include(g => g.AlumnosConvocados)
+                        .ThenInclude(ga => ga.Alumno)
+                    .Select(g => new
                     {
-                        ga.AlumnoId,
-                        NombreCompleto = ga.Alumno != null ? ga.Alumno.Nombre + " " + ga.Alumno.Apellido : null
-                    }).ToList()
-                })
-                .AsQueryable();
+                        g.Id,
+                        g.Titulo,
+                        g.Fecha,
+                        g.CategoriaId,
+                        CategoriaNombre = g.Categoria != null ? g.Categoria.Nombre : null,
+                        g.EsLocal,
+                        g.EquipoLocal,
+                        g.EquipoVisitante,
+                        g.Ubicacion,
+                        g.Observaciones,
+                        g.Rival,
+                        g.ScoreLocal,
+                        g.ScoreVisitante,
+                        AlumnosConvocados = g.AlumnosConvocados.Select(ga => new
+                        {
+                            ga.AlumnoId,
+                            NombreCompleto = ga.Alumno != null ? ga.Alumno.Nombre + " " + ga.Alumno.Apellido : null
+                        }).ToList()
+                    })
+                    .AsQueryable();
 
-            var games = await query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
+                var games = await query
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
 
-            return Ok(games);
+                return Ok(games);
+            }
+            catch (Exception ex)
+            {
+                // Log the error but return empty array to prevent calendar from breaking
+                Console.WriteLine($"[ERROR] GetGames failed: {ex.Message}");
+                return Ok(new List<object>()); // Return empty array instead of 500
+            }
         }
 
         // GET: api/Games/5
