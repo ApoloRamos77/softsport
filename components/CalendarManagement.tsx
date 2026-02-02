@@ -1,14 +1,21 @@
+```
 import React, { useState, useEffect } from 'react';
 import { apiService, Alumno, Training, Game } from '../services/api';
 
 const CalendarManagement: React.FC = () => {
   const [viewType, setViewType] = useState<'Mes' | 'Semana' | 'Día' | 'Agenda'>('Mes');
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Changed from false to true
 
   const [alumnos, setAlumnos] = useState<Alumno[]>([]);
   const [trainings, setTrainings] = useState<Training[]>([]);
   const [games, setGames] = useState<Game[]>([]);
+
+  // 🚀 VERSION LOG - VERIFICAR QUE SE CARGO LA ULTIMA VERSION
+  console.log('%c═══════════════════════════════════════════════════', 'color: #4CAF50; font-weight: bold;');
+  console.log('%c🚀 CALENDAR VERSION: 2026-02-02 17:11 UTC', 'background: #4CAF50; color: white; font-size: 16px; font-weight: bold; padding: 8px;');
+  console.log('%c📅 Birthday Fix v4 - Array Validation + Cache Bust', 'background: #2196F3; color: white; font-size: 14px; padding: 4px;');
+  console.log('%c═══════════════════════════════════════════════════', 'color: #4CAF50; font-weight: bold;');
 
   const loadData = async () => {
     setLoading(true);
@@ -19,7 +26,7 @@ const CalendarManagement: React.FC = () => {
       const alumnosPromise = fetch('/api/alumnos?pageSize=1000')
         .then(response => {
           if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`HTTP error! status: ${ response.status } `);
           }
           return response.json();
         })
@@ -86,7 +93,7 @@ const CalendarManagement: React.FC = () => {
       const trainingsCount = Array.isArray(trainingsData) ? trainingsData.length : 0;
       const gamesCount = Array.isArray(gamesData) ? gamesData.length : 0;
 
-      console.log(`Loaded ${alumnosCount} alumnos, ${trainingsCount} trainings, ${gamesCount} games`);
+      console.log(`Loaded ${ alumnosCount } alumnos, ${ trainingsCount } trainings, ${ gamesCount } games`);
 
       // DEBUG: Check if Nory (ID 22) is in the loaded data
       if (Array.isArray(alumnosData)) {
@@ -122,14 +129,14 @@ const CalendarManagement: React.FC = () => {
       console.log('STUDENTS WITH BIRTH DATES');
       console.log('========================================');
       const studentsWithBirthdays = alumnos.filter(a => a.fechaNacimiento);
-      console.log(`Total students: ${alumnos.length}, With birthdays: ${studentsWithBirthdays.length}`);
+      console.log(`Total students: ${ alumnos.length }, With birthdays: ${ studentsWithBirthdays.length } `);
       console.log('----------------------------------------');
 
       if (studentsWithBirthdays.length === 0) {
         console.warn('⚠️ NO STUDENTS HAVE BIRTH DATES!');
       } else {
         const currentMonth = currentDate.getMonth(); // 0=enero, 1=febrero, etc.
-        console.log(`\n📅 Current calendar month: ${currentMonth + 1} (${['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][currentMonth]})`);
+        console.log(`\n📅 Current calendar month: ${ currentMonth + 1 } (${ ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][currentMonth] })`);
 
         // SPECIAL DEBUG: List February birthdays FIRST
         console.log('\n🎂🎂🎂 FEBRUARY BIRTHDAYS (Month 1 in 0-11 index) 🎂🎂🎂');
@@ -141,10 +148,10 @@ const CalendarManagement: React.FC = () => {
         if (febStudents.length === 0) {
           console.log('  ❌ NO FEBRUARY BIRTHDAYS FOUND IN DATABASE');
         } else {
-          console.log(`  ✅ Found ${febStudents.length} student(s) with February birthdays:`);
+          console.log(`  ✅ Found ${ febStudents.length } student(s) with February birthdays: `);
           febStudents.forEach(a => {
             const bday = new Date(a.fechaNacimiento!);
-            console.log(`     • ${a.nombre} ${a.apellido} - Feb ${bday.getUTCDate()}`);
+            console.log(`     • ${ a.nombre } ${ a.apellido } - Feb ${ bday.getUTCDate() } `);
           });
         }
         console.log('🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂\n');
@@ -163,7 +170,7 @@ const CalendarManagement: React.FC = () => {
           const isFeb = monthUTC === 1;  // February is index 1
           const prefix = isFeb ? '🎂 FEB >>> ' : (isCurrentMonth ? '🎂 ' : '  ');
 
-          console.log(`${prefix}${a.nombre} ${a.apellido}:`, {
+          console.log(`${ prefix }${ a.nombre } ${ a.apellido }: `, {
             raw: a.fechaNacimiento,
             'UTC Month (0-11)': monthUTC,
             'UTC Month (1-12)': monthUTC + 1,
@@ -186,7 +193,7 @@ const CalendarManagement: React.FC = () => {
         } else {
           thisMonthBirthdays.forEach(a => {
             const bday = new Date(a.fechaNacimiento!);
-            console.log(`  ✅ ${a.nombre} ${a.apellido} - Day ${bday.getUTCDate()}`);
+            console.log(`  ✅ ${ a.nombre } ${ a.apellido } - Day ${ bday.getUTCDate() } `);
           });
         }
       }
@@ -236,7 +243,7 @@ const CalendarManagement: React.FC = () => {
   };
 
   const getEventsForDay = (day: number, month: number, year: number) => {
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const dateStr = `${ year } -${ String(month + 1).padStart(2, '0') } -${ String(day).padStart(2, '0') } `;
 
     const dayTrainings = trainings.filter(t => t.fecha && t.fecha.startsWith(dateStr));
     const dayGames = games.filter(g => g.fecha && g.fecha.startsWith(dateStr));
@@ -259,7 +266,7 @@ const CalendarManagement: React.FC = () => {
 
         // Check if date is valid
         if (isNaN(bday.getTime())) {
-          console.warn(`Invalid birth date for ${a.nombre}: ${a.fechaNacimiento}`);
+          console.warn(`Invalid birth date for ${ a.nombre }: ${ a.fechaNacimiento } `);
           return false;
         }
 
@@ -279,7 +286,7 @@ const CalendarManagement: React.FC = () => {
 
         // Enhanced Debug log - log for february birthdays specifically
         if (birthdayMonth === 1) {  // February is month index 1
-          console.log(`🔍 [Feb Birthday Debug] ${a.nombre} ${a.apellido}:`, {
+          console.log(`🔍[Feb Birthday Debug] ${ a.nombre } ${ a.apellido }: `, {
             fechaNacimiento: a.fechaNacimiento,
             birthdayMonth_UTC: birthdayMonth,  // 0-11
             birthdayDay_UTC: birthdayDay,
@@ -295,7 +302,7 @@ const CalendarManagement: React.FC = () => {
 
         // Log successful matches
         if (matches) {
-          console.log(`🎂 [Birthday Match] ${a.nombre} ${a.apellido}:`, {
+          console.log(`🎂[Birthday Match] ${ a.nombre } ${ a.apellido }: `, {
             fechaNacimiento: a.fechaNacimiento,
             birthdayMonth_UTC: birthdayMonth + 1,  // +1 for human-readable month
             birthdayDay_UTC: birthdayDay,
@@ -309,7 +316,7 @@ const CalendarManagement: React.FC = () => {
 
         return matches;
       } catch (error) {
-        console.error(`Error parsing birth date for ${a.nombre}: ${a.fechaNacimiento}`, error);
+        console.error(`Error parsing birth date for ${ a.nombre }: ${ a.fechaNacimiento } `, error);
         return false;
       }
     });
@@ -353,7 +360,7 @@ const CalendarManagement: React.FC = () => {
                     <small className="text-secondary opacity-50" style={{ fontSize: '10px' }}>{stat.sub}</small>
                   </div>
                   <div className="p-2 bg-primary bg-opacity-10 rounded text-primary border border-primary border-opacity-10">
-                    <i className={`fas ${stat.icon} fs-6`}></i>
+                    <i className={`fas ${ stat.icon } fs - 6`}></i>
                   </div>
                 </div>
               </div>
@@ -384,7 +391,7 @@ const CalendarManagement: React.FC = () => {
                 <button
                   key={type}
                   onClick={() => setViewType(type as any)}
-                  className={`btn btn-sm border-0 px-3 fw-bold ${viewType === type ? 'btn-primary shadow-sm' : 'btn-link text-secondary text-decoration-none'}`}
+                  className={`btn btn - sm border - 0 px - 3 fw - bold ${ viewType === type ? 'btn-primary shadow-sm' : 'btn-link text-secondary text-decoration-none' } `}
                   style={viewType === type ? { backgroundColor: '#1f6feb' } : {}}
                 >
                   {type}
@@ -433,17 +440,17 @@ const CalendarManagement: React.FC = () => {
 
                         // Debug: Log if there are birthdays for this day
                         if (birthdays.length > 0) {
-                          console.log(`📅 Rendering day ${d.month + 1}/${d.day}/${d.year}: ${birthdays.length} birthdays`, birthdays.map(b => b.nombre));
+                          console.log(`📅 Rendering day ${ d.month + 1 } /${d.day}/${ d.year }: ${ birthdays.length } birthdays`, birthdays.map(b => b.nombre));
                         }
 
                         return (
                           <td
                             key={dayIdx}
-                            className={`p-2 transition-all hover-bg-dark-lighter border-secondary border-opacity-10 ${!d.currentMonth ? 'opacity-25' : ''} ${today ? 'bg-primary bg-opacity-5' : ''}`}
+                            className={`p - 2 transition - all hover - bg - dark - lighter border - secondary border - opacity - 10 ${ !d.currentMonth ? 'opacity-25' : '' } ${ today ? 'bg-primary bg-opacity-5' : '' } `}
                             style={{ cursor: 'pointer', verticalAlign: 'top' }}
                           >
                             <div className="d-flex justify-content-between align-items-start mb-2">
-                              <span className={`${today ? 'bg-primary text-white rounded-circle d-flex align-items-center justify-center' : (dayIdx === 0 || dayIdx === 6 ? 'text-secondary opacity-50' : 'text-white')} fw-bold`}
+                              <span className={`${ today ? 'bg-primary text-white rounded-circle d-flex align-items-center justify-center' : (dayIdx === 0 || dayIdx === 6 ? 'text-secondary opacity-50' : 'text-white') } fw - bold`}
                                 style={today ? { width: '22px', height: '22px', fontSize: '12px', marginTop: '-2px' } : { fontSize: '12px' }}>
                                 {d.day}
                               </span>
