@@ -34,7 +34,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     apiService.getProductos()
                 ]);
                 setGalleries(galleryData);
-                setProductos(productData.filter(p => p.activo).slice(0, 4)); // Only active and first 4 for landing
+                // getProductos now returns a paginated object { totalCount, data }
+                const products = Array.isArray(productData) ? productData : (productData.data || []);
+                setProductos(products.filter(p => p.activo).slice(0, 4)); // Only active and first 4 for landing
             } catch (error) {
                 console.error('Error loading landing data:', error);
             } finally {

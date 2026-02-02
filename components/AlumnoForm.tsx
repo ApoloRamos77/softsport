@@ -18,6 +18,7 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
   const [categorias, setCategorias] = useState<any[]>([]);
   const [becas, setBecas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fotografiaUrl, setFotografiaUrl] = useState<string>('');
   const [formData, setFormData] = useState({
     nombre: '',
     apellido: '',
@@ -62,12 +63,14 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
       try {
         setLoading(true);
         const [repsData, gruposData, categoriasData, becasData] = await Promise.all([
-          apiService.getAll<Representante>('representantes'),
+          apiService.getRepresentantes(),
           apiService.getAll('grupos'),
           apiService.getAll('categorias'),
           apiService.getAll('becas')
         ]);
-        setRepresentantes(repsData);
+        // Handle paginated response for representantes
+        const representantesList = Array.isArray(repsData) ? repsData : (repsData.data || []);
+        setRepresentantes(representantesList);
         setGrupos(gruposData);
         setCategorias(categoriasData);
         setBecas(becasData);
@@ -119,10 +122,24 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
         notas: alumno.notas || '',
         fechaRegistro: alumno.fechaRegistro || new Date().toISOString()
       });
+      setFotografiaUrl(alumno.fotografia || '');
     }
   }, [alumno]);
 
   const handleSave = async () => {
+    // Upload photo if a new one was selected
+    let photoUrl = fotografiaUrl; // Start with existing photo URL
+
+    if (formData.fotografia) {
+      try {
+        photoUrl = await apiService.uploadFile(formData.fotografia, 'alumnos');
+      } catch (error) {
+        console.error('Error uploading photo:', error);
+        alert('Error al subir la foto. Por favor, intenta de nuevo.');
+        return;
+      }
+    }
+
     // Buscar IDs basados en nombres
     const grupoId = grupos.find(g => g.nombre === formData.grupo)?.id || null;
     const categoriaId = categorias.find(c => c.nombre === formData.categoria)?.id || null;
@@ -143,7 +160,7 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
       representanteId: formData.representanteId ? parseInt(formData.representanteId) : null,
       // Campos adicionales
       sexo: formData.sexo || null,
-      fotografia: formData.fotografia?.name || null,
+      fotografia: photoUrl || null,
       codigoPais: formData.codigoPais || null,
       direccion: formData.direccion || null,
       colegio: formData.colegio || null,
@@ -224,6 +241,49 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
             {/* Datos Personales Section */}
             <div className="p-4 rounded-lg border border-secondary border-opacity-10 bg-[#0d1117] bg-opacity-30">
               <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-4 d-block border-bottom border-blue-900 border-opacity-50 pb-2">Información Personal</label>
+
+              {/* Photo Upload Section */}
+              <div className="row g-3 mb-4">
+                <div className="col-md-12">
+                  <label>Fotografía del Alumno</label>
+                  <div className="d-flex gap-3 align-items-start">
+                    {/* Photo Preview */}
+                    <div className="border border-secondary p-2 rounded d-flex align-items-center justify-content-center" style={{ width: '120px', height: '120px', backgroundColor: '#0d1117' }}>
+                      {(fotografiaUrl || formData.fotografia) ? (
+                        <img
+                          src={formData.fotografia
+                            ? URL.createObjectURL(formData.fotografia)
+                            : fotografiaUrl
+                          }
+                          alt="Foto del alumno"
+                          className="img-fluid rounded"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      ) : (
+                        <i className="bi bi-person-circle" style={{ fontSize: '80px', color: '#6c757d' }}></i>
+                      )}
+                    </div>
+                    {/* File Upload */}
+                    <div className="flex-grow-1">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="form-control"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setFormData({ ...formData, fotografia: file });
+                          }
+                        }}
+                      />
+                      <small className="text-muted d-block mt-1">
+                        Formatos: JPG, PNG, WEBP. Máximo 5MB.
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="row g-3">
                 <div className="col-md-4">
                   <label>Nombre *</label>

@@ -108,8 +108,8 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
 
   const loadAlumnos = async () => {
     try {
-      const data = await apiService.getAlumnos();
-      setAlumnos(data);
+      const result = await apiService.getAlumnos();
+      setAlumnos(Array.isArray(result) ? result : (result.data || []));
     } catch (error) {
       console.error('Error cargando alumnos:', error);
     }
@@ -117,8 +117,8 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
 
   const loadServicios = async () => {
     try {
-      const data = await apiService.getServicios();
-      setServicios(data);
+      const result = await apiService.getServicios();
+      setServicios(Array.isArray(result) ? result : (result.data || []));
     } catch (error) {
       console.error('Error cargando servicios:', error);
     }
@@ -126,8 +126,8 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
 
   const loadProductos = async () => {
     try {
-      const data = await apiService.getProductos();
-      setProductos(data);
+      const result = await apiService.getProductos();
+      setProductos(Array.isArray(result) ? result : (result.data || []));
     } catch (error) {
       console.error('Error cargando productos:', error);
     }
