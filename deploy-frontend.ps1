@@ -26,8 +26,15 @@ Write-Host "      OK - Build completado" -ForegroundColor Green
 Write-Host ""
 
 Write-Host "[3/6] Copiando archivos..." -ForegroundColor Yellow
+# Copiar archivos del build
 Copy-Item -Path ".\dist\*" -Destination ".\publish\frontend\" -Recurse -Force
-Write-Host "      OK - Archivos copiados" -ForegroundColor Green
+# Copiar Dockerfile para Easypanel
+Copy-Item -Path ".\Dockerfile" -Destination ".\publish\frontend\Dockerfile" -Force
+# Copiar .dockerignore si existe
+if (Test-Path ".\.dockerignore") {
+    Copy-Item -Path ".\.dockerignore" -Destination ".\publish\frontend\.dockerignore" -Force
+}
+Write-Host "      OK - Archivos y Dockerfile copiados" -ForegroundColor Green
 Write-Host ""
 
 Write-Host "[4/6] Verificando cambios..." -ForegroundColor Yellow
