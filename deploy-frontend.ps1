@@ -28,8 +28,8 @@ Write-Host ""
 Write-Host "[3/6] Copiando archivos..." -ForegroundColor Yellow
 # Copiar archivos del build
 Copy-Item -Path ".\dist\*" -Destination ".\publish\frontend\" -Recurse -Force
-# Copiar Dockerfile para Easypanel
-Copy-Item -Path ".\Dockerfile" -Destination ".\publish\frontend\Dockerfile" -Force
+# Copiar Dockerfile para archivos estaticos pre-compilados
+Copy-Item -Path ".\Dockerfile.frontend-static" -Destination ".\publish\frontend\Dockerfile" -Force
 # Copiar .dockerignore si existe
 if (Test-Path ".\.dockerignore") {
     Copy-Item -Path ".\.dockerignore" -Destination ".\publish\frontend\.dockerignore" -Force
