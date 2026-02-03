@@ -11,32 +11,17 @@ const CalendarManagement: React.FC = () => {
   const [games, setGames] = useState<Game[]>([]);
 
   // 🚀 VERSION LOG - Para verificar deployment
-  console.log('%c🚀 CALENDAR v2026-02-02 17:17 - Birthday Fix PROD', 'background: #FF5722; color: white; font-size: 18px; font-weight: bold; padding: 10px;');
+  console.log('%c🚀 CALENDAR v2026-02-03 08:58 - API Service Fix', 'background: #22C55E; color: white; font-size: 18px; font-weight: bold; padding: 10px;');
 
   const loadData = async () => {
     setLoading(true);
     try {
       // Load each data source independently - don't fail completely if one fails
       // NOTE: For birthdays, we need ALL students, not just the first page
-      // Use direct fetch with pageSize parameter since getAll() doesn't support it
-      const alumnosPromise = fetch('/api/alumnos?pageSize=1000')
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status} `);
-          }
-          return response.json();
-        })
-        .then(data => {
-          // Handle paginated response - ensure we always return an array
-          if (data && typeof data === 'object' && 'data' in data && Array.isArray(data.data)) {
-            return data.data;
-          }
-          // Fallback: if it's already an array, return it
-          if (Array.isArray(data)) {
-            return data;
-          }
-          console.warn('Unexpected alumnos response format:', data);
-          return [];
+      const alumnosPromise = apiService.getAlumnos({ pageSize: 1000 })
+        .then(result => {
+          // getPaginated returns { totalCount, data }
+          return result.data || [];
         })
         .catch(error => {
           console.error('Error loading alumnos:', error);
