@@ -88,6 +88,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                         <span style={{ fontWeight: 800, color: colors.blue, letterSpacing: '1px' }}>HELPER SOFT SPORT</span>
                     </Navbar.Brand>
                     <Navbar.Toggle aria-controls="basic-navbar-nav" />
+                    <Button
+                        onClick={() => window.open(window.location.origin + '?login=true', '_blank')}
+                        className="ms-2 d-lg-none"
+                        size="sm"
+                        style={{ backgroundColor: colors.blue, border: 'none', borderRadius: '20px', fontWeight: 600, padding: '8px 20px' }}
+                    >
+                        LOGIN
+                    </Button>
                     <Navbar.Collapse id="basic-navbar-nav">
                         <Nav className="ms-auto align-items-center">
                             <Nav.Link href="#home" className="mx-2" style={{ fontWeight: 600 }}>Inicio</Nav.Link>
@@ -97,7 +105,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                             <Nav.Link href="#contacto" className="mx-2" style={{ fontWeight: 600 }}>Contáctenos</Nav.Link>
                             <Button
                                 onClick={() => window.open(window.location.origin + '?login=true', '_blank')}
-                                className="ms-lg-4 px-4 py-2"
+                                className="ms-lg-4 px-4 py-2 d-none d-lg-inline-block"
                                 style={{ backgroundColor: colors.blue, border: 'none', borderRadius: '25px', fontWeight: 600 }}
                             >
                                 LOGIN
