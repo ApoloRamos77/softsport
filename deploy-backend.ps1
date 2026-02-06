@@ -38,9 +38,13 @@ Write-Host ""
 
 Write-Host "[4/6] Copiando archivos..." -ForegroundColor Yellow
 # Limpiar destino
-Remove-Item -Path ".\publish\backend\*" -Recurse -Force -Exclude "Dockerfile",".dockerignore","DATABASE_CONFIG.md"
+Remove-Item -Path ".\publish\backend\*" -Recurse -Force -Exclude "DATABASE_CONFIG.md"
+
 # Copiar archivos compilados
 Copy-Item -Path ".\api\bin\publish\*" -Destination ".\publish\backend\" -Recurse -Force
+
+# Copiar Dockerfile optimizado para producción
+Copy-Item -Path ".\Dockerfile.backend-production" -Destination ".\publish\backend\Dockerfile" -Force
 Write-Host "      OK - Archivos copiados a publish/backend/" -ForegroundColor Green
 Write-Host ""
 

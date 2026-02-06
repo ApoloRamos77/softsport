@@ -1,4 +1,5 @@
 C:\Proyecto_2026\Soft_Sport\api\bin\publish\SoftSportAPI.exe
+C:\Proyecto_2026\Soft_Sport\api\bin\publish\publish\publish\web.config
 C:\Proyecto_2026\Soft_Sport\api\bin\publish\publish\web.config
 C:\Proyecto_2026\Soft_Sport\api\bin\publish\appsettings.Development.json
 C:\Proyecto_2026\Soft_Sport\api\bin\publish\appsettings.json
@@ -8,6 +9,14 @@ C:\Proyecto_2026\Soft_Sport\api\bin\publish\publish\appsettings.Development.json
 C:\Proyecto_2026\Soft_Sport\api\bin\publish\publish\appsettings.json
 C:\Proyecto_2026\Soft_Sport\api\bin\publish\publish\appsettings.PostgreSQL.json
 C:\Proyecto_2026\Soft_Sport\api\bin\publish\publish\appsettings.Production.json
+C:\Proyecto_2026\Soft_Sport\api\bin\publish\publish\publish\appsettings.Development.json
+C:\Proyecto_2026\Soft_Sport\api\bin\publish\publish\publish\appsettings.json
+C:\Proyecto_2026\Soft_Sport\api\bin\publish\publish\publish\appsettings.PostgreSQL.json
+C:\Proyecto_2026\Soft_Sport\api\bin\publish\publish\publish\appsettings.Production.json
+C:\Proyecto_2026\Soft_Sport\api\bin\publish\publish\publish\SoftSportAPI.deps.json
+C:\Proyecto_2026\Soft_Sport\api\bin\publish\publish\publish\SoftSportAPI.runtimeconfig.json
+C:\Proyecto_2026\Soft_Sport\api\bin\publish\publish\publish\SoftSportAPI.staticwebassets.endpoints.json
+C:\Proyecto_2026\Soft_Sport\api\bin\publish\publish\publish\test_swagger.json
 C:\Proyecto_2026\Soft_Sport\api\bin\publish\publish\SoftSportAPI.deps.json
 C:\Proyecto_2026\Soft_Sport\api\bin\publish\publish\SoftSportAPI.runtimeconfig.json
 C:\Proyecto_2026\Soft_Sport\api\bin\publish\publish\SoftSportAPI.staticwebassets.endpoints.json
