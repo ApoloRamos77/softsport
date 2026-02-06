@@ -47,8 +47,19 @@ export interface Alumno {
   telefonoEmergencia?: string;
   // Campos administrativos
   notas?: string;
-  fechaAnulacion?: string;
   usuarioAnulacion?: string;
+}
+
+export interface HistorialMedico {
+  id?: number;
+  alumnoId: number;
+  peso?: number;
+  talla?: number;
+  imc?: number;
+  fechaToma: string;
+  observaciones?: string;
+  createdAt?: string;
+  createdBy?: string;
 }
 
 export interface Representante {
@@ -149,12 +160,14 @@ export interface Game {
   id?: number;
   titulo?: string;
   fecha?: string;
+  horaInicio?: string;
   categoriaId?: number;
   categoriaNombre?: string;
   esLocal: boolean;
   equipoLocal?: string;
   equipoVisitante?: string;
   ubicacion?: string;
+  competicion?: string;
   observaciones?: string;
   scoreLocal?: number;
   scoreVisitante?: number;
@@ -308,7 +321,20 @@ class ApiService {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
-    if (!response.ok) throw new Error(`Error creating ${endpoint}`);
+    if (!response.ok) {
+      let errorMessage = `Error creating ${endpoint}`;
+      try {
+        const errorText = await response.text();
+        // Try to parse JSON if possible, otherwise use text
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.title || errorJson.message || errorJson.error || errorText;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+      } catch (e) { }
+      throw new Error(errorMessage);
+    }
     return response.json();
   }
 
@@ -318,14 +344,38 @@ class ApiService {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
-    if (!response.ok) throw new Error(`Error updating ${endpoint}/${id}`);
+    if (!response.ok) {
+      let errorMessage = `Error updating ${endpoint}/${id}`;
+      try {
+        const errorText = await response.text();
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.title || errorJson.message || errorJson.error || errorText;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+      } catch (e) { }
+      throw new Error(errorMessage);
+    }
   }
 
   async delete(endpoint: string, id: number): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/${endpoint}/${id}`, {
       method: 'DELETE'
     });
-    if (!response.ok) throw new Error(`Error deleting ${endpoint}/${id}`);
+    if (!response.ok) {
+      let errorMessage = `Error deleting ${endpoint}/${id}`;
+      try {
+        const errorText = await response.text();
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.title || errorJson.message || errorJson.error || errorText;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+      } catch (e) { }
+      throw new Error(errorMessage);
+    }
   }
 
   // Specific methods
@@ -334,6 +384,11 @@ class ApiService {
   createAlumno(data: Alumno) { return this.create<Alumno>('alumnos', data); }
   updateAlumno(id: number, data: Alumno) { return this.update<Alumno>('alumnos', id, data); }
   deleteAlumno(id: number) { return this.delete('alumnos', id); }
+
+  getHistorialByAlumno(alumnoId: number) { return this.getAll<HistorialMedico>(`historialmedico/alumno/${alumnoId}`); }
+  createHistorial(data: HistorialMedico) { return this.create<HistorialMedico>('historialmedico', data); }
+  updateHistorial(id: number, data: HistorialMedico) { return this.update<HistorialMedico>('historialmedico', id, data); }
+  deleteHistorial(id: number) { return this.delete('historialmedico', id); }
 
   getRepresentantes(params: any = {}) { return this.getPaginated<Representante>('representantes', params); }
   getRepresentante(id: number) { return this.getById<Representante>('representantes', id); }

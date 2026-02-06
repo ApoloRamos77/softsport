@@ -40,6 +40,7 @@ namespace SoftSportAPI.Data
         public DbSet<AcademyConfig> AcademyConfigs { get; set; }
         public DbSet<LandingGallery> LandingGalleries { get; set; }
         public DbSet<ContactMessage> ContactMessages { get; set; }
+        public DbSet<HistorialMedico> HistorialMedico { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -80,6 +81,12 @@ namespace SoftSportAPI.Data
                 .HasOne(a => a.Recibo)
                 .WithMany(r => r.Abonos)
                 .HasForeignKey(a => a.ReciboId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<HistorialMedico>()
+                .HasOne(h => h.Alumno)
+                .WithMany()
+                .HasForeignKey(h => h.AlumnoId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Configure unique indexes

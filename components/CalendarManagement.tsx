@@ -224,7 +224,7 @@ const CalendarManagement: React.FC = () => {
   };
 
   const getEventsForDay = (day: number, month: number, year: number) => {
-    const dateStr = `${year} -${String(month + 1).padStart(2, '0')} -${String(day).padStart(2, '0')} `;
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
     const dayTrainings = trainings.filter(t => t.fecha && t.fecha.startsWith(dateStr));
     const dayGames = games.filter(g => g.fecha && g.fecha.startsWith(dateStr));
@@ -319,6 +319,446 @@ const CalendarManagement: React.FC = () => {
     { label: 'Próximos Juegos', value: upcomingGames.toString(), sub: 'Programados', icon: 'fa-trophy' },
   ];
 
+  // Helper functions for Week and Day views
+  const getWeekDays = (date: Date) => {
+    const days = [];
+    const current = new Date(date);
+    // Get Monday of current week
+    const day = current.getDay();
+    const diff = current.getDate() - day + (day === 0 ? -6 : 1);
+    current.setDate(diff);
+
+    for (let i = 0; i < 7; i++) {
+      days.push(new Date(current));
+      current.setDate(current.getDate() + 1);
+    }
+    return days;
+  };
+
+  const formatTime = (timeStr: string | undefined) => {
+    if (!timeStr) return '';
+    const parts = timeStr.split(':');
+    if (parts.length >= 2) {
+      const hour = parseInt(parts[0]);
+      const min = parts[1];
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const hour12 = hour % 12 || 12;
+      return `${hour12}:${min} ${ampm}`;
+    }
+    return timeStr;
+  };
+
+  // Render Week View
+  const renderWeekView = () => {
+    const weekDays = getWeekDays(currentDate);
+    const daysOfWeekNames = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'];
+
+    return (
+      <div className="table-responsive">
+        <table className="table table-bordered border-secondary border-opacity-10 mb-0">
+          <thead style={{ backgroundColor: '#161b22' }}>
+            <tr>
+              {weekDays.map((day, idx) => {
+                const dayName = daysOfWeekNames[(day.getDay())];
+                const isCurrentDay = isToday(day.getDate(), day.getMonth(), day.getFullYear());
+                return (
+                  <th key={idx} className={`text-center py-3 border-bottom border-secondary border-opacity-25 ${isCurrentDay ? 'bg-primary bg-opacity-10' : ''}`}>
+                    <div className={`fw-bold ${isCurrentDay ? 'text-primary' : 'text-secondary'}`} style={{ fontSize: '11px' }}>{dayName}</div>
+                    <div className={`mt-1 ${isCurrentDay ? 'text-primary fw-bold' : 'text-white'}`} style={{ fontSize: '20px' }}>{day.getDate()}</div>
+                  </th>
+                );
+              })}
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              {weekDays.map((day, idx) => {
+                const { trainings, games, birthdays } = getEventsForDay(day.getDate(), day.getMonth(), day.getFullYear());
+                return (
+                  <td key={idx} className="align-top p-2" style={{ minHeight: '400px', verticalAlign: 'top' }}>
+                    <div className="d-flex flex-column gap-2">
+                      {trainings.map(t => (
+                        <div key={t.id} className="card border-success border-opacity-25 bg-success bg-opacity-5">
+                          <div className="card-body p-2">
+                            <div className="d-flex align-items-center gap-2 mb-1">
+                              <i className="bi bi-person-workout text-success" style={{ fontSize: '18px' }}></i>
+                              <span className="text-success fw-bold small">{t.titulo}</span>
+                            </div>
+                            {t.horaInicio && (
+                              <div className="text-secondary small">
+                                <i className="bi bi-clock me-1"></i>
+                                {formatTime(t.horaInicio)} {t.horaFin && `- ${formatTime(t.horaFin)}`}
+                              </div>
+                            )}
+                            {t.ubicacion && (
+                              <div className="text-secondary small">
+                                <i className="bi bi-geo-alt me-1"></i>
+                                {t.ubicacion}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      {games.map(g => (
+                        <div key={g.id} className="card border-warning border-opacity-25 bg-warning bg-opacity-5">
+                          <div className="card-body p-2">
+                            <div className="d-flex align-items-center gap-2 mb-1">
+                              <i className="bi bi-trophy-fill text-warning" style={{ fontSize: '18px' }}></i>
+                              <span className="text-warning fw-bold small">{g.equipoLocal} vs {g.equipoVisitante}</span>
+                            </div>
+                            {g.horaInicio && (
+                              <div className="text-secondary small">
+                                <i className="bi bi-clock me-1"></i>
+                                {formatTime(g.horaInicio)}
+                              </div>
+                            )}
+                            {g.ubicacion && (
+                              <div className="text-secondary small">
+                                <i className="bi bi-geo-alt me-1"></i>
+                                {g.ubicacion}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      {birthdays.map(a => (
+                        <div key={a.id} className="card border-info border-opacity-25 bg-info bg-opacity-5">
+                          <div className="card-body p-2">
+                            <div className="d-flex align-items-center gap-2">
+                              <i className="fa fa-birthday-cake text-info" style={{ fontSize: '16px' }}></i>
+                              <span className="text-info small">{a.nombre} {a.apellido}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </td>
+                );
+              })}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
+  // Render Day View
+  const renderDayView = () => {
+    const { trainings, games, birthdays } = getEventsForDay(
+      currentDate.getDate(),
+      currentDate.getMonth(),
+      currentDate.getFullYear()
+    );
+
+    const allEvents = [
+      ...trainings.map(t => ({ ...t, type: 'training' as const })),
+      ...games.map(g => ({ ...g, type: 'game' as const })),
+      ...birthdays.map(b => ({ ...b, type: 'birthday' as const }))
+    ];
+
+    return (
+      <div className="p-4">
+        <div className="text-center mb-4">
+          <h3 className="text-white mb-2 text-capitalize">
+            {currentDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+          </h3>
+          <div className="btn-group">
+            <button
+              onClick={() => setCurrentDate(new Date(currentDate.getTime() - 24 * 60 * 60 * 1000))}
+              className="btn btn-sm btn-outline-secondary"
+            >
+              <i className="bi bi-chevron-left"></i> Día anterior
+            </button>
+            <button
+              onClick={() => setCurrentDate(new Date())}
+              className="btn btn-sm btn-outline-secondary"
+            >
+              Hoy
+            </button>
+            <button
+              onClick={() => setCurrentDate(new Date(currentDate.getTime() + 24 * 60 * 60 * 1000))}
+              className="btn btn-sm btn-outline-secondary"
+            >
+              Día siguiente <i className="bi bi-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+
+        {allEvents.length === 0 ? (
+          <div className="text-center text-secondary py-5">
+            <i className="bi bi-calendar-x" style={{ fontSize: '48px' }}></i>
+            <p className="mt-3">No hay eventos programados para este día</p>
+          </div>
+        ) : (
+          <div className="row g-3">
+            {trainings.map(t => (
+              <div key={t.id} className="col-12">
+                <div className="card border-success border-opacity-25 bg-success bg-opacity-5">
+                  <div className="card-body">
+                    <div className="d-flex align-items-start gap-3">
+                      <div className="bg-success bg-opacity-10 rounded p-3">
+                        <i className="bi bi-person-workout text-success" style={{ fontSize: '32px' }}></i>
+                      </div>
+                      <div className="flex-grow-1">
+                        <h5 className="text-success mb-2">{t.titulo}</h5>
+                        {t.descripcion && <p className="text-white-50 small mb-2">{t.descripcion}</p>}
+                        <div className="d-flex flex-wrap gap-3">
+                          {t.horaInicio && (
+                            <span className="badge bg-success bg-opacity-10 text-success">
+                              <i className="bi bi-clock me-1"></i>
+                              {formatTime(t.horaInicio)} {t.horaFin && `- ${formatTime(t.horaFin)}`}
+                            </span>
+                          )}
+                          {t.ubicacion && (
+                            <span className="badge bg-success bg-opacity-10 text-success">
+                              <i className="bi bi-geo-alt me-1"></i>
+                              {t.ubicacion}
+                            </span>
+                          )}
+                          {t.tipo && (
+                            <span className="badge bg-success bg-opacity-10 text-success">
+                              <i className="bi bi-tag me-1"></i>
+                              {t.tipo}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {games.map(g => (
+              <div key={g.id} className="col-12">
+                <div className="card border-warning border-opacity-25 bg-warning bg-opacity-5">
+                  <div className="card-body">
+                    <div className="d-flex align-items-start gap-3">
+                      <div className="bg-warning bg-opacity-10 rounded p-3">
+                        <i className="bi bi-trophy-fill text-warning" style={{ fontSize: '32px' }}></i>
+                      </div>
+                      <div className="flex-grow-1">
+                        <h5 className="text-warning mb-2">{g.equipoLocal} vs {g.equipoVisitante}</h5>
+                        <div className="d-flex flex-wrap gap-3">
+                          {g.horaInicio && (
+                            <span className="badge bg-warning bg-opacity-10 text-warning">
+                              <i className="bi bi-clock me-1"></i>
+                              {formatTime(g.horaInicio)}
+                            </span>
+                          )}
+                          {g.ubicacion && (
+                            <span className="badge bg-warning bg-opacity-10 text-warning">
+                              <i className="bi bi-geo-alt me-1"></i>
+                              {g.ubicacion}
+                            </span>
+                          )}
+                          {g.competicion && (
+                            <span className="badge bg-warning bg-opacity-10 text-warning">
+                              <i className="bi bi-trophy me-1"></i>
+                              {g.competicion}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {birthdays.map(a => (
+              <div key={a.id} className="col-12">
+                <div className="card border-info border-opacity-25 bg-info bg-opacity-5">
+                  <div className="card-body">
+                    <div className="d-flex align-items-center gap-3">
+                      <div className="bg-info bg-opacity-10 rounded p-3">
+                        <i className="fa fa-birthday-cake text-info" style={{ fontSize: '28px' }}></i>
+                      </div>
+                      <div>
+                        <h6 className="text-info mb-0">🎉 Cumpleaños de {a.nombre} {a.apellido}</h6>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Render Agenda View
+  const renderAgendaView = () => {
+    const today = new Date();
+    const threeMonthsLater = new Date(today.getFullYear(), today.getMonth() + 3, 0);
+
+    const upcomingEvents: Array<{
+      date: Date;
+      type: 'training' | 'game' | 'birthday';
+      data: any;
+    }> = [];
+
+    trainings.forEach(t => {
+      if (t.fecha) {
+        const eventDate = new Date(t.fecha);
+        if (eventDate >= today && eventDate <= threeMonthsLater) {
+          upcomingEvents.push({ date: eventDate, type: 'training', data: t });
+        }
+      }
+    });
+
+    games.forEach(g => {
+      if (g.fecha) {
+        const eventDate = new Date(g.fecha);
+        if (eventDate >= today && eventDate <= threeMonthsLater) {
+          upcomingEvents.push({ date: eventDate, type: 'game', data: g });
+        }
+      }
+    });
+
+    alumnos.forEach(a => {
+      if (a.fechaNacimiento) {
+        const bday = new Date(a.fechaNacimiento);
+        const thisYearBirthday = new Date(today.getFullYear(), bday.getMonth(), bday.getDate());
+        if (thisYearBirthday >= today && thisYearBirthday <= threeMonthsLater) {
+          upcomingEvents.push({ date: thisYearBirthday, type: 'birthday', data: a });
+        }
+      }
+    });
+
+    upcomingEvents.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+    const groupedEvents = upcomingEvents.reduce((acc, event) => {
+      const dateKey = event.date.toLocaleDateString('es-ES');
+      if (!acc[dateKey]) {
+        acc[dateKey] = { date: event.date, events: [] };
+      }
+      acc[dateKey].events.push(event);
+      return acc;
+    }, {} as Record<string, { date: Date; events: typeof upcomingEvents }>);
+
+    return (
+      <div className="p-4">
+        <h3 className="text-white mb-4">Próximos Eventos</h3>
+        {Object.keys(groupedEvents).length === 0 ? (
+          <div className="text-center text-secondary py-5">
+            <i className="bi bi-calendar-x" style={{ fontSize: '48px' }}></i>
+            <p className="mt-3">No hay eventos programados para los próximos 3 meses</p>
+          </div>
+        ) : (
+          <div className="accordion accordion-flush" id="agendaAccordion">
+            {Object.entries(groupedEvents).map(([dateKey, { date, events }], idx) => {
+              const dayName = date.toLocaleDateString('es-ES', { weekday: 'long' });
+
+              return (
+                <div key={dateKey} className="accordion-item bg-transparent border-secondary border-opacity-25 mb-2">
+                  <h2 className="accordion-header">
+                    <button
+                      className="accordion-button bg-dark text-white collapsed"
+                      type="button"
+                      data-bs-toggle="collapse"
+                      data-bs-target={`#agenda-${idx}`}
+                    >
+                      <div className="d-flex align-items-center gap-3 w-100">
+                        <div className="text-center" style={{ minWidth: '60px' }}>
+                          <div className="fw-bold" style={{ fontSize: '24px' }}>{date.getDate()}</div>
+                          <div className="text-secondary text-uppercase" style={{ fontSize: '11px' }}>{date.toLocaleDateString('es-ES', { month: 'short' })}</div>
+                        </div>
+                        <div>
+                          <div className="fw-bold text-capitalize">{dayName}</div>
+                          <div className="text-secondary small">{events.length} evento(s)</div>
+                        </div>
+                      </div>
+                    </button>
+                  </h2>
+                  <div id={`agenda-${idx}`} className="accordion-collapse collapse" data-bs-parent="#agendaAccordion">
+                    <div className="accordion-body bg-dark bg-opacity-50">
+                      <div className="d-flex flex-column gap-3">
+                        {events.map((event, eventIdx) => {
+                          if (event.type === 'training') {
+                            const t = event.data;
+                            return (
+                              <div key={eventIdx} className="d-flex gap-3 align-items-start">
+                                <div className="bg-success bg-opacity-10 rounded p-2">
+                                  <i className="bi bi-person-workout text-success" style={{ fontSize: '24px' }}></i>
+                                </div>
+                                <div className="flex-grow-1">
+                                  <h6 className="text-success mb-1">{t.titulo}</h6>
+                                  {t.descripcion && <p className="text-white-50 small mb-2">{t.descripcion}</p>}
+                                  <div className="d-flex flex-wrap gap-2">
+                                    {t.horaInicio && (
+                                      <span className="badge bg-secondary bg-opacity-25 text-secondary">
+                                        <i className="bi bi-clock me-1"></i>
+                                        {formatTime(t.horaInicio)} {t.horaFin && `- ${formatTime(t.horaFin)}`}
+                                      </span>
+                                    )}
+                                    {t.ubicacion && (
+                                      <span className="badge bg-secondary bg-opacity-25 text-secondary">
+                                        <i className="bi bi-geo-alt me-1"></i>
+                                        {t.ubicacion}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          } else if (event.type === 'game') {
+                            const g = event.data;
+                            return (
+                              <div key={eventIdx} className="d-flex gap-3 align-items-start">
+                                <div className="bg-warning bg-opacity-10 rounded p-2">
+                                  <i className="bi bi-trophy-fill text-warning" style={{ fontSize: '24px' }}></i>
+                                </div>
+                                <div className="flex-grow-1">
+                                  <h6 className="text-warning mb-1">{g.equipoLocal} vs {g.equipoVisitante}</h6>
+                                  <div className="d-flex flex-wrap gap-2">
+                                    {g.horaInicio && (
+                                      <span className="badge bg-secondary bg-opacity-25 text-secondary">
+                                        <i className="bi bi-clock me-1"></i>
+                                        {formatTime(g.horaInicio)}
+                                      </span>
+                                    )}
+                                    {g.ubicacion && (
+                                      <span className="badge bg-secondary bg-opacity-25 text-secondary">
+                                        <i className="bi bi-geo-alt me-1"></i>
+                                        {g.ubicacion}
+                                      </span>
+                                    )}
+                                    {g.competicion && (
+                                      <span className="badge bg-secondary bg-opacity-25 text-secondary">
+                                        <i className="bi bi-trophy me-1"></i>
+                                        {g.competicion}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          } else {
+                            const a = event.data;
+                            return (
+                              <div key={eventIdx} className="d-flex gap-3 align-items-center">
+                                <div className="bg-info bg-opacity-10 rounded p-2">
+                                  <i className="fa fa-birthday-cake text-info" style={{ fontSize: '24px' }}></i>
+                                </div>
+                                <div>
+                                  <h6 className="text-info mb-0">🎉 Cumpleaños de {a.nombre} {a.apellido}</h6>
+                                </div>
+                              </div>
+                            );
+                          }
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="animate-fadeIn" style={{ backgroundColor: '#0d1117', minHeight: '80vh' }}>
       <div className="max-w-7xl mx-auto px-4 py-4 d-flex flex-column gap-4">
@@ -401,67 +841,85 @@ const CalendarManagement: React.FC = () => {
           </div>
 
           <div className="card-body p-0">
-            <div className="table-responsive overflow-hidden">
-              <table className="table table-bordered border-secondary border-opacity-10 mb-0 align-top table-fixed" style={{ tableLayout: 'fixed' }}>
-                <thead style={{ backgroundColor: '#161b22' }}>
-                  <tr>
-                    {daysOfWeek.map(day => (
-                      <th key={day} className="text-center py-2 text-secondary fw-bold border-bottom border-secondary border-opacity-25" style={{ fontSize: '11px' }}>
-                        {day}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {Array.from({ length: Math.ceil(calendarDays.length / 7) }).map((_, weekIdx) => (
-                    <tr key={weekIdx} style={{ height: '120px' }}>
-                      {calendarDays.slice(weekIdx * 7, weekIdx * 7 + 7).map((d, dayIdx) => {
-                        const { trainings, games, birthdays } = getEventsForDay(d.day, d.month, d.year);
-                        const today = isToday(d.day, d.month, d.year);
-
-                        // Debug: Log if there are birthdays for this day
-                        if (birthdays.length > 0) {
-                          console.log(`📅 Rendering day ${d.month + 1} /${d.day}/${d.year}: ${birthdays.length} birthdays`, birthdays.map(b => b.nombre));
-                        }
-
-                        return (
-                          <td
-                            key={dayIdx}
-                            className={`p - 2 transition - all hover - bg - dark - lighter border - secondary border - opacity - 10 ${!d.currentMonth ? 'opacity-25' : ''} ${today ? 'bg-primary bg-opacity-5' : ''} `}
-                            style={{ cursor: 'pointer', verticalAlign: 'top' }}
-                          >
-                            <div className="d-flex justify-content-between align-items-start mb-2">
-                              <span className={`${today ? 'bg-primary text-white rounded-circle d-flex align-items-center justify-center' : (dayIdx === 0 || dayIdx === 6 ? 'text-secondary opacity-50' : 'text-white')} fw - bold`}
-                                style={today ? { width: '22px', height: '22px', fontSize: '12px', marginTop: '-2px' } : { fontSize: '12px' }}>
-                                {d.day}
-                              </span>
-                            </div>
-
-                            <div className="d-flex flex-column gap-1 overflow-hidden" style={{ maxHeight: '85px' }}>
-                              {trainings.map(t => (
-                                <div key={t.id} className="badge w-100 text-start bg-success bg-opacity-10 text-success border border-success border-opacity-10 p-1 text-truncate" style={{ fontSize: '8px', fontWeight: '500' }}>
-                                  <i className="bi bi-person-arms-up me-1"></i> {t.titulo}
-                                </div>
-                              ))}
-                              {games.map(g => (
-                                <div key={g.id} className="badge w-100 text-start bg-warning bg-opacity-10 text-warning border border-warning border-opacity-10 p-1 text-truncate" style={{ fontSize: '8px', fontWeight: '500' }}>
-                                  <i className="bi bi-trophy me-1"></i> {g.equipoLocal} vs {g.equipoVisitante}
-                                </div>
-                              ))}
-                              {birthdays.map(a => (
-                                <div key={a.id} className="badge w-100 text-start bg-info bg-opacity-10 text-info border border-info border-opacity-10 p-1 text-truncate" style={{ fontSize: '8px', fontWeight: '500' }}>
-                                  <i className="fa fa-birthday-cake me-1"></i> Cumple: {a.nombre}
-                                </div>
-                              ))}
-                            </div>
-                          </td>
-                        );
-                      })}
+            {viewType === 'Semana' && renderWeekView()}
+            {viewType === 'Día' && renderDayView()}
+            {viewType === 'Agenda' && renderAgendaView()}
+            {viewType === 'Mes' && (
+              <div className="table-responsive overflow-hidden">
+                <table className="table table-bordered border-secondary border-opacity-10 mb-0 align-top table-fixed" style={{ tableLayout: 'fixed' }}>
+                  <thead style={{ backgroundColor: '#161b22' }}>
+                    <tr>
+                      {daysOfWeek.map(day => (
+                        <th key={day} className="text-center py-2 text-secondary fw-bold border-bottom border-secondary border-opacity-25" style={{ fontSize: '11px' }}>
+                          {day}
+                        </th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {Array.from({ length: Math.ceil(calendarDays.length / 7) }, (_, weekIndex) => (
+                      <tr key={weekIndex}>
+                        {calendarDays.slice(weekIndex * 7, weekIndex * 7 + 7).map((calDay, idx) => {
+                          const events = getEventsForDay(calDay.day, calDay.month, calDay.year);
+                          const isCurrentDay = isToday(calDay.day, calDay.month, calDay.year);
+                          const hasEvents = events.trainings.length > 0 || events.games.length > 0 || events.birthdays.length > 0;
+
+                          return (
+                            <td
+                              key={idx}
+                              className={`
+                                ${!calDay.currentMonth ? 'bg-dark bg-opacity-25 text-secondary' : ''}
+                                ${isCurrentDay ? 'bg-primary bg-opacity-10' : ''}
+                                border-secondary border-opacity-10 p-2 position-relative
+                              `}
+                              style={{ height: '110px', verticalAlign: 'top', cursor: calDay.currentMonth ? 'pointer' : 'default' }}
+                            >
+                              <div className="d-flex flex-column h-100">
+                                <div className="d-flex justify-content-between align-items-start mb-1">
+                                  <span
+                                    className={`
+                                      fw-bold
+                                      ${isCurrentDay ? 'text-white bg-primary rounded-circle d-flex align-items-center justify-content-center' : !calDay.currentMonth ? 'text-secondary opacity-50' : 'text-white'}
+                                    `}
+                                    style={isCurrentDay ? { width: '24px', height: '24px', fontSize: '11px' } : { fontSize: '13px' }}
+                                  >
+                                    {calDay.day}
+                                  </span>
+                                  {hasEvents && calDay.currentMonth && (
+                                    <div className="d-flex gap-1">
+                                      {events.trainings.length > 0 && <div className="rounded-circle" style={{ width: '6px', height: '6px', backgroundColor: '#10b981' }}></div>}
+                                      {events.games.length > 0 && <div className="rounded-circle" style={{ width: '6px', height: '6px', backgroundColor: '#f59e0b' }}></div>}
+                                      {events.birthdays.length > 0 && <div className="rounded-circle" style={{ width: '6px', height: '6px', backgroundColor: '#3b82f6' }}></div>}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="d-flex flex-column gap-1 overflow-hidden" style={{ maxHeight: '85px' }}>
+                                  {events.trainings.map(t => (
+                                    <div key={t.id} className="badge w-100 text-start bg-success text-white border border-success border-opacity-25 p-1 text-truncate" style={{ fontSize: '8px', fontWeight: '500' }}>
+                                      <i className="bi bi-person-workout me-1"></i> {t.titulo}
+                                    </div>
+                                  ))}
+                                  {events.games.map(g => (
+                                    <div key={g.id} className="badge w-100 text-start bg-warning bg-opacity-10 text-warning border border-warning border-opacity-10 p-1 text-truncate" style={{ fontSize: '8px', fontWeight: '500' }}>
+                                      <i className="bi bi-trophy-fill me-1"></i> {g.equipoLocal} vs {g.equipoVisitante}
+                                    </div>
+                                  ))}
+                                  {events.birthdays.map(a => (
+                                    <div key={a.id} className="badge w-100 text-start bg-info bg-opacity-10 text-info border border-info border-opacity-10 p-1 text-truncate" style={{ fontSize: '8px', fontWeight: '500' }}>
+                                      <i className="fa fa-birthday-cake me-1"></i> {a.nombre}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       </div>

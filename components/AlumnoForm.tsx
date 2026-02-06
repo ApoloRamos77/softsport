@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Representante, Alumno, apiService } from '../services/api';
+import { Representante, Alumno, HistorialMedico, apiService } from '../services/api';
 import DatePicker from './DatePicker';
 
 type Tab = 'basica' | 'medica' | 'administrativa';
@@ -13,6 +13,8 @@ interface AlumnoFormProps {
 
 const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => {
   const [activeTab, setActiveTab] = useState<Tab>('basica');
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [historialMedico, setHistorialMedico] = useState<HistorialMedico[]>([]);
   const [representantes, setRepresentantes] = useState<Representante[]>([]);
   const [grupos, setGrupos] = useState<any[]>([]);
   const [categorias, setCategorias] = useState<any[]>([]);
@@ -43,8 +45,13 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
     // Campos médicos
     tipoSangre: '',
     alergias: '',
+    alergiaCustom: '',
     condicionesMedicas: '',
     medicamentos: '',
+    peso: '',
+    talla: '',
+    imc: '',
+    fechaToma: new Date().toISOString().split('T')[0],
     contactoEmergencia: '',
     codigoPaisEmergencia: '+51',
     telefonoEmergencia: '',
@@ -86,6 +93,10 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
   // Cargar datos del alumno en modo edición
   useEffect(() => {
     if (alumno) {
+      // Check if allergy is a custom value (not in the predefined list)
+      const predefinedAllergies = ['', 'Ninguna', 'Penicilina', 'Polen', 'Ácaros', 'Mariscos', 'Frutos secos', 'Látex', 'Picaduras de insectos'];
+      const isCustomAllergy = alumno.alergias && !predefinedAllergies.includes(alumno.alergias);
+
       setFormData({
         nombre: alumno.nombre || '',
         apellido: alumno.apellido || '',
@@ -108,7 +119,8 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
         },
         posicion: alumno.posicion || 'Delantero',
         tipoSangre: alumno.tipoSangre || '',
-        alergias: alumno.alergias || '',
+        alergias: isCustomAllergy ? 'Otro' : (alumno.alergias || ''),
+        alergiaCustom: isCustomAllergy ? alumno.alergias : '',
         condicionesMedicas: alumno.condicionesMedicas || '',
         medicamentos: alumno.medicamentos || '',
         contactoEmergencia: alumno.contactoEmergencia || '',
@@ -120,11 +132,52 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
         beca: alumno.beca?.nombre || alumno.beca?.porcentaje?.toString() || '',
         estado: alumno.estado || 'Activo',
         notas: alumno.notas || '',
-        fechaRegistro: alumno.fechaRegistro || new Date().toISOString()
+        fechaRegistro: alumno.fechaRegistro || new Date().toISOString(),
+        peso: '',
+        talla: '',
+        imc: '',
+        fechaToma: new Date().toISOString().split('T')[0]
       });
       setFotografiaUrl(alumno.fotografia || '');
     }
   }, [alumno]);
+
+  // Cargar historial médico
+  useEffect(() => {
+    if (alumno?.id) {
+      apiService.getHistorialByAlumno(alumno.id)
+        .then(data => {
+          setHistorialMedico(data);
+          // Si hay historial, cargar el último registro en el formulario
+          if (data.length > 0) {
+            const latest = data[0];
+            setFormData(prev => ({
+              ...prev,
+              peso: latest.peso?.toString() || '',
+              talla: latest.talla?.toString() || '',
+              imc: latest.imc?.toString() || '',
+              fechaToma: latest.fechaToma.split('T')[0]
+            }));
+          }
+        })
+        .catch(console.error);
+    }
+  }, [alumno]);
+
+  const calculateIMC = (peso: string, talla: string) => {
+    const p = parseFloat(peso);
+    const t = parseFloat(talla); // talla en metros
+    if (p && t && t > 0) {
+      const imcVal = p / (t * t);
+      return imcVal.toFixed(2);
+    }
+    return '';
+  };
+
+  useEffect(() => {
+    const imc = calculateIMC(formData.peso, formData.talla);
+    setFormData(prev => ({ ...prev, imc }));
+  }, [formData.peso, formData.talla]);
 
   const handleSave = async () => {
     // Upload photo if a new one was selected
@@ -172,7 +225,7 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
       segundoRepresentanteEmail: formData.segundoRepresentante.email || null,
       // Campos médicos
       tipoSangre: formData.tipoSangre || null,
-      alergias: formData.alergias || null,
+      alergias: formData.alergias === 'Otro' ? formData.alergiaCustom : formData.alergias || null,
       condicionesMedicas: formData.condicionesMedicas || null,
       medicamentos: formData.medicamentos || null,
       contactoEmergencia: formData.contactoEmergencia || null,
@@ -186,6 +239,8 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
     };
 
     try {
+      let savedAlumnoId = alumno?.id;
+
       if (alumno?.id) {
         // Modo edición
         await apiService.update('alumnos', alumno.id, {
@@ -194,12 +249,54 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
         });
       } else {
         // Modo creación
-        await apiService.create('alumnos', alumnoData);
+        const response = await apiService.create('alumnos', alumnoData) as any;
+        savedAlumnoId = response.id; // Get the new ID
       }
+
+      // Handle Medical History
+      if (savedAlumnoId && (formData.peso || formData.talla)) {
+        // Check if data changed compared to latest record to avoid duplicates
+        const latestInfo = historialMedico.length > 0 ? historialMedico[0] : null;
+        const currentPeso = formData.peso ? parseFloat(formData.peso) : null;
+        const currentTalla = formData.talla ? parseFloat(formData.talla) : null;
+        const currentImc = formData.imc ? parseFloat(formData.imc) : null;
+        const currentDate = formData.fechaToma;
+
+        const hasChanges = !latestInfo ||
+          latestInfo.peso !== currentPeso ||
+          latestInfo.talla !== currentTalla ||
+          latestInfo.fechaToma.split('T')[0] !== currentDate;
+
+        if (hasChanges) {
+          const historyData: HistorialMedico = {
+            alumnoId: savedAlumnoId,
+            peso: currentPeso || undefined,
+            talla: currentTalla || undefined,
+            imc: currentImc || undefined,
+            fechaToma: new Date(currentDate).toISOString(),
+            observaciones: 'Registro desde ficha principal'
+          };
+
+          // If editing the LATEST record on the SAME day, we might want to update instead of create?
+          // But simpler is to always create if data changed, OR if date is same, update.
+          // Let's rely on Create for now as it's cleaner for history.
+          // Exception: If the user explicitly wants to correct the entry they just made.
+          // Logic: If Latest exists AND Date is same, Update. Else Create.
+
+          if (latestInfo && latestInfo.fechaToma.split('T')[0] === currentDate) {
+            if (latestInfo.id) {
+              await apiService.updateHistorial(latestInfo.id, { ...historyData, id: latestInfo.id });
+            }
+          } else {
+            await apiService.createHistorial(historyData);
+          }
+        }
+      }
+
       if (onSave) onSave(alumnoData);
     } catch (error) {
       console.error('Error al guardar alumno:', error);
-      alert('Error al guardar el alumno');
+      alert('Error al guardar el alumno o su historial médico');
     }
   };
 
@@ -480,7 +577,8 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
                       type="text"
                       placeholder="Especifique alergia..."
                       className="form-control mt-2"
-                      onChange={e => setFormData({ ...formData, alergias: e.target.value })}
+                      value={formData.alergiaCustom}
+                      onChange={e => setFormData({ ...formData, alergiaCustom: e.target.value })}
                     />
                   )}
                 </div>
@@ -502,6 +600,60 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
                     placeholder="Medicamentos de uso regular..."
                     value={formData.medicamentos}
                     onChange={e => setFormData({ ...formData, medicamentos: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Nuevos Campos Médicos: Peso, Talla, IMC */}
+            <div className="p-4 rounded-lg border border-info border-opacity-10 bg-[#0d1117] bg-opacity-30">
+              <div className="d-flex justify-content-between align-items-center mb-4 border-bottom border-info border-opacity-30 pb-2">
+                <label className="text-[10px] font-bold text-info uppercase tracking-widest mb-0">Medidas Antropométricas</label>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-info text-[10px] font-bold uppercase"
+                  onClick={() => setShowHistoryModal(true)}
+                >
+                  <i className="bi bi-clock-history me-1"></i> Ver Historial
+                </button>
+              </div>
+              <div className="row g-3">
+                <div className="col-md-3">
+                  <label>Fecha de Toma</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={formData.fechaToma}
+                    onChange={e => setFormData({ ...formData, fechaToma: e.target.value })}
+                  />
+                </div>
+                <div className="col-md-3">
+                  <label>Peso (kg)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    className="form-control"
+                    value={formData.peso}
+                    onChange={e => setFormData({ ...formData, peso: e.target.value })}
+                  />
+                </div>
+                <div className="col-md-3">
+                  <label>Talla (m)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="form-control"
+                    value={formData.talla}
+                    onChange={e => setFormData({ ...formData, talla: e.target.value })}
+                  />
+                </div>
+                <div className="col-md-3">
+                  <label>IMC</label>
+                  <input
+                    type="text"
+                    className="form-control bg-dark text-white"
+                    readOnly
+                    value={calculateIMC(formData.peso, formData.talla)}
                   />
                 </div>
               </div>
@@ -707,6 +859,58 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
           </button>
         </div>
       </div>
+      {/* Modal de Historial Médico */}
+      {showHistoryModal && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}>
+          <div className="modal-dialog modal-lg modal-dialog-centered">
+            <div className="modal-content bg-dark border-secondary">
+              <div className="modal-header border-secondary">
+                <h5 className="modal-title text-white">Historial Médico - {formData.nombre} {formData.apellido}</h5>
+                <button type="button" className="btn-close btn-close-white" onClick={() => setShowHistoryModal(false)}></button>
+              </div>
+              <div className="modal-body">
+                <div className="table-responsive">
+                  <table className="table table-dark table-hover mb-0">
+                    <thead>
+                      <tr className="text-secondary text-xs uppercase tracking-wider">
+                        <th>Fecha</th>
+                        <th>Peso (kg)</th>
+                        <th>Talla (m)</th>
+                        <th>IMC</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {historialMedico.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="text-center py-4 text-muted">No hay registros históricos</td>
+                        </tr>
+                      ) : (
+                        historialMedico.map((record, index) => (
+                          <tr key={record.id}>
+                            <td>{new Date(record.fechaToma).toLocaleDateString()}</td>
+                            <td>{record.peso}</td>
+                            <td>{record.talla}</td>
+                            <td>{record.imc}</td>
+                            <td>
+                              {index === 0 && (
+                                <span className="badge bg-primary text-[10px]">Actual (Editable en ficha)</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div className="modal-footer border-secondary">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowHistoryModal(false)}>Cerrar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
