@@ -11,7 +11,7 @@ Write-Host ""
 
 Write-Host "[1/6] Limpiando cache y build anterior..." -ForegroundColor Yellow
 Remove-Item -Path ".\node_modules\.vite" -Recurse -Force -ErrorAction SilentlyContinue
-Remove-Item -Path ".\dist" -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item -Path ".\publish\frontend" -Recurse -Force -ErrorAction SilentlyContinue
 Write-Host "      OK - Cache limpiado" -ForegroundColor Green
 Write-Host ""
 
@@ -27,7 +27,8 @@ Write-Host ""
 
 Write-Host "[3/6] Copiando archivos..." -ForegroundColor Yellow
 # Copiar archivos del build
-Copy-Item -Path ".\dist\*" -Destination ".\publish\frontend\" -Recurse -Force
+# Los archivos ya se generan en publish/frontend segun vite.config.ts
+# Copy-Item -Path ".\dist\*" -Destination ".\publish\frontend\" -Recurse -Force
 # Copiar Dockerfile para archivos estaticos pre-compilados
 Copy-Item -Path ".\Dockerfile.frontend-static" -Destination ".\publish\frontend\Dockerfile" -Force
 # Copiar .dockerignore si existe
