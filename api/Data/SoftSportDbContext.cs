@@ -41,6 +41,10 @@ namespace SoftSportAPI.Data
         public DbSet<LandingGallery> LandingGalleries { get; set; }
         public DbSet<ContactMessage> ContactMessages { get; set; }
         public DbSet<HistorialMedico> HistorialMedico { get; set; }
+        public DbSet<Bioquimica> Bioquimica { get; set; }
+        public DbSet<PlanNutricional> PlanesNutricionales { get; set; }
+        public DbSet<Suplementacion> Suplementaciones { get; set; }
+        public DbSet<TrainingSchedule> TrainingSchedules { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -87,6 +91,24 @@ namespace SoftSportAPI.Data
                 .HasOne(h => h.Alumno)
                 .WithMany()
                 .HasForeignKey(h => h.AlumnoId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Bioquimica>()
+                .HasOne(b => b.Alumno)
+                .WithMany()
+                .HasForeignKey(b => b.AlumnoId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PlanNutricional>()
+                .HasOne(p => p.Alumno)
+                .WithMany()
+                .HasForeignKey(p => p.AlumnoId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Suplementacion>()
+                .HasOne(s => s.PlanNutricional)
+                .WithMany(p => p.Suplementaciones)
+                .HasForeignKey(s => s.PlanNutricionalId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Configure unique indexes

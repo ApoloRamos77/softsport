@@ -177,7 +177,7 @@ const AccountingManagement: React.FC = () => {
             <div className="card h-100 border-0 shadow-sm" style={{ backgroundColor: '#161b22' }}>
               <div className="card-body p-3">
                 <p className="text-secondary small fw-bold mb-1 text-uppercase" style={{ fontSize: '10px' }}>Monto Facturado</p>
-                <h3 className="fw-bold mb-0 text-white font-monospace">S/. {grandStats.montoFacturado.toFixed(2)}</h3>
+                <h3 className="fw-bold mb-0 text-white font-monospace">S/. {(grandStats.montoFacturado || 0).toFixed(2)}</h3>
                 <small className="text-secondary opacity-50" style={{ fontSize: '10px' }}>Total histórico</small>
               </div>
             </div>
@@ -186,7 +186,7 @@ const AccountingManagement: React.FC = () => {
             <div className="card h-100 border-0 shadow-sm" style={{ backgroundColor: '#161b22' }}>
               <div className="card-body p-3">
                 <p className="text-secondary small fw-bold mb-1 text-uppercase" style={{ fontSize: '10px' }}>Recaudado</p>
-                <h3 className="fw-bold mb-0 text-success font-monospace">S/. {grandStats.montoRecaudado.toFixed(2)}</h3>
+                <h3 className="fw-bold mb-0 text-success font-monospace">S/. {(grandStats.montoRecaudado || 0).toFixed(2)}</h3>
                 <small className="text-secondary opacity-50" style={{ fontSize: '10px' }}>Ingresos netos</small>
               </div>
             </div>
@@ -195,7 +195,7 @@ const AccountingManagement: React.FC = () => {
             <div className="card h-100 border-0 shadow-sm" style={{ backgroundColor: '#161b22' }}>
               <div className="card-body p-3">
                 <p className="text-secondary small fw-bold mb-1 text-uppercase" style={{ fontSize: '10px' }}>Exonerado</p>
-                <h3 className="fw-bold mb-0 text-white font-monospace">S/. {grandStats.montoExonerado.toFixed(2)}</h3>
+                <h3 className="fw-bold mb-0 text-white font-monospace">S/. {(grandStats.montoExonerado || 0).toFixed(2)}</h3>
                 <small className="text-secondary opacity-50" style={{ fontSize: '10px' }}>Descuentos y becas</small>
               </div>
             </div>
@@ -204,7 +204,7 @@ const AccountingManagement: React.FC = () => {
             <div className="card h-100 border-0 shadow-sm" style={{ backgroundColor: '#161b22' }}>
               <div className="card-body p-3">
                 <p className="text-secondary small fw-bold mb-1 text-uppercase" style={{ fontSize: '10px' }}>Por Recaudar</p>
-                <h3 className="fw-bold mb-0 text-danger font-monospace">S/. {grandStats.montoPorRecaudar.toFixed(2)}</h3>
+                <h3 className="fw-bold mb-0 text-danger font-monospace">S/. {(grandStats.montoPorRecaudar || 0).toFixed(2)}</h3>
                 <small className="text-secondary opacity-50" style={{ fontSize: '10px' }}>Saldo pendiente</small>
               </div>
             </div>
@@ -301,16 +301,16 @@ const AccountingManagement: React.FC = () => {
                         </div>
                       </td>
                       <td className="text-secondary border-bottom border-secondary border-opacity-10 py-3 font-monospace">
-                        S/. {recibo.subtotal.toFixed(2)}
+                        S/. {(recibo.subtotal || 0).toFixed(2)}
                       </td>
                       <td className="text-secondary border-bottom border-secondary border-opacity-10 py-3 font-monospace">
-                        S/. {recibo.descuento.toFixed(2)}
+                        S/. {(recibo.descuento || 0).toFixed(2)}
                       </td>
                       <td className="text-center text-secondary border-bottom border-secondary border-opacity-10 py-3 font-monospace">
-                        S/. {recibo.abonos ? recibo.abonos.reduce((sum: number, a: any) => sum + a.monto, 0).toFixed(2) : '0.00'}
+                        S/. {recibo.abonos ? recibo.abonos.reduce((sum: number, a: any) => sum + (a.monto || 0), 0).toFixed(2) : '0.00'}
                       </td>
                       <td className="text-center fw-bold text-white border-bottom border-secondary border-opacity-10 py-3 font-monospace">
-                        S/. {recibo.total.toFixed(2)}
+                        S/. {(recibo.total || 0).toFixed(2)}
                       </td>
                       <td className="text-secondary border-bottom border-secondary border-opacity-10 py-3 small">
                         {new Date(recibo.fecha).toLocaleDateString('es-ES')}

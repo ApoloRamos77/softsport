@@ -1,0 +1,19 @@
+{
+    "message":  "Schema correction executed significantly.",
+    "logs":  [
+                 "FAILED: Rename created_at -\u003e fecha_creacion - 42703: column \"created_at\" does not exist",
+                 "FAILED: Rename updated_at -\u003e fecha_modificacion - 42703: column \"updated_at\" does not exist",
+                 "FAILED: Rename created_by -\u003e usuario_creacion - 42703: column \"created_by\" does not exist",
+                 "FAILED: Rename updated_by -\u003e usuario_modificacion - 42703: column \"updated_by\" does not exist",
+                 "SUCCESS: Add fecha_creacion",
+                 "SUCCESS: Add fecha_modificacion",
+                 "SUCCESS: Add usuario_creacion",
+                 "SUCCESS: Add usuario_modificacion",
+                 "SUCCESS: Add fecha_anulacion",
+                 "SUCCESS: Add usuario_anulacion",
+                 "SUCCESS: Add descripcion",
+                 "SUCCESS: Add ubicacion",
+                 "SUCCESS: Add temporada",
+                 "SUCCESS: Add FK training_schedule_id to trainings"
+             ]
+}

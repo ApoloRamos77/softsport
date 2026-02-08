@@ -29,6 +29,32 @@ namespace SoftSportAPI.Models
         [Column("observaciones")]
         public string? Observaciones { get; set; }
 
+        // Datos de Composición Corporal
+        [Column("porcentaje_grasa")]
+        public decimal? PorcentajeGrasa { get; set; }
+
+        [Column("porcentaje_musculo")]
+        public decimal? PorcentajeMusculo { get; set; }
+
+        [Column("grasa_visceral")]
+        public decimal? GrasaVisceral { get; set; }
+
+        // Perímetros (en cm)
+        [Column("cintura")]
+        public decimal? Cintura { get; set; }
+
+        [Column("cadera")]
+        public decimal? Cadera { get; set; }
+
+        [Column("brazo_relajado")]
+        public decimal? BrazoRelajado { get; set; }
+
+        [Column("brazo_contraido")]
+        public decimal? BrazoContraido { get; set; }
+
+        [Column("muslo")]
+        public decimal? Muslo { get; set; }
+
         // Navigation property
         [ForeignKey("AlumnoId")]
         public Alumno? Alumno { get; set; }

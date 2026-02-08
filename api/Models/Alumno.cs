@@ -134,6 +134,29 @@ namespace SoftSportAPI.Models
         [Column("notas")]
         public string? Notas { get; set; }
 
+        // Campos de Gestión Nutricional
+        [Column("horario_entrenamiento")]
+        [MaxLength(200)]
+        public string? HorarioEntrenamiento { get; set; }
+
+        [Column("intolerancias")]
+        [MaxLength(200)]
+        public string? Intolerancias { get; set; }
+
+        [Column("horas_sueno")]
+        public decimal? HorasSueno { get; set; }
+
+        [Column("agua_diaria")]
+        [MaxLength(50)]
+        public string? AguaDiaria { get; set; }
+
+        [Column("digestion")]
+        [MaxLength(50)]
+        public string? Digestion { get; set; }
+
+        [Column("lesiones_recientes")]
+        public string? LesionesRecientes { get; set; }
+
         // Navigation properties
         [ForeignKey("RepresentanteId")]
         public Representante? Representante { get; set; }

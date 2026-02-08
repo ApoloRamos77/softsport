@@ -48,6 +48,15 @@ export interface Alumno {
   // Campos administrativos
   notas?: string;
   usuarioAnulacion?: string;
+  fechaAnulacion?: string;
+
+  // Campos de Gestión Nutricional
+  horarioEntrenamiento?: string;
+  intolerancias?: string;
+  horasSueno?: number;
+  aguaDiaria?: string;
+  digestion?: string;
+  lesionesRecientes?: string;
 }
 
 export interface HistorialMedico {
@@ -58,6 +67,19 @@ export interface HistorialMedico {
   imc?: number;
   fechaToma: string;
   observaciones?: string;
+
+  // Datos de Composición Corporal
+  porcentajeGrasa?: number;
+  porcentajeMusculo?: number;
+  grasaVisceral?: number;
+
+  // Perímetros (en cm)
+  cintura?: number;
+  cadera?: number;
+  brazoRelajado?: number;
+  brazoContraido?: number;
+  muslo?: number;
+
   createdAt?: string;
   createdBy?: string;
 }
@@ -153,6 +175,22 @@ export interface Training {
   categoriaId?: number;
   categoria?: Categoria;
   tipo?: string;
+  estado: string;
+  entrenadorId?: number;
+  trainingScheduleId?: number;
+}
+
+export interface TrainingSchedule {
+  id: number;
+  nombre: string;
+  descripcion?: string;
+  categoriaId?: number;
+  categoria?: Categoria;
+  diasSemana: string; // "1,3,5"
+  horaInicio: string;
+  horaFin: string;
+  ubicacion?: string;
+  temporada?: string;
   estado: string;
 }
 
@@ -279,6 +317,45 @@ export interface AcademyConfig {
   fechaActualizacion?: string;
 }
 
+export interface Bioquimica {
+  id?: number;
+  alumnoId: number;
+  fechaToma: string;
+  hemoglobina?: number;
+  hematocrito?: number;
+  glucosaBasal?: number;
+  colesterolTotal?: number;
+  trigliceridos?: number;
+  vitaminaD?: number;
+  ferritina?: number;
+  observaciones?: string;
+}
+
+export interface PlanNutricional {
+  id?: number;
+  alumnoId: number;
+  fechaInicio: string;
+  fechaFin?: string;
+  objetivo?: string;
+  tmb?: number;
+  gastoEnergeticoTotal?: number;
+  proteinas?: number;
+  carbohidratos?: number;
+  grasas?: number;
+  observaciones?: string;
+  archivoRuta?: string;
+  suplementaciones?: Suplementacion[];
+}
+
+export interface Suplementacion {
+  id?: number;
+  planNutricionalId: number;
+  producto: string;
+  dosis?: string;
+  momento?: string;
+  observaciones?: string;
+}
+
 class ApiService {
   // Generic paginated GET
   async getPaginated<T>(endpoint: string, params: Record<string, any> = {}): Promise<{ totalCount: number, data: T[] }> {
@@ -326,6 +403,28 @@ class ApiService {
       try {
         const errorText = await response.text();
         // Try to parse JSON if possible, otherwise use text
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.title || errorJson.message || errorJson.error || errorText;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+      } catch (e) { }
+      throw new Error(errorMessage);
+    }
+    return response.json();
+  }
+
+  async post<T>(endpoint: string, data: any): Promise<T> {
+    const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!response.ok) {
+      let errorMessage = `Error posting to ${endpoint}`;
+      try {
+        const errorText = await response.text();
         try {
           const errorJson = JSON.parse(errorText);
           errorMessage = errorJson.title || errorJson.message || errorJson.error || errorText;
@@ -499,6 +598,19 @@ class ApiService {
     const data = await response.json();
     return data.url;
   }
+
+  // Bioquimica
+  getBioquimicaByAlumno(alumnoId: number) { return this.getAll<Bioquimica>(`bioquimica/alumno/${alumnoId}`); }
+  createBioquimica(data: Bioquimica) { return this.create<Bioquimica>('bioquimica', data); }
+  updateBioquimica(id: number, data: Bioquimica) { return this.update<Bioquimica>('bioquimica', id, data); }
+  deleteBioquimica(id: number) { return this.delete('bioquimica', id); }
+
+  // Plan Nutricional
+  getPlanesByAlumno(alumnoId: number) { return this.getAll<PlanNutricional>(`plannutricional/alumno/${alumnoId}`); }
+  getPlanNutricional(id: number) { return this.getById<PlanNutricional>('plannutricional', id); }
+  createPlanNutricional(data: PlanNutricional) { return this.create<PlanNutricional>('plannutricional', data); }
+  updatePlanNutricional(id: number, data: PlanNutricional) { return this.update<PlanNutricional>('plannutricional', id, data); }
+  deletePlanNutricional(id: number) { return this.delete('plannutricional', id); }
 
   async getDashboardStats(seasonId?: number): Promise<any> {
     const url = seasonId ? `${API_BASE_URL}/dashboard/stats?seasonId=${seasonId}` : `${API_BASE_URL}/dashboard/stats`;
