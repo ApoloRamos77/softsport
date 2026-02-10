@@ -59,6 +59,17 @@ export interface Alumno {
   lesionesRecientes?: string;
 }
 
+export interface Personal {
+  id?: number;
+  nombres: string;
+  apellidos: string;
+  dni?: string;
+  celular?: string;
+  fechaNacimiento?: string;
+  cargo?: string; // Administrativo, Nutricionista, Terapeuta, Paramedico, Entrenador
+  estado?: string;
+}
+
 export interface HistorialMedico {
   id?: number;
   alumnoId: number;
@@ -221,6 +232,7 @@ export interface User {
   telefono?: string;
   role: string;
   active: boolean;
+  personalId?: number; // Link to Personal
   createdAt?: string;
   updatedAt?: string;
 }
@@ -483,6 +495,12 @@ class ApiService {
   createAlumno(data: Alumno) { return this.create<Alumno>('alumnos', data); }
   updateAlumno(id: number, data: Alumno) { return this.update<Alumno>('alumnos', id, data); }
   deleteAlumno(id: number) { return this.delete('alumnos', id); }
+
+  getPersonal(params: any = {}) { return this.getAll<Personal>(`personal?${new URLSearchParams(params)}`); }
+  getPersonalById(id: number) { return this.getById<Personal>('personal', id); }
+  createPersonal(data: Personal) { return this.create<Personal>('personal', data); }
+  updatePersonal(id: number, data: Personal) { return this.update<Personal>('personal', id, data); }
+  deletePersonal(id: number) { return this.delete('personal', id); }
 
   getHistorialByAlumno(alumnoId: number) { return this.getAll<HistorialMedico>(`historialmedico/alumno/${alumnoId}`); }
   createHistorial(data: HistorialMedico) { return this.create<HistorialMedico>('historialmedico', data); }

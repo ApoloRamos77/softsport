@@ -1,0 +1,11 @@
+﻿  Determinando los proyectos que se van a restaurar...
+  Todos los proyectos est├ín actualizados para la restauraci├│n.
+  SoftSportAPI -> C:\Proyecto_2026\Soft_Sport\api\bin\Debug\net9.0\SoftSportAPI.dll
+
+Compilaci├│n correcta.
+    0 Advertencia(s)
+    0 Errores
+
+Tiempo transcurrido 00:00:01.07
+
+Hay actualizaciones de carga de trabajo disponibles. Ejecute "dotnet workload list" para obtener m├ís informaci├│n.

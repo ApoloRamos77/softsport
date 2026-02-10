@@ -23,8 +23,8 @@ interface Recibo {
 const AccountingManagement: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [filters, setFilters] = useState({
-    desde: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-    hasta: new Date().toISOString().split('T')[0]
+    desde: new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0],
+    hasta: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0]
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [recibos, setRecibos] = useState<Recibo[]>([]);

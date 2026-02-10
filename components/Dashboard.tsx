@@ -224,19 +224,28 @@ const Dashboard: React.FC = () => {
       <div className="row g-3 mt-2">
         {financialStats.map((stat, i) => (
           <div key={i} className="col-lg-3 col-md-6 col-12">
-            <div className={`info-box ${i === 0 ? 'bg-gradient-primary' : i === 1 ? 'bg-gradient-success' : i === 2 ? 'bg-gradient-warning' : 'bg-gradient-secondary'} text-white`}>
-              <span className="info-box-icon elevation-1">
-                <i className={`fas ${stat.icon}`}></i>
-              </span>
-              <div className="info-box-content">
-                <span className="info-box-text text-white">{stat.label}</span>
-                <span className="info-box-number text-white">{stat.value}</span>
-                <div className="progress">
-                  <div className="progress-bar" style={{ width: '70%' }}></div>
+            <div className="card h-100 border-0 shadow-sm" style={{ backgroundColor: '#161b22' }}>
+              <div className="card-body p-3 d-flex justify-content-between align-items-center">
+                <div>
+                  <p className="text-secondary small fw-bold mb-1 text-uppercase" style={{ fontSize: '10px' }}>{stat.label}</p>
+                  <h3 className={`fw-bold mb-0 font-monospace ${i === 0 ? 'text-primary' :
+                    i === 1 ? 'text-success' :
+                      i === 2 ? 'text-warning' :
+                        'text-info'
+                    }`}>{stat.value}</h3>
+                  <small className="text-secondary opacity-50" style={{ fontSize: '10px' }}>{stat.sub}</small>
                 </div>
-                <span className="progress-description text-white-50">
-                  {stat.sub}
-                </span>
+                <div className={`p-3 rounded bg-opacity-10 ${i === 0 ? 'bg-primary' :
+                  i === 1 ? 'bg-success' :
+                    i === 2 ? 'bg-warning' :
+                      'bg-info'
+                  }`}>
+                  <i className={`fas ${stat.icon} fa-2x ${i === 0 ? 'text-primary' :
+                    i === 1 ? 'text-success' :
+                      i === 2 ? 'text-warning' :
+                        'text-info'
+                    }`}></i>
+                </div>
               </div>
             </div>
           </div>
@@ -255,13 +264,13 @@ const Dashboard: React.FC = () => {
             <div className="card-body">
               <div className="position-relative" style={{ height: '250px' }}>
                 {financialChart.length > 0 ? (
-                  <div className="d-flex align-items-end justify-content-around h-100 px-3">
+                  <div className="d-flex justify-content-around h-100 px-3">
                     {financialChart.slice(-6).map((data, i) => {
                       const ingresosHeight = (data.ingresos / maxValue) * 100;
                       const egresosHeight = (data.egresos / maxValue) * 100;
                       return (
-                        <div key={i} className="d-flex flex-column align-items-center gap-1 flex-fill">
-                          <div className="d-flex gap-1 w-100 justify-content-center align-items-end h-100">
+                        <div key={i} className="d-flex flex-column align-items-center gap-1 flex-fill h-100">
+                          <div className="d-flex gap-1 w-100 justify-content-center align-items-end flex-grow-1">
                             <div
                               className="bg-success rounded-top"
                               style={{ height: `${ingresosHeight}%`, width: '12px' }}

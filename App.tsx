@@ -26,8 +26,9 @@ import GeneralConfig from './components/GeneralConfig';
 import Login from './components/Login';
 import LandingPage from './components/LandingPage';
 import LandingPageManagement from './components/LandingPageManagement';
+import PersonalManagement from './components/PersonalManagement';
 
-type View = 'representantes' | 'servicios' | 'grupos' | 'categorias' | 'atletas' | 'entrenamientos' | 'becas' | 'productos' | 'pagos' | 'ingresos' | 'egresos' | 'abonos' | 'usuarios' | 'tablero' | 'juegos' | 'calendario' | 'temporadas' | 'dashboard' | 'academia_config' | 'perfil' | 'configuracion' | 'landing_mgmt';
+type View = 'representantes' | 'servicios' | 'grupos' | 'categorias' | 'atletas' | 'entrenamientos' | 'becas' | 'productos' | 'pagos' | 'ingresos' | 'egresos' | 'abonos' | 'usuarios' | 'tablero' | 'juegos' | 'calendario' | 'temporadas' | 'dashboard' | 'academia_config' | 'perfil' | 'configuracion' | 'landing_mgmt' | 'personal';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -152,6 +153,7 @@ const App: React.FC = () => {
       case 'perfil': return <ProfileSettings darkMode={darkMode} onToggleTheme={toggleTheme} />;
       case 'configuracion': return <GeneralConfig />;
       case 'landing_mgmt': return <LandingPageManagement />;
+      case 'personal': return <PersonalManagement />;
       default:
         return (
           <div className="bg-white dark:bg-[#111827] p-8 rounded-lg border border-slate-200 dark:border-slate-800 text-center">
@@ -185,6 +187,7 @@ const App: React.FC = () => {
       case 'usuarios': return 'Usuarios';
       case 'tablero': return 'Tablero Táctico';
       case 'landing_mgmt': return 'Gestión de Página Web';
+      case 'personal': return 'Mantenimiento de Personal';
       default: return 'Panel de Control';
     }
   };

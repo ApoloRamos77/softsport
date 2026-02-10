@@ -39,7 +39,8 @@ namespace SoftSportAPI.Controllers
 
             if (hasta.HasValue)
             {
-                query = query.Where(e => e.Fecha <= hasta.Value);
+                var fechaHasta = hasta.Value.Date.AddDays(1);
+                query = query.Where(e => e.Fecha < fechaHasta);
             }
 
             var totalCount = await query.CountAsync();

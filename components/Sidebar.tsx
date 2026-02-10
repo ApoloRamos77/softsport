@@ -40,6 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) => {
     ],
     sistema: [
       { id: 'usuarios', name: 'Usuarios', icon: 'bi-shield-lock-fill' },
+      { id: 'personal', name: 'Personal', icon: 'bi-person-vcard-fill' },
       { id: 'landing_mgmt', name: 'Página Web', icon: 'bi-browser-chrome' },
     ],
   };

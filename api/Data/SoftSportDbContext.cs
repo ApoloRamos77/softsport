@@ -29,6 +29,7 @@ namespace SoftSportAPI.Data
         public DbSet<Abono> Abonos { get; set; }
         public DbSet<Season> Seasons { get; set; }
         public DbSet<Training> Trainings { get; set; }
+        public DbSet<Personal> Personal { get; set; }
         public DbSet<Game> Games { get; set; }
         public DbSet<TacticalBoard> TacticalBoards { get; set; }
         public DbSet<Expense> Expenses { get; set; }
@@ -115,6 +116,12 @@ namespace SoftSportAPI.Data
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)
                 .IsUnique();
+
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Personal)
+                .WithMany()
+                .HasForeignKey(u => u.PersonalId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -175,5 +182,6 @@ namespace SoftSportAPI.Data
             }
 
             return base.SaveChangesAsync(cancellationToken);
-        }    }
+        }
+    }
 }

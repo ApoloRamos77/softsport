@@ -10,7 +10,7 @@ const ExpenseManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [filters, setFilters] = useState({
-    desde: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
+    desde: new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0],
     hasta: new Date().toISOString().split('T')[0],
     metodoPago: 'Todos',
     busqueda: ''
@@ -30,7 +30,7 @@ const ExpenseManagement: React.FC = () => {
         pageSize: itemsPerPage,
         searchTerm: filters.busqueda,
         desde: filters.desde,
-        hasta: filters.hasta
+        hasta: new Date(new Date(filters.hasta).setDate(new Date(filters.hasta).getDate() + 1)).toISOString().split('T')[0]
       };
       const result = await apiService.getExpenses(params);
       setExpenses(result.data);

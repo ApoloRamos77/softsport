@@ -1,16 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { apiService } from '../services/api';
+import { apiService, PaymentMethod } from '../services/api';
 
 interface RealizarPagoProps {
   recibo: any;
   onClose: () => void;
   onSuccess: () => void;
-}
-
-interface PaymentMethod {
-  id: number;
-  nombre: string;
 }
 
 const RealizarPago: React.FC<RealizarPagoProps> = ({ recibo, onClose, onSuccess }) => {
@@ -79,96 +74,103 @@ const RealizarPago: React.FC<RealizarPagoProps> = ({ recibo, onClose, onSuccess 
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-[#1a2332] border border-slate-700 rounded-lg p-6 max-w-md w-full">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-white">Registrar Pago</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-white">
-            <i className="fas fa-times text-xl"></i>
-          </button>
+    <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }} tabIndex={-1}>
+      <div className="modal-dialog modal-dialog-centered">
+        <div className="modal-content border-secondary border-opacity-25 shadow-lg" style={{ backgroundColor: '#161b22' }}>
+          <div className="modal-header border-bottom border-secondary border-opacity-10">
+            <h5 className="modal-title fw-bold text-white">Registrar Pago</h5>
+            <button type="button" className="btn-close btn-close-white" onClick={onClose} aria-label="Close"></button>
+          </div>
+
+          <div className="modal-body p-4">
+            <div className="mb-4 p-3 rounded" style={{ backgroundColor: '#0d1117', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div className="d-flex justify-content-between mb-2">
+                <span className="text-secondary small">Recibo:</span>
+                <span className="text-white fw-bold">#{recibo.numero || recibo.id}</span>
+              </div>
+              <div className="d-flex justify-content-between mb-2">
+                <span className="text-secondary small">Alumno:</span>
+                <span className="text-white fw-bold text-end ms-2">{recibo.alumnoNombre || recibo.AlumnoNombre || '-'}</span>
+              </div>
+              <div className="d-flex justify-content-between mb-2">
+                <span className="text-secondary small">Total Recibo:</span>
+                <span className="text-white fw-bold font-monospace">S/. {recibo.total.toFixed(2)}</span>
+              </div>
+              <div className="d-flex justify-content-between border-top border-secondary border-opacity-25 pt-2 mt-2">
+                <span className="text-white fw-bold small">Saldo Pendiente:</span>
+                <span className="text-danger fw-bold font-monospace">S/. {saldoPendiente.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmit}>
+              <div className="mb-3">
+                <label className="form-label text-secondary small">Monto a Pagar *</label>
+                <div className="input-group">
+                  <span className="input-group-text bg-transparent border-secondary border-opacity-25 text-secondary">S/.</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={monto}
+                    onChange={(e) => setMonto(e.target.value)}
+                    className="form-control bg-[#0d1117] border-secondary border-opacity-25 text-white"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label text-secondary small">Método de Pago *</label>
+                <select
+                  value={metodoPago}
+                  onChange={(e) => setMetodoPago(e.target.value)}
+                  className="form-select bg-[#0d1117] border-secondary border-opacity-25 text-white"
+                  required
+                >
+                  <option value="">Seleccionar método...</option>
+                  {paymentMethods.map(pm => (
+                    <option key={pm.id} value={pm.id} className="text-dark">
+                      {pm.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="mb-4">
+                <label className="form-label text-secondary small">Referencia (opcional)</label>
+                <input
+                  type="text"
+                  value={referencia}
+                  onChange={(e) => setReferencia(e.target.value)}
+                  placeholder="Nro. operación, cheque, etc."
+                  className="form-control bg-[#0d1117] border-secondary border-opacity-25 text-white placeholder-secondary"
+                />
+              </div>
+
+              <div className="d-flex gap-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="btn btn-outline-secondary text-white w-50 border-opacity-25"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn btn-success text-white fw-bold w-50"
+                  style={{ backgroundColor: '#238636', borderColor: '#2ea043' }}
+                >
+                  {loading ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      Procesando...
+                    </>
+                  ) : 'Registrar Pago'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-
-        <div className="mb-6 bg-[#0f1729] p-4 rounded-lg">
-          <div className="flex justify-between mb-2">
-            <span className="text-slate-400">Recibo:</span>
-            <span className="text-white font-semibold">#{recibo.numero || recibo.id}</span>
-          </div>
-          <div className="flex justify-between mb-2">
-            <span className="text-slate-400">Alumno:</span>
-            <span className="text-white font-semibold">{recibo.alumnoNombre || recibo.AlumnoNombre || '-'}</span>
-          </div>
-          <div className="flex justify-between mb-2">
-            <span className="text-slate-400">Total Recibo:</span>
-            <span className="text-white font-semibold">S/. {recibo.total.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between text-lg border-t border-slate-700 pt-2 mt-2">
-            <span className="text-white font-bold">Saldo Pendiente:</span>
-            <span className="text-red-400 font-bold">S/. {saldoPendiente.toFixed(2)}</span>
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="text-sm text-slate-300 block mb-2">
-              Monto a Pagar *
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              value={monto}
-              onChange={(e) => setMonto(e.target.value)}
-              className="w-full bg-[#0f1729] border border-slate-600 text-white px-3 py-2.5 rounded-md text-sm focus:outline-none focus:border-blue-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="text-sm text-slate-300 block mb-2">
-              Método de Pago *
-            </label>
-            <select
-              value={metodoPago}
-              onChange={(e) => setMetodoPago(e.target.value)}
-              className="w-full bg-[#0f1729] border border-slate-600 text-white px-3 py-2.5 rounded-md text-sm focus:outline-none focus:border-blue-500"
-              required
-            >
-              <option value="">Seleccionar método de pago</option>
-              {paymentMethods.map(pm => (
-                <option key={pm.id} value={pm.id}>{pm.nombre}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="text-sm text-slate-300 block mb-2">
-              Referencia (opcional)
-            </label>
-            <input
-              type="text"
-              value={referencia}
-              onChange={(e) => setReferencia(e.target.value)}
-              placeholder="Número de transacción, cheque, etc."
-              className="w-full bg-[#0f1729] border border-slate-600 text-white px-3 py-2.5 rounded-md text-sm focus:outline-none focus:border-blue-500"
-            />
-          </div>
-
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-6 py-2 rounded-md border border-slate-600 text-slate-300 hover:bg-slate-800 transition-colors text-sm font-medium"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 px-6 py-2 rounded-md bg-green-500 hover:bg-green-600 text-white transition-colors text-sm font-medium disabled:opacity-50"
-            >
-              {loading ? 'Procesando...' : 'Registrar Pago'}
-            </button>
-          </div>
-        </form>
       </div>
     </div>
   );

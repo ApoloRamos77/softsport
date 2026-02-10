@@ -41,6 +41,12 @@ namespace SoftSportAPI.Models
         [Column("active")]
         public bool Active { get; set; } = true;
 
+        [Column("personal_id")]
+        public int? PersonalId { get; set; }
+
+        [ForeignKey("PersonalId")]
+        public Personal? Personal { get; set; }
+
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

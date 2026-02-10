@@ -1,0 +1,27 @@
+  Determinando los proyectos que se van a restaurar...
+  Se ha restaurado C:\Proyecto_2026\Soft_Sport\api\SoftSportAPI.csproj (en 2.72 s).
+C:\Proyecto_2026\Soft_Sport\api\Controllers\AlumnosController.cs(43,21): warning CS8602: Desreferencia de una referencia posiblemente NULL. [C:\Proyecto_2026\Soft_Sport\api\SoftSportAPI.csproj]
+C:\Proyecto_2026\Soft_Sport\api\Controllers\AbonosController.cs(30,39): warning CS8602: Desreferencia de una referencia posiblemente NULL. [C:\Proyecto_2026\Soft_Sport\api\SoftSportAPI.csproj]
+C:\Proyecto_2026\Soft_Sport\api\Controllers\AbonosController.cs(32,39): warning CS8602: Desreferencia de una referencia posiblemente NULL. [C:\Proyecto_2026\Soft_Sport\api\SoftSportAPI.csproj]
+C:\Proyecto_2026\Soft_Sport\api\Controllers\AbonosController.cs(39,21): warning CS8602: Desreferencia de una referencia posiblemente NULL. [C:\Proyecto_2026\Soft_Sport\api\SoftSportAPI.csproj]
+C:\Proyecto_2026\Soft_Sport\api\Controllers\ExpensesController.cs(32,42): warning CS8602: Desreferencia de una referencia posiblemente NULL. [C:\Proyecto_2026\Soft_Sport\api\SoftSportAPI.csproj]
+C:\Proyecto_2026\Soft_Sport\api\Controllers\PersonalController.cs(36,65): error CS0103: El nombre 'p' no existe en el contexto actual [C:\Proyecto_2026\Soft_Sport\api\SoftSportAPI.csproj]
+C:\Proyecto_2026\Soft_Sport\api\Controllers\RecibosController.cs(37,21): warning CS8602: Desreferencia de una referencia posiblemente NULL. [C:\Proyecto_2026\Soft_Sport\api\SoftSportAPI.csproj]
+C:\Proyecto_2026\Soft_Sport\api\Controllers\DashboardController.cs(218,49): warning CS1998: El método asincrónico carece de operadores "await" y se ejecutará de forma sincrónica. Puede usar el operador 'await' para esperar llamadas API que no sean de bloqueo o 'await Task.Run(...)' para hacer tareas enlazadas a la CPU en un subproceso en segundo plano. [C:\Proyecto_2026\Soft_Sport\api\SoftSportAPI.csproj]
+
+ERROR al compilar.
+
+C:\Proyecto_2026\Soft_Sport\api\Controllers\AlumnosController.cs(43,21): warning CS8602: Desreferencia de una referencia posiblemente NULL. [C:\Proyecto_2026\Soft_Sport\api\SoftSportAPI.csproj]
+C:\Proyecto_2026\Soft_Sport\api\Controllers\AbonosController.cs(30,39): warning CS8602: Desreferencia de una referencia posiblemente NULL. [C:\Proyecto_2026\Soft_Sport\api\SoftSportAPI.csproj]
+C:\Proyecto_2026\Soft_Sport\api\Controllers\AbonosController.cs(32,39): warning CS8602: Desreferencia de una referencia posiblemente NULL. [C:\Proyecto_2026\Soft_Sport\api\SoftSportAPI.csproj]
+C:\Proyecto_2026\Soft_Sport\api\Controllers\AbonosController.cs(39,21): warning CS8602: Desreferencia de una referencia posiblemente NULL. [C:\Proyecto_2026\Soft_Sport\api\SoftSportAPI.csproj]
+C:\Proyecto_2026\Soft_Sport\api\Controllers\ExpensesController.cs(32,42): warning CS8602: Desreferencia de una referencia posiblemente NULL. [C:\Proyecto_2026\Soft_Sport\api\SoftSportAPI.csproj]
+C:\Proyecto_2026\Soft_Sport\api\Controllers\RecibosController.cs(37,21): warning CS8602: Desreferencia de una referencia posiblemente NULL. [C:\Proyecto_2026\Soft_Sport\api\SoftSportAPI.csproj]
+C:\Proyecto_2026\Soft_Sport\api\Controllers\DashboardController.cs(218,49): warning CS1998: El método asincrónico carece de operadores "await" y se ejecutará de forma sincrónica. Puede usar el operador 'await' para esperar llamadas API que no sean de bloqueo o 'await Task.Run(...)' para hacer tareas enlazadas a la CPU en un subproceso en segundo plano. [C:\Proyecto_2026\Soft_Sport\api\SoftSportAPI.csproj]
+C:\Proyecto_2026\Soft_Sport\api\Controllers\PersonalController.cs(36,65): error CS0103: El nombre 'p' no existe en el contexto actual [C:\Proyecto_2026\Soft_Sport\api\SoftSportAPI.csproj]
+    7 Advertencia(s)
+    1 Errores
+
+Tiempo transcurrido 00:00:04.56
+
+Hay actualizaciones de carga de trabajo disponibles. Ejecute "dotnet workload list" para obtener más información.

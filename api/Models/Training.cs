@@ -49,6 +49,9 @@ namespace SoftSportAPI.Models
         [Column("entrenador_id")]
         public int? EntrenadorId { get; set; }
 
+        [ForeignKey("EntrenadorId")]
+        public Personal? Entrenador { get; set; }
+
         [Column("training_schedule_id")]
         public int? TrainingScheduleId { get; set; }
 

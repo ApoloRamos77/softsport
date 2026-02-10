@@ -171,9 +171,9 @@ const ServiceManagement: React.FC = () => {
                         </td>
                         <td className="py-3 border-bottom border-secondary border-opacity-10">
                           {service.recurrenteMensual ? (
-                            <span className="badge bg-info bg-opacity-20 text-white border border-info border-opacity-30">Recurrente</span>
+                            <span className="badge bg-info text-white border border-info">Recurrente</span>
                           ) : (
-                            <span className="badge bg-secondary bg-opacity-20 text-white border border-secondary border-opacity-30">Único</span>
+                            <span className="badge bg-dark text-white border border-secondary">Único</span>
                           )}
                         </td>
                         <td className="py-3 border-bottom border-secondary border-opacity-10">

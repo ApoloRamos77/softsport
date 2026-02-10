@@ -22,6 +22,7 @@ namespace SoftSportAPI.Controllers
         {
             return await _context.Trainings
                 .Include(t => t.Categoria)
+                .Include(t => t.Entrenador)
                 .Where(t => t.FechaAnulacion == null)
                 .OrderByDescending(t => t.Fecha)
                 .ToListAsync();
@@ -33,6 +34,7 @@ namespace SoftSportAPI.Controllers
         {
             var training = await _context.Trainings
                 .Include(t => t.Categoria)
+                .Include(t => t.Entrenador)
                 .FirstOrDefaultAsync(t => t.Id == id);
 
             if (training == null)

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { apiService, User } from '../services/api';
+import { apiService, User, Personal } from '../services/api';
 
 interface UserFormProps {
   user?: User | null;
@@ -16,6 +16,8 @@ const UserForm: React.FC<UserFormProps> = ({ user, onCancel }) => {
   const [telefono, setTelefono] = useState('');
   const [codigoPais, setCodigoPais] = useState('+51');
   const [role, setRole] = useState('');
+  const [personalId, setPersonalId] = useState<number | undefined>(undefined);
+  const [personalList, setPersonalList] = useState<Personal[]>([]);
   const [loading, setLoading] = useState(false);
 
   const roles = [
@@ -25,14 +27,42 @@ const UserForm: React.FC<UserFormProps> = ({ user, onCancel }) => {
   ];
 
   useEffect(() => {
+    const loadPersonal = async () => {
+      try {
+        const data = await apiService.getPersonal();
+        setPersonalList(data);
+      } catch (error) {
+        console.error('Error loading personal:', error);
+      }
+    };
+    loadPersonal();
+
     if (user) {
       setNombre(user.nombre || '');
       setApellido(user.apellido || '');
       setEmail(user.email || '');
       setTelefono(user.telefono || '');
       setRole(user.role || '');
+      setPersonalId(user.personalId);
     }
   }, [user]);
+
+  const handlePersonalChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedId = Number(e.target.value);
+    setPersonalId(selectedId);
+
+    const selectedPersonal = personalList.find(p => p.id === selectedId);
+    if (selectedPersonal) {
+      setNombre(selectedPersonal.nombres);
+      setApellido(selectedPersonal.apellidos);
+      if (selectedPersonal.celular) setTelefono(selectedPersonal.celular);
+      // Auto-assign role based on Cargo if not already set
+      if (!role && selectedPersonal.cargo) {
+        if (selectedPersonal.cargo === 'Entrenador') setRole('Entrenador');
+        else if (selectedPersonal.cargo === 'Administrativo') setRole('Administrador');
+      }
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +85,8 @@ const UserForm: React.FC<UserFormProps> = ({ user, onCancel }) => {
         email: email.trim(),
         telefono: telefono || null,
         role: role,
-        active: true
+        active: true,
+        personalId: personalId
       };
 
       if (password) {
@@ -93,7 +124,27 @@ const UserForm: React.FC<UserFormProps> = ({ user, onCancel }) => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="p-4 rounded-lg border border-secondary border-opacity-10 bg-[#0d1117] bg-opacity-30">
               <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-4 d-block border-bottom border-blue-900 border-opacity-50 pb-2">Información de Identidad</label>
+
               <div className="row g-3">
+                <div className="col-12 mb-3">
+                  <label>Vincular con Personal (Opcional)</label>
+                  <select
+                    className="form-select"
+                    value={personalId || ''}
+                    onChange={handlePersonalChange}
+                  >
+                    <option value="">-- Seleccionar personal --</option>
+                    {personalList.map(p => (
+                      <option key={p.id} value={p.id}>
+                        {p.nombres} {p.apellidos} - {p.cargo || 'Sin Cargo'}
+                      </option>
+                    ))}
+                  </select>
+                  <small className="text-muted d-block mt-1">
+                    Seleccionar un personal autocompletará el nombre y apellido.
+                  </small>
+                </div>
+
                 <div className="col-md-6">
                   <label>Nombre *</label>
                   <input
@@ -103,6 +154,8 @@ const UserForm: React.FC<UserFormProps> = ({ user, onCancel }) => {
                     onChange={(e) => setNombre(e.target.value)}
                     placeholder="Ej: Juan"
                     required
+                    readOnly={!!personalId}
+                    style={personalId ? { backgroundColor: '#21262d', opacity: 0.7 } : {}}
                   />
                 </div>
                 <div className="col-md-6">
@@ -114,6 +167,8 @@ const UserForm: React.FC<UserFormProps> = ({ user, onCancel }) => {
                     onChange={(e) => setApellido(e.target.value)}
                     placeholder="Ej: Pérez"
                     required
+                    readOnly={!!personalId}
+                    style={personalId ? { backgroundColor: '#21262d', opacity: 0.7 } : {}}
                   />
                 </div>
                 <div className="col-md-6">

@@ -186,16 +186,17 @@ namespace SoftSportAPI.Controllers
                 for (int i = 0; i < 12; i++)
                 {
                     var monthStart = startDate.AddMonths(i);
-                    var monthEnd = monthStart.AddMonths(1).AddDays(-1);
+                    // Extend end date by 1 day as requested to cover timezone differences or edge cases
+                    var monthEnd = monthStart.AddMonths(1).AddDays(1);
 
                     // Ingresos del mes (abonos realizados)
                     var ingresos = await _context.Abonos
-                        .Where(a => a.Fecha >= monthStart && a.Fecha <= monthEnd)
+                        .Where(a => a.Fecha >= monthStart && a.Fecha < monthEnd)
                         .SumAsync(a => (decimal?)a.Monto) ?? 0m;
 
                     // Egresos del mes
                     var egresos = await _context.Expenses
-                        .Where(e => e.Fecha >= monthStart && e.Fecha <= monthEnd)
+                        .Where(e => e.Fecha >= monthStart && e.Fecha < monthEnd)
                         .SumAsync(e => (decimal?)e.Monto) ?? 0m;
 
                     months.Add(new

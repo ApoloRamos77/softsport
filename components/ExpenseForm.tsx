@@ -39,10 +39,13 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ expense, onCancel, onSuccess 
       return;
     }
 
+    const dateObj = new Date(fecha);
+    dateObj.setHours(12, 0, 0, 0);
+
     const payload = {
       descripcion: concepto,
       monto: parseFloat(monto),
-      fecha: new Date(fecha).toISOString(),
+      fecha: dateObj.toISOString(),
       categoria: metodoPago,
       referencia: notas,
       estado: expense?.estado || 'Activo'

@@ -8,19 +8,20 @@ interface ReceiptFormProps {
 }
 
 interface Alumno {
-  id: number;
+  id?: number;
   nombre: string;
   apellido: string;
+  documento?: string;
 }
 
 interface Servicio {
-  id: number;
+  id?: number;
   nombre: string;
   precio: number;
 }
 
 interface Producto {
-  id: number;
+  id?: number;
   nombre: string;
   precio: number;
 }
@@ -46,6 +47,24 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
   const [cantidad, setCantidad] = useState(1);
   const [descuentoManual, setDescuentoManual] = useState(0);
   const [items, setItems] = useState<ReciboItem[]>([]);
+
+  // Autocomplete states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [loadingAlumnos, setLoadingAlumnos] = useState(false);
+
+  useEffect(() => {
+    if (destType === 'alumnos' && !isEditMode) {
+      const delayDebounceFn = setTimeout(() => {
+        loadAlumnos(searchTerm);
+      }, 300);
+
+      return () => clearTimeout(delayDebounceFn);
+    } else {
+      // Para otros modos, cargar lista normal si es necesario
+      loadAlumnos();
+    }
+  }, [searchTerm, destType]);
 
   useEffect(() => {
     const initializeForm = async () => {
@@ -106,12 +125,18 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
     }
   }, [recibo, servicios, productos]);
 
-  const loadAlumnos = async () => {
+  const loadAlumnos = async (term: string = '') => {
     try {
-      const result = await apiService.getAlumnos();
+      setLoadingAlumnos(true);
+      const params: any = {};
+      if (term) params.searchTerm = term;
+
+      const result = await apiService.getAlumnos(params);
       setAlumnos(Array.isArray(result) ? result : (result.data || []));
     } catch (error) {
       console.error('Error cargando alumnos:', error);
+    } finally {
+      setLoadingAlumnos(false);
     }
   };
 
@@ -268,19 +293,87 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
 
                   <div className="space-y-3">
                     <label className="text-[11px] font-bold text-slate-400 uppercase mb-2">Selección Específica</label>
-                    <select
-                      value={selectedAlumnoId}
-                      onChange={(e) => setSelectedAlumnoId(e.target.value)}
-                      className="form-select"
-                      disabled={destType === 'todos' || isEditMode}
-                    >
-                      <option value="">{destType === 'alumnos' ? 'Seleccionar alumno...' : 'Seleccionar grupo/cat...'}</option>
-                      {alumnos.map((alumno) => (
-                        <option key={alumno.id} value={alumno.id}>
-                          {alumno.nombre} {alumno.apellido}
-                        </option>
-                      ))}
-                    </select>
+
+                    {destType === 'alumnos' && !isEditMode ? (
+                      <div className="position-relative">
+                        <div className="input-group">
+                          <span className="input-group-text bg-transparent border-secondary border-opacity-25 text-secondary">
+                            <i className="bi bi-search"></i>
+                          </span>
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Buscar alumno por nombre..."
+                            value={searchTerm}
+                            onChange={(e) => {
+                              setSearchTerm(e.target.value);
+                              setShowDropdown(true);
+                              if (!e.target.value) {
+                                setSelectedAlumnoId('');
+                              }
+                            }}
+                            onFocus={() => setShowDropdown(true)}
+                          />
+                        </div>
+
+                        {showDropdown && (searchTerm || alumnos.length > 0) && (
+                          <div className="position-absolute w-100 z-50 mt-1 rounded shadow-lg border border-secondary border-opacity-25 bg-[#161b22]"
+                            style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                            {loadingAlumnos ? (
+                              <div className="p-3 text-center text-secondary small">
+                                <div className="spinner-border spinner-border-sm mb-1" role="status"></div>
+                                <div>Buscando...</div>
+                              </div>
+                            ) : alumnos.length > 0 ? (
+                              <div className="list-group list-group-flush">
+                                {alumnos.map((alumno) => (
+                                  <button
+                                    key={alumno.id || Math.random()}
+                                    type="button"
+                                    className="list-group-item list-group-item-action bg-transparent text-white border-secondary border-opacity-10 py-2 px-3 small"
+                                    onClick={() => {
+                                      if (alumno.id) {
+                                        setSelectedAlumnoId(alumno.id.toString());
+                                        setSearchTerm(`${alumno.nombre} ${alumno.apellido}`);
+                                        setShowDropdown(false);
+                                      }
+                                    }}
+                                  >
+                                    <div className="fw-bold">{alumno.nombre} {alumno.apellido}</div>
+                                    <div className="text-secondary" style={{ fontSize: '10px' }}>{alumno.documento || 'Sin documento'}</div>
+                                  </button>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="p-3 text-center text-secondary small">
+                                No se encontraron alumnos.
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {selectedAlumnoId && (
+                          <div className="text-success small mt-1">
+                            <i className="bi bi-check-circle-fill me-1"></i> Alumno seleccionado
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <select
+                        value={selectedAlumnoId}
+                        onChange={(e) => setSelectedAlumnoId(e.target.value)}
+                        className="form-select"
+                        disabled={destType === 'todos' || (isEditMode && destType === 'alumnos')}
+                      >
+                        <option value="">{destType === 'alumnos' ? 'Seleccionar alumno...' : 'Seleccionar grupo/cat...'}</option>
+                        {/* Logic for other types would go here if implemented, currently sharing 'alumnos' state which is not ideal for groups/cats but user only asked for students */}
+                        {alumnos.map((alumno) => (
+                          <option key={alumno.id} value={alumno.id}>
+                            {alumno.nombre} {alumno.apellido}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+
                     <p className="text-[10px] text-secondary opacity-60 italic mt-2 px-1">
                       <i className="bi bi-info-circle me-1"></i>
                       {destType === 'todos' ? 'Se generará un recibo por cada alumno activo.' : 'Elige a quién va dirigido este comprobante.'}

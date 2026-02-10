@@ -45,17 +45,18 @@ namespace SoftSportAPI.Controllers
 
             if (hasta.HasValue)
             {
-                query = query.Where(r => r.Fecha <= hasta.Value);
+                var fechaHasta = hasta.Value.Date.AddDays(1);
+                query = query.Where(r => r.Fecha < fechaHasta);
             }
 
             var totalCount = await query.CountAsync();
 
             var stats = new
             {
-                totalFacturado = await query.SumAsync(r => r.Subtotal),
-                totalRecaudado = await query.Where(r => r.Estado == "Pagado").SumAsync(r => r.Total),
-                totalExonerado = await query.SumAsync(r => r.Descuento),
-                totalPorRecaudar = await query.Where(r => r.Estado == "Pendiente").SumAsync(r => r.Total)
+                montoFacturado = await query.SumAsync(r => r.Subtotal),
+                montoRecaudado = await query.Where(r => r.Estado == "Pagado").SumAsync(r => r.Total),
+                montoExonerado = await query.SumAsync(r => r.Descuento),
+                montoPorRecaudar = await query.Where(r => r.Estado == "Pendiente").SumAsync(r => r.Total)
             };
 
             var servicios = await _context.Servicios.ToDictionaryAsync(s => s.Id, s => s.Nombre);

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import TacticalPlaysModal from './TacticalPlaysModal';
 import DatePicker from './DatePicker';
-import { apiService, Categoria, Training } from '../services/api';
+import { apiService, Categoria, Training, Personal } from '../services/api';
 
 interface TrainingFormProps {
   training?: Training | null;
@@ -14,32 +14,38 @@ const TrainingForm: React.FC<TrainingFormProps> = ({ training, onCancel, onSave 
   const [showTacticalModal, setShowTacticalModal] = useState(false);
   const [selectedPlaysCount, setSelectedPlaysCount] = useState(0);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [entrenadores, setEntrenadores] = useState<Personal[]>([]);
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     titulo: '',
     fecha: '',
     categoriaId: '',
+    entrenadorId: '',
     horaInicio: { hora: '--', minuto: '--', periodo: 'AM' },
     horaFin: { hora: '--', minuto: '--', periodo: 'AM' },
     ubicacion: '',
     descripcion: ''
   });
 
-  // Cargar categorías
+  // Cargar datos iniciales
   useEffect(() => {
-    const loadCategorias = async () => {
+    const loadData = async () => {
       try {
         setLoading(true);
-        const data = await apiService.getAll<Categoria>('categorias');
-        setCategorias(data);
+        const [cats, coaches] = await Promise.all([
+          apiService.getAll<Categoria>('categorias'),
+          apiService.getPersonal({ cargo: 'Entrenador' })
+        ]);
+        setCategorias(cats);
+        setEntrenadores(coaches);
       } catch (error) {
-        console.error('Error loading categorias:', error);
+        console.error('Error loading data:', error);
       } finally {
         setLoading(false);
       }
     };
-    loadCategorias();
+    loadData();
   }, []);
 
   // Cargar datos del entrenamiento si está en modo edición
@@ -62,6 +68,7 @@ const TrainingForm: React.FC<TrainingFormProps> = ({ training, onCancel, onSave 
         titulo: training.titulo || '',
         fecha: training.fecha ? training.fecha.split('T')[0] : '',
         categoriaId: training.categoriaId?.toString() || '',
+        entrenadorId: training.entrenadorId?.toString() || '',
         horaInicio: parseTime(training.horaInicio),
         horaFin: parseTime(training.horaFin),
         ubicacion: training.ubicacion || '',
@@ -89,6 +96,7 @@ const TrainingForm: React.FC<TrainingFormProps> = ({ training, onCancel, onSave 
       horaFin: formatTime(formData.horaFin),
       ubicacion: formData.ubicacion || null,
       categoriaId: formData.categoriaId ? parseInt(formData.categoriaId) : null,
+      entrenadorId: formData.entrenadorId ? parseInt(formData.entrenadorId) : null,
       estado: 'Programado'
     };
 
@@ -154,6 +162,22 @@ const TrainingForm: React.FC<TrainingFormProps> = ({ training, onCancel, onSave 
                 ))}
               </select>
             </div>
+          </div>
+
+          <div className="form-group mb-0">
+            <label className="text-secondary small fw-bold mb-2 d-block text-uppercase" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Nombre del Entrenador</label>
+            <select
+              className="form-select border-secondary border-opacity-25 text-white bg-[#0d1117]"
+              value={formData.entrenadorId}
+              onChange={e => setFormData({ ...formData, entrenadorId: e.target.value })}
+            >
+              <option value="" style={{ backgroundColor: '#0d1117' }}>Seleccionar Entrenador</option>
+              {entrenadores.map(coach => (
+                <option key={coach.id} value={coach.id} style={{ backgroundColor: '#0d1117' }}>
+                  {coach.nombres} {coach.apellidos}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="row g-4">
