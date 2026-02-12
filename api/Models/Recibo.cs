@@ -52,5 +52,26 @@ namespace SoftSportAPI.Models
         public Alumno? Alumno { get; set; }
         public ICollection<ReciboItem> Items { get; set; } = new List<ReciboItem>();
         public ICollection<Abono> Abonos { get; set; } = new List<Abono>();
+
+        [Column("fecha_creacion")]
+        public DateTime? FechaCreacion { get; set; }
+
+        [Column("usuario_creacion")]
+        [MaxLength(100)]
+        public string? UsuarioCreacion { get; set; }
+
+        [Column("fecha_modificacion")]
+        public DateTime? FechaModificacion { get; set; }
+
+        [Column("usuario_modificacion")]
+        [MaxLength(100)]
+        public string? UsuarioModificacion { get; set; }
+
+        [Column("fecha_anulacion")]
+        public DateTime? FechaAnulacion { get; set; }
+
+        [Column("usuario_anulacion")]
+        [MaxLength(100)]
+        public string? UsuarioAnulacion { get; set; }
     }
 }

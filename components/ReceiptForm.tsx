@@ -47,6 +47,8 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
   const [cantidad, setCantidad] = useState(1);
   const [descuentoManual, setDescuentoManual] = useState(0);
   const [items, setItems] = useState<ReciboItem[]>([]);
+  // Added state for fecha
+  const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
 
   // Autocomplete states
   const [searchTerm, setSearchTerm] = useState('');
@@ -70,11 +72,13 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
     const initializeForm = async () => {
       await Promise.all([loadAlumnos(), loadServicios(), loadProductos()]);
 
-      // Si estamos editando, cargar los datos del recibo
       if (recibo && recibo.items) {
         setDestType(recibo.destinatarioType || 'alumnos');
         setSelectedAlumnoId(recibo.destinatarioId?.toString() || '');
         setDescuentoManual(recibo.descuento || 0);
+        if (recibo.fecha) {
+          setFecha(new Date(recibo.fecha).toISOString().split('T')[0]);
+        }
       }
     };
 
@@ -218,7 +222,7 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
       const reciboData: any = {
         destinatarioType: destType,
         destinatarioId: selectedAlumnoId ? parseInt(selectedAlumnoId) : null,
-        fecha: recibo?.fecha || new Date().toISOString(),
+        fecha: fecha ? new Date(fecha).toISOString() : new Date().toISOString(),
         subtotal: calcularSubtotal(),
         descuento: descuentoManual,
         total: calcularTotal(),
@@ -267,6 +271,22 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
 
         <div className="card-body p-4">
           <form className="space-y-6" onSubmit={handleSubmit}>
+            {/* Header Info Row */}
+            <div className="row g-4 mb-2">
+              <div className="col-12 d-flex justify-content-end">
+                <div className="d-flex align-items-center gap-2">
+                  <label className="text-secondary small fw-bold mb-0">Fecha de Emisión / Pago:</label>
+                  <input
+                    type="date"
+                    className="form-control form-control-sm bg-[#0d1117] border-secondary border-opacity-25 text-white"
+                    style={{ width: '150px' }}
+                    value={fecha}
+                    onChange={(e) => setFecha(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Main Info Row */}
             <div className="row g-4">
               {/* Left Column: Destinatarios */}
@@ -436,12 +456,12 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
                   </button>
                 </div>
               </div>
-            </div>
+            </div >
 
             {/* Table and Summary Row */}
-            <div className="row g-4">
+            < div className="row g-4" >
               {/* Items List Table */}
-              <div className="col-lg-8">
+              < div className="col-lg-8" >
                 <div className="border border-secondary border-opacity-10 rounded-lg overflow-hidden bg-[#0d1117] bg-opacity-20">
                   <table className="table align-middle mb-0" style={{ fontSize: '13px', borderColor: '#30363d' }}>
                     <thead style={{ backgroundColor: '#161b22' }}>
@@ -486,10 +506,10 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
                     </tbody>
                   </table>
                 </div>
-              </div>
+              </div >
 
               {/* Financial Summary */}
-              <div className="col-lg-4">
+              < div className="col-lg-4" >
                 <div className="p-4 rounded-lg bg-blue-600 bg-opacity-10 border border-blue-500 border-opacity-20 h-100 flex-column d-flex">
                   <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-4 d-block border-bottom border-blue-900 border-opacity-30 pb-2">Resumen Financiero</label>
 
@@ -526,8 +546,8 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
                     </p>
                   </div>
                 </div>
-              </div>
-            </div>
+              </div >
+            </div >
 
             <div className="d-flex justify-content-between align-items-center mt-5 pt-4 border-top border-secondary border-opacity-25">
               <button
@@ -546,10 +566,10 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
                 {isEditMode ? 'Guardar Cambios' : 'Confirmar y Emitir Recibo(s)'}
               </button>
             </div>
-          </form>
-        </div>
-      </div>
-    </div>
+          </form >
+        </div >
+      </div >
+    </div >
   );
 };
 

@@ -59,7 +59,8 @@ const RealizarPago: React.FC<RealizarPagoProps> = ({ recibo, onClose, onSuccess 
       if (montoNumero >= saldoPendiente) {
         await apiService.updateRecibo(recibo.id, {
           ...recibo,
-          estado: 'Pagado'
+          estado: 'Pagado',
+          paymentMethodId: parseInt(metodoPago)
         });
       }
 

@@ -156,6 +156,9 @@ namespace SoftSportAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<Recibo>> PostRecibo(Recibo recibo)
         {
+            recibo.FechaCreacion = DateTime.UtcNow;
+            recibo.UsuarioCreacion = "System"; // TODO: Replace with logged in user when Auth is ready
+
             _context.Recibos.Add(recibo);
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetRecibo), new { id = recibo.Id }, recibo);
@@ -185,7 +188,18 @@ namespace SoftSportAPI.Controllers
             existingRecibo.Subtotal = recibo.Subtotal;
             existingRecibo.Descuento = recibo.Descuento;
             existingRecibo.Total = recibo.Total;
+
+            // Handle Annulment
+            if (existingRecibo.Estado != "Anulado" && recibo.Estado == "Anulado")
+            {
+                existingRecibo.FechaAnulacion = DateTime.UtcNow;
+                existingRecibo.UsuarioAnulacion = "System";
+            }
+
             existingRecibo.Estado = recibo.Estado;
+
+            existingRecibo.FechaModificacion = DateTime.UtcNow;
+            existingRecibo.UsuarioModificacion = "System";
 
             // Eliminar items antiguos
             _context.ReciboItems.RemoveRange(existingRecibo.Items);
