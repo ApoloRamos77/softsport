@@ -12,6 +12,7 @@ const RealizarPago: React.FC<RealizarPagoProps> = ({ recibo, onClose, onSuccess 
   const [monto, setMonto] = useState('');
   const [metodoPago, setMetodoPago] = useState('');
   const [referencia, setReferencia] = useState('');
+  const [observaciones, setObservaciones] = useState('');
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -20,6 +21,8 @@ const RealizarPago: React.FC<RealizarPagoProps> = ({ recibo, onClose, onSuccess 
   useEffect(() => {
     loadPaymentMethods();
     setMonto(saldoPendiente.toFixed(2));
+    // Initialize observaciones from recibo if exists
+    setObservaciones(recibo.observaciones || '');
   }, []);
 
   const loadPaymentMethods = async () => {
@@ -60,7 +63,14 @@ const RealizarPago: React.FC<RealizarPagoProps> = ({ recibo, onClose, onSuccess 
         await apiService.updateRecibo(recibo.id, {
           ...recibo,
           estado: 'Pagado',
-          paymentMethodId: parseInt(metodoPago)
+          paymentMethodId: parseInt(metodoPago),
+          observaciones: observaciones || recibo.observaciones || null
+        });
+      } else if (observaciones && observaciones !== recibo.observaciones) {
+        // Update observaciones even if not fully paid
+        await apiService.updateRecibo(recibo.id, {
+          ...recibo,
+          observaciones: observaciones
         });
       }
 
@@ -145,6 +155,23 @@ const RealizarPago: React.FC<RealizarPagoProps> = ({ recibo, onClose, onSuccess 
                   placeholder="Nro. operación, cheque, etc."
                   className="form-control bg-[#0d1117] border-secondary border-opacity-25 text-white placeholder-secondary"
                 />
+              </div>
+
+              <div className="mb-4">
+                <label className="form-label text-secondary small">
+                  <i className="bi bi-pencil-square me-1"></i>
+                  Observaciones (opcional)
+                </label>
+                <textarea
+                  value={observaciones}
+                  onChange={(e) => setObservaciones(e.target.value)}
+                  placeholder="Notas o glosa adicional del pago..."
+                  className="form-control bg-[#0d1117] border-secondary border-opacity-25 text-white placeholder-secondary"
+                  rows={2}
+                />
+                <small className="text-secondary opacity-75 mt-1 d-block" style={{ fontSize: '10px' }}>
+                  💡 Estas observaciones se guardarán con el recibo.
+                </small>
               </div>
 
               <div className="d-flex gap-2">

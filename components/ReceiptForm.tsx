@@ -49,6 +49,8 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
   const [items, setItems] = useState<ReciboItem[]>([]);
   // Added state for fecha
   const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
+  // Added state for observaciones
+  const [observaciones, setObservaciones] = useState('');
 
   // Autocomplete states
   const [searchTerm, setSearchTerm] = useState('');
@@ -79,6 +81,7 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
         if (recibo.fecha) {
           setFecha(new Date(recibo.fecha).toISOString().split('T')[0]);
         }
+        setObservaciones(recibo.observaciones || '');
       }
     };
 
@@ -227,6 +230,7 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
         descuento: descuentoManual,
         total: calcularTotal(),
         estado: recibo?.estado || 'Pendiente',
+        observaciones: observaciones || null,
         items: items.map(item => ({
           tipo: item.tipo,
           itemId: item.itemId,
@@ -548,6 +552,28 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
                 </div>
               </div >
             </div >
+
+            {/* Observaciones Section */}
+            <div className="row g-4 mt-2">
+              <div className="col-12">
+                <div className="p-4 rounded-lg border border-secondary border-opacity-10 bg-[#0d1117] bg-opacity-30">
+                  <label className="form-label text-secondary small fw-bold mb-2">
+                    <i className="bi bi-pencil-square me-2"></i>
+                    Glosa / Observaciones
+                  </label>
+                  <textarea
+                    value={observaciones}
+                    onChange={(e) => setObservaciones(e.target.value)}
+                    className="form-control bg-[#0d1117] border-secondary border-opacity-25 text-white placeholder-secondary"
+                    rows={3}
+                    placeholder="Ingrese observaciones, notas o glosa adicional del recibo (opcional)..."
+                  />
+                  <small className="text-secondary opacity-75 mt-2 d-block" style={{ fontSize: '10px' }}>
+                    💡 Este campo aparecerá en el detalle del recibo y en el comprobante impreso.
+                  </small>
+                </div>
+              </div>
+            </div>
 
             <div className="d-flex justify-content-between align-items-center mt-5 pt-4 border-top border-secondary border-opacity-25">
               <button

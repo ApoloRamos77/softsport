@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SoftSportAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bf1e67b7144c8e690d308f964cf270cf97a1eb96")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+715f3b0ccaeee0be0d35de8e3f8cd42847ee0103")]
 [assembly: System.Reflection.AssemblyProductAttribute("SoftSportAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SoftSportAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

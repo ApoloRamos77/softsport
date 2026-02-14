@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReceiptForm from './ReceiptForm';
 import DetalleRecibo from './DetalleRecibo';
 import RealizarPago from './RealizarPago';
+import ReciboImpresion from './ReciboImpresion';
 import { apiService } from '../services/api';
 
 interface Recibo {
@@ -32,6 +33,7 @@ const AccountingManagement: React.FC = () => {
   const [selectedRecibo, setSelectedRecibo] = useState<Recibo | null>(null);
   const [showDetalles, setShowDetalles] = useState(false);
   const [showPago, setShowPago] = useState(false);
+  const [showPrint, setShowPrint] = useState(false);
   const [editingRecibo, setEditingRecibo] = useState<Recibo | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -127,6 +129,18 @@ const AccountingManagement: React.FC = () => {
     }
     setSelectedRecibo(recibo);
     setShowPago(true);
+  };
+
+  const handlePrintRecibo = async (recibo: Recibo) => {
+    try {
+      // Load full receipt details before printing
+      const fullRecibo = await apiService.getRecibo(recibo.id);
+      setSelectedRecibo(fullRecibo);
+      setShowPrint(true);
+    } catch (error) {
+      console.error('Error al cargar recibo para impresión:', error);
+      alert('Error al cargar los detalles del recibo');
+    }
   };
 
   const handleFormClose = () => {
@@ -335,6 +349,14 @@ const AccountingManagement: React.FC = () => {
                           >
                             <i className="bi bi-eye"></i>
                           </button>
+                          <button
+                            onClick={() => handlePrintRecibo(recibo)}
+                            className="btn btn-sm text-secondary p-0"
+                            title="Imprimir recibo"
+                            style={{ background: 'transparent', border: 'none' }}
+                          >
+                            <i className="bi bi-printer"></i>
+                          </button>
                           {recibo.estado !== 'Anulado' && (
                             <>
                               <button
@@ -435,6 +457,16 @@ const AccountingManagement: React.FC = () => {
               setShowPago(false);
               setSelectedRecibo(null);
               loadRecibos();
+            }}
+          />
+        )}
+
+        {showPrint && selectedRecibo && (
+          <ReciboImpresion
+            recibo={selectedRecibo}
+            onClose={() => {
+              setShowPrint(false);
+              setSelectedRecibo(null);
             }}
           />
         )}

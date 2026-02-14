@@ -79,6 +79,7 @@ namespace SoftSportAPI.Controllers
                 r.Descuento,
                 r.Total,
                 r.Estado,
+                r.Observaciones,
                 AlumnoNombre = r.Alumno != null ? $"{r.Alumno.Nombre} {r.Alumno.Apellido}" : null,
                 Items = r.Items.Select(item => new
                 {
@@ -134,6 +135,8 @@ namespace SoftSportAPI.Controllers
                 recibo.Descuento,
                 recibo.Total,
                 recibo.Estado,
+                recibo.Observaciones,
+                AlumnoNombre = recibo.Alumno != null ? $"{recibo.Alumno.Nombre} {recibo.Alumno.Apellido}" : null,
                 Items = recibo.Items.Select(item => new
                 {
                     item.Id,
@@ -156,6 +159,29 @@ namespace SoftSportAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<Recibo>> PostRecibo(Recibo recibo)
         {
+            // Auto-generate receipt number: max + 1
+            var maxNumero = await _context.Recibos
+                .Where(r => r.Numero != null && r.Numero != "")
+                .Select(r => r.Numero)
+                .ToListAsync();
+
+            int nextNumber = 1;
+            if (maxNumero.Any())
+            {
+                // Extract numeric values and find the max
+                var numericValues = maxNumero
+                    .Select(n => int.TryParse(n, out var num) ? num : 0)
+                    .ToList();
+                
+                if (numericValues.Any())
+                {
+                    nextNumber = numericValues.Max() + 1;
+                }
+            }
+
+            // Format with 6 digits and leading zeros (e.g., 000057)
+            recibo.Numero = nextNumber.ToString("D6");
+
             recibo.FechaCreacion = DateTime.UtcNow;
             recibo.UsuarioCreacion = "System"; // TODO: Replace with logged in user when Auth is ready
 
@@ -188,6 +214,7 @@ namespace SoftSportAPI.Controllers
             existingRecibo.Subtotal = recibo.Subtotal;
             existingRecibo.Descuento = recibo.Descuento;
             existingRecibo.Total = recibo.Total;
+            existingRecibo.Observaciones = recibo.Observaciones;
 
             // Handle Annulment
             if (existingRecibo.Estado != "Anulado" && recibo.Estado == "Anulado")

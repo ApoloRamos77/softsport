@@ -41,6 +41,9 @@ namespace SoftSportAPI.Models
         [MaxLength(50)]
         public string Estado { get; set; } = "Pendiente";
 
+        [Column("observaciones")]
+        public string? Observaciones { get; set; }
+
         [Column("payment_method_id")]
         public int? PaymentMethodId { get; set; }
 
