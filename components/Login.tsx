@@ -24,6 +24,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
       localStorage.setItem('user', JSON.stringify(user));
       localStorage.setItem('userRole', user.role || 'User');
       localStorage.setItem('userName', user.nombre || username);
+      localStorage.setItem('userPermissions', JSON.stringify(user.permissions || []));
 
       if (rememberMe) {
         localStorage.setItem('rememberMe', 'true');

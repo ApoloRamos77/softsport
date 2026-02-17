@@ -12,44 +12,53 @@ const RoleForm: React.FC<RoleFormProps> = ({ role, onCancel }) => {
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [loading, setLoading] = useState(false);
-  const [permissions, setPermissions] = useState<Permission[]>([
-    { moduloId: 1, moduloNombre: 'Dashboard', ver: false, crear: false, modificar: false, eliminar: false },
-    { moduloId: 2, moduloNombre: 'Atletas', ver: false, crear: false, modificar: false, eliminar: false },
-    { moduloId: 3, moduloNombre: 'Grupos', ver: false, crear: false, modificar: false, eliminar: false },
-    { moduloId: 4, moduloNombre: 'Categorías', ver: false, crear: false, modificar: false, eliminar: false },
-    { moduloId: 5, moduloNombre: 'Entrenamientos', ver: false, crear: false, modificar: false, eliminar: false },
-    { moduloId: 6, moduloNombre: 'Juegos', ver: false, crear: false, modificar: false, eliminar: false },
-    { moduloId: 7, moduloNombre: 'Representantes', ver: false, crear: false, modificar: false, eliminar: false },
-    { moduloId: 8, moduloNombre: 'Abonos', ver: false, crear: false, modificar: false, eliminar: false },
-    { moduloId: 9, moduloNombre: 'Becas', ver: false, crear: false, modificar: false, eliminar: false },
-    { moduloId: 10, moduloNombre: 'Servicios', ver: false, crear: false, modificar: false, eliminar: false },
-    { moduloId: 11, moduloNombre: 'Productos', ver: false, crear: false, modificar: false, eliminar: false },
-  ]);
+  const [permissions, setPermissions] = useState<Permission[]>([]);
 
   const isEditMode = !!role;
 
   useEffect(() => {
-    if (role) {
-      setNombre(role.nombre);
-      setDescripcion(role.descripcion);
-      if (role.id) {
-        loadPermissions(role.id);
-      }
-    }
+    loadData();
   }, [role]);
 
-  const loadPermissions = async (roleId: number) => {
+  const loadData = async () => {
     try {
-      const savedPermissions = await apiService.getRolePermissions(roleId);
-      const permissionsMap = new Map(
-        savedPermissions.map((p: Permission) => [p.moduloId, p])
-      );
-      setPermissions(prev => prev.map(p => {
-        const saved = permissionsMap.get(p.moduloId);
-        return saved ? saved : p;
+      setLoading(true);
+      // 1. Fetch all available modules
+      const modules = await apiService.getModules();
+
+      // 2. Create base permissions from modules
+      let initialPermissions: Permission[] = modules.map(m => ({
+        moduloId: m.id,
+        moduloNombre: m.nombre,
+        ver: false,
+        crear: false,
+        modificar: false,
+        eliminar: false
       }));
+
+      // 3. If editing, fetch and merge saved permissions
+      if (role && role.id) {
+        setNombre(role.nombre);
+        setDescripcion(role.descripcion);
+
+        const savedPermissions = await apiService.getRolePermissions(role.id);
+        const savedMap = new Map(savedPermissions.map(p => [p.moduloId, p]));
+
+        initialPermissions = initialPermissions.map(p => {
+          const saved = savedMap.get(p.moduloId);
+          if (saved) {
+            // Keep the name from the module source of truth, but take values from saved
+            return { ...saved, moduloNombre: p.moduloNombre };
+          }
+          return p;
+        });
+      }
+
+      setPermissions(initialPermissions);
     } catch (error) {
-      console.error('Error cargando permisos:', error);
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -156,50 +165,99 @@ const RoleForm: React.FC<RoleFormProps> = ({ role, onCancel }) => {
             </div>
           ) : (
             <div className="mt-2">
-              <div className="mb-4">
-                <h5 className="fw-bold text-white mb-1">Permisos por Módulo</h5>
-                <small className="text-secondary">Configura los permisos de acceso para cada módulo del sistema</small>
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                  <h5 className="fw-bold text-white mb-1">Permisos por Módulo</h5>
+                  <small className="text-secondary">Configura los permisos de acceso para cada módulo del sistema</small>
+                </div>
+                <div className="d-flex gap-2">
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-primary"
+                    onClick={() => setPermissions(prev => prev.map(p => ({ ...p, ver: true, crear: true, modificar: true, eliminar: true })))}
+                  >
+                    <i className="bi bi-check-all me-1"></i> Seleccionar Todo
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary"
+                    onClick={() => setPermissions(prev => prev.map(p => ({ ...p, ver: false, crear: false, modificar: false, eliminar: false })))}
+                  >
+                    <i className="bi bi-x-circle me-1"></i> Deseleccionar Todo
+                  </button>
+                </div>
               </div>
 
-              <div className="table-responsive rounded border border-secondary border-opacity-25">
-                <table className="table align-middle mb-0" style={{ borderColor: '#30363d' }}>
-                  <thead style={{ backgroundColor: '#161b22' }}>
-                    <tr>
-                      <th className="ps-4 py-3 text-white border-bottom border-secondary border-opacity-25">Módulo</th>
-                      <th className="text-center py-3 text-white border-bottom border-secondary border-opacity-25">Ver</th>
-                      <th className="text-center py-3 text-white border-bottom border-secondary border-opacity-25">Crear</th>
-                      <th className="text-center py-3 text-white border-bottom border-secondary border-opacity-25">Modificar</th>
-                      <th className="text-center py-3 text-white border-bottom border-secondary border-opacity-25">Eliminar</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {permissions.map((perm) => (
-                      <tr key={perm.moduloId} style={{ backgroundColor: '#0d1117' }}>
-                        <td className="ps-4 py-3 fw-medium text-white border-bottom border-secondary border-opacity-10">{perm.moduloNombre}</td>
-                        {['ver', 'crear', 'modificar', 'eliminar'].map((action) => (
-                          <td key={action} className="text-center border-bottom border-secondary border-opacity-10">
-                            <div className="form-check d-flex justify-content-center">
-                              <input
-                                className="form-check-input"
-                                type="checkbox"
-                                checked={(perm as any)[action]}
-                                onChange={() => handlePermissionChange(perm.moduloId, action as any)}
-                                style={{
-                                  backgroundColor: (perm as any)[action] ? '#1f6feb' : 'transparent',
-                                  borderColor: '#30363d',
-                                  width: '18px',
-                                  height: '18px',
-                                  cursor: 'pointer'
-                                }}
-                              />
+              {permissions.length === 0 ? (
+                <div className="alert alert-warning border-0 bg-opacity-10 bg-warning text-warning d-flex align-items-center">
+                  <i className="bi bi-exclamation-triangle-fill me-3 fs-4"></i>
+                  <div>
+                    <h6 className="fw-bold mb-1">No se encontraron módulos</h6>
+                    <p className="mb-0 small">No hay módulos disponibles en la base de datos. Por favor, contacte al administrador del sistema para ejecutar el script de inicialización.</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="table-responsive rounded border border-secondary border-opacity-25">
+                  <table className="table align-middle mb-0" style={{ borderColor: '#30363d' }}>
+                    <thead style={{ backgroundColor: '#161b22' }}>
+                      <tr>
+                        <th className="ps-4 py-3 text-white border-bottom border-secondary border-opacity-25">Módulo</th>
+                        <th className="text-center py-3 text-white border-bottom border-secondary border-opacity-25">Acciones Rápidas</th>
+                        <th className="text-center py-3 text-white border-bottom border-secondary border-opacity-25">Ver</th>
+                        <th className="text-center py-3 text-white border-bottom border-secondary border-opacity-25">Crear</th>
+                        <th className="text-center py-3 text-white border-bottom border-secondary border-opacity-25">Modificar</th>
+                        <th className="text-center py-3 text-white border-bottom border-secondary border-opacity-25">Eliminar</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {permissions.map((perm) => (
+                        <tr key={perm.moduloId} style={{ backgroundColor: '#0d1117' }}>
+                          <td className="ps-4 py-3 fw-medium text-white border-bottom border-secondary border-opacity-10">{perm.moduloNombre}</td>
+                          <td className="text-center border-bottom border-secondary border-opacity-10">
+                            <div className="btn-group btn-group-sm">
+                              <button
+                                type="button"
+                                className="btn btn-outline-secondary border-opacity-25"
+                                onClick={() => setPermissions(prev => prev.map(p => p.moduloId === perm.moduloId ? { ...p, ver: true, crear: true, modificar: true, eliminar: true } : p))}
+                                title="Seleccionar todo"
+                              >
+                                <i className="bi bi-check-all"></i>
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-outline-secondary border-opacity-25"
+                                onClick={() => setPermissions(prev => prev.map(p => p.moduloId === perm.moduloId ? { ...p, ver: false, crear: false, modificar: false, eliminar: false } : p))}
+                                title="Deseleccionar todo"
+                              >
+                                <i className="bi bi-x"></i>
+                              </button>
                             </div>
                           </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                          {['ver', 'crear', 'modificar', 'eliminar'].map((action) => (
+                            <td key={action} className="text-center border-bottom border-secondary border-opacity-10">
+                              <div className="form-check d-flex justify-content-center">
+                                <input
+                                  className="form-check-input"
+                                  type="checkbox"
+                                  checked={(perm as any)[action]}
+                                  onChange={() => handlePermissionChange(perm.moduloId, action as any)}
+                                  style={{
+                                    backgroundColor: (perm as any)[action] ? '#1f6feb' : 'transparent',
+                                    borderColor: '#30363d',
+                                    width: '18px',
+                                    height: '18px',
+                                    cursor: 'pointer'
+                                  }}
+                                />
+                              </div>
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
 

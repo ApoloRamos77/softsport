@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { apiService, Categoria, TrainingSchedule } from '../services/api';
+import { apiService, Categoria, TrainingSchedule, Personal } from '../services/api';
 
 interface TrainingScheduleFormProps {
     schedule?: TrainingSchedule | null;
@@ -10,11 +10,13 @@ interface TrainingScheduleFormProps {
 
 const TrainingScheduleForm: React.FC<TrainingScheduleFormProps> = ({ schedule, onCancel, onSave }) => {
     const [categorias, setCategorias] = useState<Categoria[]>([]);
+    const [entrenadores, setEntrenadores] = useState<Personal[]>([]);
     const [loading, setLoading] = useState(false);
 
     const [formData, setFormData] = useState({
         nombre: '',
-        categoriaId: '',
+        categoriaIds: [] as number[],
+        entrenadorId: '',
         diasSemana: [] as number[], // 1=Mon, 7=Sun
         horaInicio: { hora: '--', minuto: '--', periodo: 'AM' },
         horaFin: { hora: '--', minuto: '--', periodo: 'AM' },
@@ -32,20 +34,24 @@ const TrainingScheduleForm: React.FC<TrainingScheduleFormProps> = ({ schedule, o
         { id: 7, label: 'Domingo' }
     ];
 
-    // Load categories
+    // Load categories and coaches
     useEffect(() => {
-        const loadCategorias = async () => {
+        const loadData = async () => {
             try {
                 setLoading(true);
-                const data = await apiService.getAll<Categoria>('categorias');
-                setCategorias(data);
+                const [cats, coaches] = await Promise.all([
+                    apiService.getAll<Categoria>('categorias'),
+                    apiService.getPersonal({ cargo: 'Entrenador' })
+                ]);
+                setCategorias(cats);
+                setEntrenadores(coaches);
             } catch (error) {
-                console.error('Error loading categories:', error);
+                console.error('Error loading data:', error);
             } finally {
                 setLoading(false);
             }
         };
-        loadCategorias();
+        loadData();
     }, []);
 
     // Load schedule data if editing
@@ -66,7 +72,8 @@ const TrainingScheduleForm: React.FC<TrainingScheduleFormProps> = ({ schedule, o
 
             setFormData({
                 nombre: schedule.nombre || '',
-                categoriaId: schedule.categoriaId?.toString() || '',
+                categoriaIds: schedule.categoriaId ? [schedule.categoriaId] : [],
+                entrenadorId: schedule.entrenadorId?.toString() || '',
                 diasSemana: schedule.diasSemana ? schedule.diasSemana.split(',').map(Number) : [],
                 horaInicio: parseTime(schedule.horaInicio),
                 horaFin: parseTime(schedule.horaFin),
@@ -75,6 +82,16 @@ const TrainingScheduleForm: React.FC<TrainingScheduleFormProps> = ({ schedule, o
             });
         }
     }, [schedule]);
+
+    // Toggle category selection
+    const toggleCategory = (catId: number) => {
+        setFormData(prev => ({
+            ...prev,
+            categoriaIds: prev.categoriaIds.includes(catId)
+                ? prev.categoriaIds.filter(id => id !== catId)
+                : [...prev.categoriaIds, catId]
+        }));
+    };
 
     const toggleDay = (dayId: number) => {
         setFormData(prev => {
@@ -104,7 +121,8 @@ const TrainingScheduleForm: React.FC<TrainingScheduleFormProps> = ({ schedule, o
         const scheduleData = {
             nombre: formData.nombre,
             descripcion: formData.descripcion || null,
-            categoriaId: formData.categoriaId ? parseInt(formData.categoriaId) : null,
+            categoriaId: formData.categoriaIds.length > 0 ? formData.categoriaIds[0] : null,
+            entrenadorId: formData.entrenadorId ? parseInt(formData.entrenadorId) : null,
             diasSemana: formData.diasSemana.join(','),
             horaInicio: formatTime(formData.horaInicio),
             horaFin: formatTime(formData.horaFin),
@@ -151,16 +169,43 @@ const TrainingScheduleForm: React.FC<TrainingScheduleFormProps> = ({ schedule, o
 
                     <div className="row g-4">
                         <div className="col-md-6">
-                            <label className="text-secondary small fw-bold mb-2 d-block text-uppercase" style={{ fontSize: '11px' }}>Categoría *</label>
+                            <label className="text-secondary small fw-bold mb-2 d-block text-uppercase" style={{ fontSize: '11px' }}>Categorías * (selección múltiple)</label>
+                            <div className="border border-secondary border-opacity-25 rounded p-3 bg-[#0d1117]" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                {categorias.length === 0 ? (
+                                    <p className="text-secondary text-sm mb-0">Cargando categorías...</p>
+                                ) : (
+                                    categorias.map(cat => (
+                                        <div key={cat.id} className="form-check mb-2">
+                                            <input
+                                                className="form-check-input"
+                                                type="checkbox"
+                                                id={`schedule-cat-${cat.id}`}
+                                                checked={formData.categoriaIds.includes(cat.id)}
+                                                onChange={() => toggleCategory(cat.id)}
+                                            />
+                                            <label className="form-check-label text-white" htmlFor={`schedule-cat-${cat.id}`}>
+                                                {cat.nombre}
+                                            </label>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                            {formData.categoriaIds.length === 0 && (
+                                <small className="text-danger d-block mt-1">Selecciona al menos una categoría</small>
+                            )}
+                        </div>
+                        <div className="col-md-6">
+                            <label className="text-secondary small fw-bold mb-2 d-block text-uppercase" style={{ fontSize: '11px' }}>Entrenador</label>
                             <select
                                 className="form-select border-secondary border-opacity-25 text-white bg-[#0d1117]"
-                                value={formData.categoriaId}
-                                onChange={e => setFormData({ ...formData, categoriaId: e.target.value })}
-                                required
+                                value={formData.entrenadorId}
+                                onChange={e => setFormData({ ...formData, entrenadorId: e.target.value })}
                             >
-                                <option value="" style={{ backgroundColor: '#0d1117' }}>Seleccionar categoría</option>
-                                {categorias.map(cat => (
-                                    <option key={cat.id} value={cat.id} style={{ backgroundColor: '#0d1117' }}>{cat.nombre}</option>
+                                <option value="" style={{ backgroundColor: '#0d1117' }}>Seleccionar entrenador</option>
+                                {entrenadores.map(coach => (
+                                    <option key={coach.id} value={coach.id} style={{ backgroundColor: '#0d1117' }}>
+                                        {coach.nombres} {coach.apellidos}
+                                    </option>
                                 ))}
                             </select>
                         </div>
@@ -175,8 +220,8 @@ const TrainingScheduleForm: React.FC<TrainingScheduleFormProps> = ({ schedule, o
                                     type="button"
                                     onClick={() => toggleDay(day.id)}
                                     className={`btn btn-sm ${formData.diasSemana.includes(day.id)
-                                            ? 'btn-primary bg-primary text-white border-primary'
-                                            : 'btn-outline-secondary text-secondary border-secondary border-opacity-25'
+                                        ? 'btn-primary bg-primary text-white border-primary'
+                                        : 'btn-outline-secondary text-secondary border-secondary border-opacity-25'
                                         }`}
                                     style={{ minWidth: '80px' }}
                                 >

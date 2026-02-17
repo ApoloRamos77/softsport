@@ -23,6 +23,8 @@ namespace SoftSportAPI.Controllers
             return await _context.Trainings
                 .Include(t => t.Categoria)
                 .Include(t => t.Entrenador)
+                .Include(t => t.TrainingCategorias)
+                    .ThenInclude(tc => tc.Categoria)
                 .Where(t => t.FechaAnulacion == null)
                 .OrderByDescending(t => t.Fecha)
                 .ToListAsync();
@@ -35,6 +37,8 @@ namespace SoftSportAPI.Controllers
             var training = await _context.Trainings
                 .Include(t => t.Categoria)
                 .Include(t => t.Entrenador)
+                .Include(t => t.TrainingCategorias)
+                    .ThenInclude(tc => tc.Categoria)
                 .FirstOrDefaultAsync(t => t.Id == id);
 
             if (training == null)
@@ -47,24 +51,85 @@ namespace SoftSportAPI.Controllers
 
         // POST: api/Trainings
         [HttpPost]
-        public async Task<ActionResult<Training>> PostTraining(Training training)
+        public async Task<ActionResult<Training>> PostTraining([FromBody] DTOs.TrainingDto trainingDto)
         {
+            var training = new Training
+            {
+                Titulo = trainingDto.Titulo,
+                Descripcion = trainingDto.Descripcion,
+                Fecha = trainingDto.Fecha,
+                HoraInicio = trainingDto.HoraInicio != null ? TimeSpan.Parse(trainingDto.HoraInicio) : null,
+                HoraFin = trainingDto.HoraFin != null ? TimeSpan.Parse(trainingDto.HoraFin) : null,
+                Ubicacion = trainingDto.Ubicacion,
+                CategoriaId = trainingDto.CategoriaId,
+                EntrenadorId = trainingDto.EntrenadorId,
+                Estado = trainingDto.Estado,
+                TrainingScheduleId = trainingDto.TrainingScheduleId
+            };
+
             _context.Trainings.Add(training);
             await _context.SaveChangesAsync();
+
+            //  Add TrainingCategorias if categoriaIds provided
+            if (trainingDto.CategoriaIds != null && trainingDto.CategoriaIds.Count > 0)
+            {
+                foreach (var catId in trainingDto.CategoriaIds)
+                {
+                    _context.TrainingCategorias.Add(new TrainingCategoria
+                    {
+                        TrainingId = training.Id,
+                        CategoriaId = catId
+                    });
+                }
+                await _context.SaveChangesAsync();
+            }
 
             return CreatedAtAction(nameof(GetTraining), new { id = training.Id }, training);
         }
 
         // PUT: api/Trainings/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutTraining(int id, Training training)
+        public async Task<IActionResult> PutTraining(int id, [FromBody] DTOs.TrainingDto trainingDto)
         {
-            if (id != training.Id)
+            if (id != trainingDto.Id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(training).State = EntityState.Modified;
+            var training = await _context.Trainings.FindAsync(id);
+            if (training == null)
+            {
+                return NotFound();
+            }
+
+            // Update training properties
+            training.Titulo = trainingDto.Titulo;
+            training.Descripcion = trainingDto.Descripcion;
+            training.Fecha = trainingDto.Fecha;
+            training.HoraInicio = trainingDto.HoraInicio != null ? TimeSpan.Parse(trainingDto.HoraInicio) : null;
+            training.HoraFin = trainingDto.HoraFin != null ? TimeSpan.Parse(trainingDto.HoraFin) : null;
+            training.Ubicacion = trainingDto.Ubicacion;
+            training.CategoriaId = trainingDto.CategoriaId;
+            training.EntrenadorId = trainingDto.EntrenadorId;
+            training.Estado = trainingDto.Estado;
+
+            // Update category associations if provided
+            if (trainingDto.CategoriaIds != null && trainingDto.CategoriaIds.Count > 0)
+            {
+                // Remove existing associations
+                var existingAssociations = _context.TrainingCategorias.Where(tc => tc.TrainingId == id);
+                _context.TrainingCategorias.RemoveRange(existingAssociations);
+
+                // Add new associations
+                foreach (var catId in trainingDto.CategoriaIds)
+                {
+                    _context.TrainingCategorias.Add(new TrainingCategoria
+                    {
+                        TrainingId = id,
+                        CategoriaId = catId
+                    });
+                }
+            }
 
             try
             {

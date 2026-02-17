@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { apiService, User, Personal } from '../services/api';
+import { apiService, User, Personal, Role } from '../services/api';
 
 interface UserFormProps {
   user?: User | null;
@@ -18,24 +18,23 @@ const UserForm: React.FC<UserFormProps> = ({ user, onCancel }) => {
   const [role, setRole] = useState('');
   const [personalId, setPersonalId] = useState<number | undefined>(undefined);
   const [personalList, setPersonalList] = useState<Personal[]>([]);
+  const [roleList, setRoleList] = useState<Role[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const roles = [
-    { id: 'Administrador', title: 'Administrador', description: 'Acceso completo al sistema' },
-    { id: 'Entrenador', title: 'Entrenador', description: 'Gestión de entrenamientos y partidos' },
-    { id: 'Representante', title: 'Representante', description: 'Acceso limitado para representantes' },
-  ];
-
   useEffect(() => {
-    const loadPersonal = async () => {
+    const loadData = async () => {
       try {
-        const data = await apiService.getPersonal();
-        setPersonalList(data);
+        const [personalData, rolesData] = await Promise.all([
+          apiService.getPersonal(),
+          apiService.getRoles()
+        ]);
+        setPersonalList(personalData);
+        setRoleList(rolesData);
       } catch (error) {
-        console.error('Error loading personal:', error);
+        console.error('Error loading data:', error);
       }
     };
-    loadPersonal();
+    loadData();
 
     if (user) {
       setNombre(user.nombre || '');
@@ -219,14 +218,14 @@ const UserForm: React.FC<UserFormProps> = ({ user, onCancel }) => {
                     required
                   >
                     <option value="" disabled>Seleccionar rol...</option>
-                    {roles.map(r => (
-                      <option key={r.id} value={r.title}>{r.title}</option>
+                    {roleList.map(r => (
+                      <option key={r.id} value={r.nombre}>{r.nombre}</option>
                     ))}
                   </select>
                   {role && (
                     <div className="form-text text-secondary mt-2" style={{ fontSize: '11px' }}>
                       <i className="bi bi-info-circle me-1"></i>
-                      {roles.find(r => r.title === role)?.description}
+                      {roleList.find(r => r.nombre === role)?.descripcion}
                     </div>
                   )}
                 </div>

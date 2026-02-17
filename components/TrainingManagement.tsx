@@ -15,6 +15,11 @@ const TrainingManagement: React.FC = () => {
   const [tipoFiltro, setTipoFiltro] = useState('Todos');
   const [availableCategories, setAvailableCategories] = useState<Categoria[]>([]);
 
+  // Status modal state
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [selectedTraining, setSelectedTraining] = useState<Training | null>(null);
+  const [newStatus, setNewStatus] = useState('');
+
   const loadTrainings = async () => {
     try {
       setLoading(true);
@@ -81,6 +86,57 @@ const TrainingManagement: React.FC = () => {
     if (!dateStr) return '--';
     const date = new Date(dateStr);
     return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' });
+  };
+
+  // Calcular estado automático basado en la fecha
+  const getAutomaticStatus = (training: Training): string => {
+    if (!training.fecha) return training.estado || 'Programado';
+    const trainingDate = new Date(training.fecha);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    trainingDate.setHours(0, 0, 0, 0);
+
+    if (trainingDate > today) {
+      return 'Programado';
+    } else {
+      // Si es fecha pasada y no tiene estado específico, dejar que se elija
+      return training.estado || 'No Ejecutado';
+    }
+  };
+
+  // Verificar si la fecha ya pasó
+  const isPastDate = (dateStr?: string): boolean => {
+    if (!dateStr) return false;
+    const trainingDate = new Date(dateStr);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    trainingDate.setHours(0, 0, 0, 0);
+    return trainingDate < today;
+  };
+
+  // Actualizar estado de entrenamiento
+  const handleStatusUpdate = async () => {
+    if (!selectedTraining) return;
+
+    try {
+      await apiService.update('trainings', selectedTraining.id, {
+        ...selectedTraining,
+        estado: newStatus
+      });
+      await loadTrainings();
+      setShowStatusModal(false);
+      setSelectedTraining(null);
+    } catch (error) {
+      console.error('Error updating training status:', error);
+      alert('Error al actualizar el estado del entrenamiento');
+    }
+  };
+
+  // Open status modal
+  const openStatusModal = (training: Training) => {
+    setSelectedTraining(training);
+    setNewStatus(training.estado || 'Ejecutado');
+    setShowStatusModal(true);
   };
 
   const filteredTrainings = trainings.filter(t => {
@@ -336,25 +392,51 @@ const TrainingManagement: React.FC = () => {
                             <div className="small">{formatTime(training.horaInicio)} - {formatTime(training.horaFin)}</div>
                           </td>
                           <td className="text-secondary border-bottom border-secondary border-opacity-10 py-3">
-                            <span className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">{training.categoria?.nombre || '--'}</span>
+                            <div className="d-flex flex-wrap gap-1">
+                              {training.trainingCategorias && training.trainingCategorias.length > 0 ? (
+                                training.trainingCategorias.map((tc, index) => (
+                                  <span key={index} className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25" style={{ fontSize: '11px' }}>
+                                    {tc.categoria?.nombre}
+                                  </span>
+                                ))
+                              ) : (
+                                <span className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">
+                                  {training.categoria?.nombre || '--'}
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="border-bottom border-secondary border-opacity-10 py-3">
-                            <span className={`badge border border-opacity-30 text-white ${training.estado === 'Programado' ? 'bg-primary bg-opacity-20 border-primary' :
-                              training.estado === 'Completado' ? 'bg-success bg-opacity-20 border-success' :
-                                'bg-secondary bg-opacity-20 border-secondary'
-                              }`}>
-                              {training.estado}
-                            </span>
+                            {isPastDate(training.fecha) ? (
+                              <button
+                                onClick={() => openStatusModal(training)}
+                                className={`btn btn-sm border ${(training.estado || 'Ejecutado') === 'Ejecutado'
+                                  ? 'btn-success bg-success text-white border-success' :
+                                  (training.estado || 'Ejecutado') === 'No Ejecutado'
+                                    ? 'btn-danger bg-danger text-white border-danger' :
+                                    'btn-warning bg-warning text-dark border-warning'
+                                  }`}
+                                style={{ fontSize: '12px', fontWeight: '600', minWidth: '120px' }}
+                                title="Click para cambiar estado"
+                              >
+                                {(training.estado || 'Ejecutado') === 'Ejecutado' ? '✓' : '✗'} {training.estado || 'Ejecutado'}
+                              </button>
+                            ) : (
+                              <span className="badge bg-primary text-white border border-primary border-opacity-50 px-3 py-2" style={{ fontSize: '12px' }}>
+                                <i className="bi bi-clock me-1"></i>
+                                Programado
+                              </span>
+                            )}
                           </td>
                           <td className="text-end pe-4 border-bottom border-secondary border-opacity-10 py-3">
                             <div className="d-flex justify-content-end gap-2">
                               <button
                                 onClick={() => handleEdit(training)}
-                                className="btn btn-sm text-primary p-0 me-2"
+                                className="btn btn-sm text-primary p-0"
                                 title="Editar"
                                 style={{ backgroundColor: 'transparent', border: 'none' }}
                               >
-                                <i className="bi bi-pencil"></i>
+                                <i className="bi bi-pencil-square"></i>
                               </button>
                               <button
                                 onClick={() => handleDelete(training)}
@@ -373,12 +455,173 @@ const TrainingManagement: React.FC = () => {
                 </table>
               </div>
             </div>
+
+            {/* Mobile View (Cards) */}
+            <div className="d-md-none d-flex flex-column gap-3">
+              {filteredTrainings.length === 0 ? (
+                <div className="card border-0 shadow-sm" style={{ backgroundColor: '#0f1419' }}>
+                  <div className="card-body text-center py-5">
+                    <i className="bi bi-clipboard-x text-secondary display-4 mb-3"></i>
+                    <p className="text-muted fw-medium mb-0">No se encontraron registros</p>
+                  </div>
+                </div>
+              ) : (
+                filteredTrainings.map((training) => (
+                  <div key={training.id} className="card border-0 shadow-sm" style={{ backgroundColor: '#0f1419' }}>
+                    <div className="card-header bg-transparent border-bottom border-secondary border-opacity-10 p-3 d-flex justify-content-between align-items-center">
+                      <span className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">
+                        {formatDate(training.fecha)}
+                      </span>
+                      <div className="d-flex gap-2">
+                        <button
+                          onClick={() => handleEdit(training)}
+                          className="btn btn-sm text-primary p-0"
+                          style={{ backgroundColor: 'transparent', border: 'none' }}
+                        >
+                          <i className="bi bi-pencil-square fs-5"></i>
+                        </button>
+                        <button
+                          onClick={() => handleDelete(training)}
+                          className="btn btn-sm text-danger p-0"
+                          style={{ backgroundColor: 'transparent', border: 'none' }}
+                        >
+                          <i className="bi bi-trash fs-5"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div className="card-body p-3">
+                      <h6 className="text-white fw-bold mb-1">{training.titulo}</h6>
+                      <p className="text-secondary small mb-2">{training.ubicacion || 'Sin ubicación'}</p>
+
+                      <div className="d-flex flex-wrap gap-2 mb-3">
+                        <div className="d-flex align-items-center text-secondary small">
+                          <i className="bi bi-clock me-1"></i>
+                          {formatTime(training.horaInicio)} - {formatTime(training.horaFin)}
+                        </div>
+                      </div>
+
+                      <div className="d-flex flex-wrap gap-1 mb-3">
+                        {training.trainingCategorias && training.trainingCategorias.length > 0 ? (
+                          training.trainingCategorias.map((tc, index) => (
+                            <span key={index} className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25" style={{ fontSize: '10px' }}>
+                              {tc.categoria?.nombre}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25" style={{ fontSize: '10px' }}>
+                            {training.categoria?.nombre || '--'}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="d-grid">
+                        {isPastDate(training.fecha) ? (
+                          <button
+                            onClick={() => openStatusModal(training)}
+                            className={`btn btn-sm ${(training.estado || 'Ejecutado') === 'Ejecutado'
+                              ? 'btn-success bg-success text-white border-success' :
+                              (training.estado || 'Ejecutado') === 'No Ejecutado'
+                                ? 'btn-danger bg-danger text-white border-danger' :
+                                'btn-warning bg-warning text-dark border-warning'
+                              }`}
+                            style={{ fontWeight: '600' }}
+                          >
+                            {(training.estado || 'Ejecutado') === 'Ejecutado' ? '✓' : '✗'} {training.estado || 'Ejecutado'}
+                          </button>
+                        ) : (
+                          <button className="btn btn-sm btn-outline-primary disabled border-opacity-50 text-white" style={{ opacity: 1 }}>
+                            <i className="bi bi-clock me-1"></i> Programado
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
           </>
         ) : (
           <TrainingConfig />
         )}
       </div>
-    </div>
+
+      {/* Status Update Modal */}
+      {
+        showStatusModal && selectedTraining && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }} onClick={() => setShowStatusModal(false)}>
+            <div className="modal-dialog modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-content" style={{ backgroundColor: '#161b22', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <div className="modal-header border-secondary border-opacity-25">
+                  <h5 className="modal-title text-white">
+                    <i className="bi bi-clipboard-check me-2"></i>
+                    Actualizar Estado de Entrenamiento
+                  </h5>
+                  <button type="button" className="btn-close btn-close-white" onClick={() => setShowStatusModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <div className="mb-3">
+                    <p className="text-secondary mb-2">
+                      <strong className="text-white">{selectedTraining.titulo}</strong>
+                    </p>
+                    <p className="text-secondary small mb-0">
+                      <i className="bi bi-calendar3 me-1"></i>
+                      {new Date(selectedTraining.fecha).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                    </p>
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="text-secondary small fw-bold mb-2 d-block text-uppercase" style={{ fontSize: '11px' }}>
+                      Nuevo Estado
+                    </label>
+                    <div className="d-flex gap-3">
+                      <button
+                        onClick={() => setNewStatus('Ejecutado')}
+                        className={`btn flex-fill ${newStatus === 'Ejecutado'
+                          ? 'btn-success bg-success text-white'
+                          : 'btn-outline-success text-success'}`}
+                        style={{ padding: '12px' }}
+                      >
+                        <i className="bi bi-check-circle-fill me-2"></i>
+                        Ejecutado
+                      </button>
+                      <button
+                        onClick={() => setNewStatus('No Ejecutado')}
+                        className={`btn flex-fill ${newStatus === 'No Ejecutado'
+                          ? 'btn-danger bg-danger text-white'
+                          : 'btn-outline-danger text-danger'}`}
+                        style={{ padding: '12px' }}
+                      >
+                        <i className="bi bi-x-circle-fill me-2"></i>
+                        No Ejecutado
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-footer border-secondary border-opacity-25">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setShowStatusModal(false)}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={handleStatusUpdate}
+                    style={{ backgroundColor: '#1f6feb', borderColor: '#1f6feb' }}
+                  >
+                    <i className="bi bi-save me-2"></i>
+                    Guardar Cambios
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      }
+    </div >
   );
 };
 

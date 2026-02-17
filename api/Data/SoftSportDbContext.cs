@@ -38,6 +38,7 @@ namespace SoftSportAPI.Data
         public DbSet<GameAlumno> GameAlumnos { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<RolePermission> RolePermissions { get; set; }
+        public DbSet<Modulo> Modulos { get; set; }
         public DbSet<AcademyConfig> AcademyConfigs { get; set; }
         public DbSet<LandingGallery> LandingGalleries { get; set; }
         public DbSet<ContactMessage> ContactMessages { get; set; }
@@ -46,6 +47,7 @@ namespace SoftSportAPI.Data
         public DbSet<PlanNutricional> PlanesNutricionales { get; set; }
         public DbSet<Suplementacion> Suplementaciones { get; set; }
         public DbSet<TrainingSchedule> TrainingSchedules { get; set; }
+        public DbSet<TrainingCategoria> TrainingCategorias { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -112,6 +114,19 @@ namespace SoftSportAPI.Data
                 .HasForeignKey(s => s.PlanNutricionalId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // Configure TrainingCategoria many-to-many relationship
+            modelBuilder.Entity<TrainingCategoria>()
+                .HasOne(tc => tc.Training)
+                .WithMany(t => t.TrainingCategorias)
+                .HasForeignKey(tc => tc.TrainingId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<TrainingCategoria>()
+                .HasOne(tc => tc.Categoria)
+                .WithMany()
+                .HasForeignKey(tc => tc.CategoriaId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Configure unique indexes
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)
@@ -122,6 +137,13 @@ namespace SoftSportAPI.Data
                 .WithMany()
                 .HasForeignKey(u => u.PersonalId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            // Configure RolePermission relationship with Modulo
+             modelBuilder.Entity<RolePermission>()
+                .HasOne<Modulo>()
+                .WithMany()
+                .HasForeignKey(rp => rp.ModuloId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

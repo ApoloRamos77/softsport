@@ -5,6 +5,7 @@ import AnamnesisTab from './AnamnesisTab';
 import AnthropometryTab from './AnthropometryTab';
 import BiochemistryTab from './BiochemistryTab';
 import NutritionalPlanTab from './NutritionalPlanTab';
+import ClinicalEvaluationTab from './ClinicalEvaluationTab';
 import NutritionalSummary from './NutritionalSummary';
 
 interface NutritionalManagerProps {
@@ -13,7 +14,7 @@ interface NutritionalManagerProps {
     onUpdate: () => void; // Para recargar datos si algo cambia
 }
 
-type Tab = 'context' | 'anamnesis' | 'anthropometry' | 'biochemistry' | 'plan';
+type Tab = 'context' | 'anamnesis' | 'anthropometry' | 'biochemistry' | 'plan' | 'clinical';
 
 const NutritionalManager: React.FC<NutritionalManagerProps> = ({ alumno, onClose, onUpdate }) => {
     const [activeTab, setActiveTab] = useState<Tab>('context');
@@ -47,6 +48,7 @@ const NutritionalManager: React.FC<NutritionalManagerProps> = ({ alumno, onClose
                 <ul className="nav nav-tabs border-0 flex-nowrap" style={{ overflowX: 'auto' }}>
                     {[
                         { id: 'context', label: 'Contexto', icon: 'bi-person-badge' },
+                        { id: 'clinical', label: 'Evaluación Clínica', icon: 'bi-heart-pulse' },
                         { id: 'anamnesis', label: 'Anamnesis', icon: 'bi-clipboard2-pulse' },
                         { id: 'anthropometry', label: 'Antropometría', icon: 'bi-rulers' },
                         { id: 'biochemistry', label: 'Bioquímica', icon: 'bi-moisture' },
@@ -72,6 +74,7 @@ const NutritionalManager: React.FC<NutritionalManagerProps> = ({ alumno, onClose
                     {/* Main Content */}
                     <div className="col-lg-9 d-flex flex-column">
                         {activeTab === 'context' && <ContextTab alumno={alumno} onUpdate={onUpdate} />}
+                        {activeTab === 'clinical' && <ClinicalEvaluationTab alumno={alumno} onUpdate={onUpdate} />}
                         {activeTab === 'anamnesis' && <AnamnesisTab alumno={alumno} onUpdate={onUpdate} />}
                         {activeTab === 'anthropometry' && <AnthropometryTab alumno={alumno} />}
                         {activeTab === 'biochemistry' && <BiochemistryTab alumno={alumno} />}

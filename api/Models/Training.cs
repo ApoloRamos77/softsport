@@ -57,5 +57,15 @@ namespace SoftSportAPI.Models
 
         [ForeignKey("TrainingScheduleId")]
         public TrainingSchedule? TrainingSchedule { get; set; }
+
+        // Many-to-many relationship with Categorias
+        public ICollection<TrainingCategoria> TrainingCategorias { get; set; } = new List<TrainingCategoria>();
+
+        // Helper property to get categorias directly (not mapped)
+        [NotMapped]
+        public List<Categoria> Categorias 
+        { 
+            get => TrainingCategorias?.Select(tc => tc.Categoria).Where(c => c != null).ToList() ?? new List<Categoria>();
+        }
     }
 }

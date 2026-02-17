@@ -20,7 +20,7 @@ const TrainingForm: React.FC<TrainingFormProps> = ({ training, onCancel, onSave 
   const [formData, setFormData] = useState({
     titulo: '',
     fecha: '',
-    categoriaId: '',
+    categoriaIds: [] as number[],
     entrenadorId: '',
     horaInicio: { hora: '--', minuto: '--', periodo: 'AM' },
     horaFin: { hora: '--', minuto: '--', periodo: 'AM' },
@@ -64,10 +64,14 @@ const TrainingForm: React.FC<TrainingFormProps> = ({ training, onCancel, onSave 
         };
       };
 
+      // Extract category IDs from training categorias
+      const categoryIds = training.trainingCategorias?.map(tc => tc.categoriaId) ||
+        (training.categoriaId ? [training.categoriaId] : []);
+
       setFormData({
         titulo: training.titulo || '',
         fecha: training.fecha ? training.fecha.split('T')[0] : '',
-        categoriaId: training.categoriaId?.toString() || '',
+        categoriaIds: categoryIds,
         entrenadorId: training.entrenadorId?.toString() || '',
         horaInicio: parseTime(training.horaInicio),
         horaFin: parseTime(training.horaFin),
@@ -76,6 +80,16 @@ const TrainingForm: React.FC<TrainingFormProps> = ({ training, onCancel, onSave 
       });
     }
   }, [training]);
+
+  // Toggle category selection
+  const toggleCategory = (catId: number) => {
+    setFormData(prev => ({
+      ...prev,
+      categoriaIds: prev.categoriaIds.includes(catId)
+        ? prev.categoriaIds.filter(id => id !== catId)
+        : [...prev.categoriaIds, catId]
+    }));
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,6 +102,10 @@ const TrainingForm: React.FC<TrainingFormProps> = ({ training, onCancel, onSave 
       return `${hour.toString().padStart(2, '0')}:${time.minuto}:00`;
     };
 
+    // Determine status based on date
+    const isPastDate = formData.fecha && new Date(formData.fecha) < new Date(new Date().setHours(0, 0, 0, 0));
+    const defaultStatus = isPastDate ? 'Ejecutado' : 'Programado';
+
     const trainingData = {
       titulo: formData.titulo,
       descripcion: formData.descripcion || null,
@@ -95,9 +113,10 @@ const TrainingForm: React.FC<TrainingFormProps> = ({ training, onCancel, onSave 
       horaInicio: formatTime(formData.horaInicio),
       horaFin: formatTime(formData.horaFin),
       ubicacion: formData.ubicacion || null,
-      categoriaId: formData.categoriaId ? parseInt(formData.categoriaId) : null,
+      categoriaId: formData.categoriaIds.length > 0 ? formData.categoriaIds[0] : null,
       entrenadorId: formData.entrenadorId ? parseInt(formData.entrenadorId) : null,
-      estado: 'Programado'
+      estado: training?.estado || defaultStatus,  // Keep existing status if editing, otherwise use default
+      categoriaIds: formData.categoriaIds
     };
 
     try {
@@ -149,18 +168,30 @@ const TrainingForm: React.FC<TrainingFormProps> = ({ training, onCancel, onSave 
               />
             </div>
             <div className="col-md-6">
-              <label className="text-secondary small fw-bold mb-2 d-block text-uppercase" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Categoría *</label>
-              <select
-                className="form-select border-secondary border-opacity-25 text-white bg-[#0d1117]"
-                value={formData.categoriaId}
-                onChange={e => setFormData({ ...formData, categoriaId: e.target.value })}
-                required
-              >
-                <option value="" style={{ backgroundColor: '#0d1117' }}>Seleccionar categoría</option>
-                {categorias.map(cat => (
-                  <option key={cat.id} value={cat.id} style={{ backgroundColor: '#0d1117' }}>{cat.nombre}</option>
-                ))}
-              </select>
+              <label className="text-secondary small fw-bold mb-2 d-block text-uppercase" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Categorías * (selección múltiple)</label>
+              <div className="border border-secondary border-opacity-25 rounded p-3 bg-[#0d1117]" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                {categorias.length === 0 ? (
+                  <p className="text-secondary text-sm mb-0">Cargando categorías...</p>
+                ) : (
+                  categorias.map(cat => (
+                    <div key={cat.id} className="form-check mb-2">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id={`cat-${cat.id}`}
+                        checked={formData.categoriaIds.includes(cat.id)}
+                        onChange={() => toggleCategory(cat.id)}
+                      />
+                      <label className="form-check-label text-white" htmlFor={`cat-${cat.id}`}>
+                        {cat.nombre}
+                      </label>
+                    </div>
+                  ))
+                )}
+              </div>
+              {formData.categoriaIds.length === 0 && (
+                <small className="text-danger d-block mt-1">Selecciona al menos una categoría</small>
+              )}
             </div>
           </div>
 

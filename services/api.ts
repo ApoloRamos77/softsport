@@ -20,6 +20,7 @@ export interface Alumno {
   becaId?: number;
   estado: string;
   fechaRegistro: string;
+  fechaInscripcion?: string;
   representanteId?: number;
   representante?: Representante;
   grupo?: Grupo;
@@ -189,6 +190,14 @@ export interface Training {
   estado: string;
   entrenadorId?: number;
   trainingScheduleId?: number;
+  trainingCategorias?: TrainingCategoria[];
+}
+
+export interface TrainingCategoria {
+  id: number;
+  trainingId: number;
+  categoriaId: number;
+  categoria?: Categoria;
 }
 
 export interface TrainingSchedule {
@@ -197,6 +206,7 @@ export interface TrainingSchedule {
   descripcion?: string;
   categoriaId?: number;
   categoria?: Categoria;
+  entrenadorId?: number;
   diasSemana: string; // "1,3,5"
   horaInicio: string;
   horaFin: string;
@@ -235,6 +245,7 @@ export interface User {
   personalId?: number; // Link to Personal
   createdAt?: string;
   updatedAt?: string;
+  permissions?: Permission[];
 }
 
 export interface Season {
@@ -270,11 +281,21 @@ export interface PaymentMethod {
 
 export interface Permission {
   moduloId: number;
+  moduloKey?: string;
   moduloNombre: string;
   ver: boolean;
   crear: boolean;
   modificar: boolean;
   eliminar: boolean;
+}
+
+export interface Modulo {
+  id: number;
+  nombre: string;
+  key: string;
+  grupo: string;
+  orden: number;
+  activo: boolean;
 }
 
 export interface Abono {
@@ -561,6 +582,7 @@ class ApiService {
   updateRole(id: number, data: Role) { return this.update<Role>('roles', id, data); }
   deleteRole(id: number) { return this.delete('roles', id); }
   getRolePermissions(id: number) { return this.getAll<Permission>(`roles/${id}/permissions`); }
+  getModules() { return this.getAll<Modulo>('modules'); }
 
   getAbonos(params: any = {}) { return this.getPaginated<Abono>('abonos', params); }
   getAbono(id: number) { return this.getById<Abono>('abonos', id); }

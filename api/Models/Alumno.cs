@@ -58,6 +58,9 @@ namespace SoftSportAPI.Models
         [Column("fecha_registro")]
         public DateTime FechaRegistro { get; set; } = DateTime.Now;
 
+        [Column("fecha_inscripcion")]
+        public DateTime? FechaInscripcion { get; set; }
+
         [Column("representante_id")]
         public int? RepresentanteId { get; set; }
 

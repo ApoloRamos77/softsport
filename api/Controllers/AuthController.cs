@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using SoftSportAPI.Data;
 using SoftSportAPI.Models;
 using BCrypt.Net;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace SoftSportAPI.Controllers
 {
@@ -43,6 +45,34 @@ namespace SoftSportAPI.Controllers
                     return Unauthorized(new { error = "Usuario inactivo. Contacta al administrador." });
                 }
 
+                // Get role with permissions
+                var roleEntity = await _context.Roles
+                    .Include(r => r.Permissions)
+                    .FirstOrDefaultAsync(r => r.Nombre == user.Role);
+
+                var permissions = new List<AuthPermissionDto>();
+
+                if (roleEntity != null && roleEntity.Permissions != null)
+                {
+                    // Fetch all active modules for mapping keys
+                    var modules = await _context.Modulos.Where(m => m.Activo).ToListAsync();
+
+                    permissions = roleEntity.Permissions.Select(p => 
+                    {
+                        var module = modules.FirstOrDefault(m => m.Id == p.ModuloId);
+                        return new AuthPermissionDto
+                        {
+                            ModuloId = p.ModuloId,
+                            ModuloKey = module?.Key ?? "",
+                            ModuloNombre = module?.Nombre ?? p.ModuloNombre,
+                            Ver = p.Ver,
+                            Crear = p.Crear,
+                            Modificar = p.Modificar,
+                            Eliminar = p.Eliminar
+                        };
+                    }).ToList();
+                }
+
                 // Return user data (excluding password)
                 var response = new LoginResponse
                 {
@@ -51,7 +81,8 @@ namespace SoftSportAPI.Controllers
                     Apellido = user.Apellido,
                     Email = user.Email,
                     Role = user.Role,
-                    Telefono = user.Telefono
+                    Telefono = user.Telefono,
+                    Permissions = permissions
                 };
 
                 return Ok(response);
@@ -77,5 +108,17 @@ namespace SoftSportAPI.Controllers
         public string Email { get; set; } = string.Empty;
         public string Role { get; set; } = string.Empty;
         public string? Telefono { get; set; }
+        public List<AuthPermissionDto> Permissions { get; set; } = new List<AuthPermissionDto>();
+    }
+
+    public class AuthPermissionDto
+    {
+        public int ModuloId { get; set; }
+        public string ModuloKey { get; set; } = string.Empty;
+        public string ModuloNombre { get; set; } = string.Empty;
+        public bool Ver { get; set; }
+        public bool Crear { get; set; }
+        public bool Modificar { get; set; }
+        public bool Eliminar { get; set; }
     }
 }

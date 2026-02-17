@@ -27,8 +27,9 @@ import Login from './components/Login';
 import LandingPage from './components/LandingPage';
 import LandingPageManagement from './components/LandingPageManagement';
 import PersonalManagement from './components/PersonalManagement';
+import NutritionalManagementPage from './components/NutritionalManagementPage';
 
-type View = 'representantes' | 'servicios' | 'grupos' | 'categorias' | 'atletas' | 'entrenamientos' | 'becas' | 'productos' | 'pagos' | 'ingresos' | 'egresos' | 'abonos' | 'usuarios' | 'tablero' | 'juegos' | 'calendario' | 'temporadas' | 'dashboard' | 'academia_config' | 'perfil' | 'configuracion' | 'landing_mgmt' | 'personal';
+type View = 'representantes' | 'servicios' | 'grupos' | 'categorias' | 'atletas' | 'entrenamientos' | 'becas' | 'productos' | 'pagos' | 'ingresos' | 'egresos' | 'abonos' | 'usuarios' | 'tablero' | 'juegos' | 'calendario' | 'temporadas' | 'dashboard' | 'academia_config' | 'perfil' | 'configuracion' | 'landing_mgmt' | 'personal' | 'nutricion';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -90,6 +91,32 @@ const App: React.FC = () => {
     // Update body classes based on authentication status
     if (isAuthenticated) {
       document.body.className = 'layout-fixed bg-body-tertiary';
+
+      // Redirect to first allowed view if dashboard is not allowed
+      const savedPermissions = localStorage.getItem('userPermissions');
+      if (savedPermissions) {
+        try {
+          const permissions = JSON.parse(savedPermissions);
+          const role = localStorage.getItem('userRole');
+
+          // Skip check for Admin fallback (if needed)
+          if (role === 'Administrador' && permissions.length === 0) return;
+
+          // Check if dashboard is allowed
+          const dashboardAllowed = permissions.some((p: any) => p.moduloKey === 'dashboard' && p.ver);
+
+          if (!dashboardAllowed && permissions.length > 0) {
+            // Find first allowed module
+            const firstAllowed = permissions.find((p: any) => p.ver);
+            if (firstAllowed && firstAllowed.moduloKey) {
+              setCurrentView(firstAllowed.moduloKey as View);
+            }
+          }
+        } catch (e) {
+          console.error("Error checking permissions for redirect", e);
+        }
+      }
+
     } else {
       document.body.className = 'hold-transition login-page';
     }
@@ -154,6 +181,7 @@ const App: React.FC = () => {
       case 'configuracion': return <GeneralConfig />;
       case 'landing_mgmt': return <LandingPageManagement />;
       case 'personal': return <PersonalManagement />;
+      case 'nutricion': return <NutritionalManagementPage />;
       default:
         return (
           <div className="bg-white dark:bg-[#111827] p-8 rounded-lg border border-slate-200 dark:border-slate-800 text-center">
@@ -188,6 +216,7 @@ const App: React.FC = () => {
       case 'tablero': return 'Tablero Táctico';
       case 'landing_mgmt': return 'Gestión de Página Web';
       case 'personal': return 'Mantenimiento de Personal';
+      case 'nutricion': return 'Nutrición Deportiva';
       default: return 'Panel de Control';
     }
   };

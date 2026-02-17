@@ -87,6 +87,15 @@ const AlumnoManagement: React.FC = () => {
     loadAlumnos();
   }, [currentPage, itemsPerPage, searchTerm, estadoFiltro, grupoFiltro, categoriaFiltro]);
 
+  // Check if payment is overdue (more than 30 days since enrollment)
+  const isPaymentOverdue = (alumno: Alumno): boolean => {
+    if (!alumno.fechaInscripcion) return false;
+    const enrollmentDate = new Date(alumno.fechaInscripcion);
+    const today = new Date();
+    const daysDifference = Math.floor((today.getTime() - enrollmentDate.getTime()) / (1000 * 60 * 60 * 24));
+    return daysDifference > 30;
+  };
+
   const handleSave = async () => {
     await loadAlumnos();
     setShowForm(false);
@@ -244,7 +253,7 @@ const AlumnoManagement: React.FC = () => {
           </div>
 
           {/* Table */}
-          <div className="card border-0 shadow-sm" style={{ backgroundColor: '#0f1419' }}>
+          <div className="card border-0 shadow-sm d-none d-lg-block" style={{ backgroundColor: '#0f1419' }}>
             <div className="table-responsive">
               <table className="table align-middle mb-0" style={{ borderColor: '#30363d' }}>
                 <thead style={{ backgroundColor: '#161b22' }}>
@@ -275,7 +284,14 @@ const AlumnoManagement: React.FC = () => {
                       <td className="ps-4 text-secondary border-bottom border-secondary border-opacity-10 py-3">{(currentPage - 1) * itemsPerPage + i + 1}</td>
                       <td className="border-bottom border-secondary border-opacity-10 py-3">
                         <div className="d-flex flex-column">
-                          <span className="fw-bold text-white">{a.nombre} {a.apellido}</span>
+                          <div className="d-flex align-items-center gap-2">
+                            <span className="fw-bold text-white">{a.nombre} {a.apellido}</span>
+                            {isPaymentOverdue(a) && (
+                              <span className="badge bg-danger text-white border border-white border-opacity-25 fw-bold shadow-sm" style={{ fontSize: '10px', padding: '4px 8px' }} title="Pago vencido - Más de 30 días desde inscripción">
+                                <i className="bi bi-exclamation-triangle-fill me-1"></i>PAGO VENCIDO
+                              </span>
+                            )}
+                          </div>
                           <small className="text-secondary" style={{ fontSize: '11px' }}>{a.documento || '-'}</small>
                         </div>
                       </td>
@@ -345,6 +361,89 @@ const AlumnoManagement: React.FC = () => {
                 </tbody>
               </table>
             </div>
+          </div>
+
+          {/* Mobile View (Cards) */}
+          <div className="d-lg-none d-flex flex-column gap-3">
+            {paginatedAlumnos.length === 0 ? (
+              <div className="card border-0 shadow-sm" style={{ backgroundColor: '#0f1419' }}>
+                <div className="card-body text-center py-5">
+                  <i className="bi bi-people text-secondary display-4 mb-3"></i>
+                  <p className="text-muted fw-medium mb-1">No se encontraron alumnos</p>
+                  <small className="text-secondary">Intenta ajustar los filtros o agregar un nuevo alumno</small>
+                </div>
+              </div>
+            ) : (
+              paginatedAlumnos.map((a) => (
+                <div key={a.id} className="card border-0 shadow-sm" style={{ backgroundColor: '#0f1419' }}>
+                  <div className="card-header bg-transparent border-bottom border-secondary border-opacity-10 p-3">
+                    <div className="d-flex justify-content-between align-items-start mb-2">
+                      <div>
+                        <h6 className="text-white fw-bold mb-1">{a.nombre} {a.apellido}</h6>
+                        <small className="text-secondary d-block" style={{ fontSize: '11px' }}>{a.documento || '-'}</small>
+                      </div>
+                      <span className={`badge border border-opacity-30 text-white ${a.estado === 'Activo' ? 'bg-success bg-opacity-20 border-success' : 'bg-secondary bg-opacity-20 border-secondary'
+                        }`}>
+                        {a.estado}
+                      </span>
+                    </div>
+                    {isPaymentOverdue(a) && (
+                      <span className="badge bg-danger text-white border border-white border-opacity-25 fw-bold shadow-sm w-100 mt-1" style={{ fontSize: '10px', padding: '4px 8px' }} title="Pago vencido - Más de 30 días desde inscripción">
+                        <i className="bi bi-exclamation-triangle-fill me-1"></i>PAGO VENCIDO
+                      </span>
+                    )}
+                  </div>
+                  <div className="card-body p-3">
+                    <div className="row g-2 mb-3">
+                      <div className="col-6">
+                        <small className="text-secondary d-block text-uppercase" style={{ fontSize: '10px' }}>Fecha Nac.</small>
+                        <span className="text-white small">{a.fechaNacimiento ? new Date(a.fechaNacimiento).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}</span>
+                      </div>
+                      <div className="col-6">
+                        <small className="text-secondary d-block text-uppercase" style={{ fontSize: '10px' }}>Contacto</small>
+                        <span className="text-white small d-block">{a.telefono || '-'}</span>
+                      </div>
+                      <div className="col-6">
+                        <small className="text-secondary d-block text-uppercase" style={{ fontSize: '10px' }}>Grupo / Cat</small>
+                        <span className="text-white small d-block">{a.grupo?.nombre || '-'}</span>
+                        <small className="text-secondary" style={{ fontSize: '10px' }}>{a.categoria?.nombre || '-'}</small>
+                      </div>
+                      <div className="col-6">
+                        <small className="text-secondary d-block text-uppercase" style={{ fontSize: '10px' }}>Posición</small>
+                        <span className="text-white small">{a.posicion || '-'}</span>
+                      </div>
+                      <div className="col-12">
+                        <small className="text-secondary d-block text-uppercase" style={{ fontSize: '10px' }}>Beca</small>
+                        <span className="badge bg-primary bg-opacity-20 text-white border border-primary border-opacity-30">
+                          {a.beca?.nombre || (a.beca?.porcentaje !== undefined ? a.beca.porcentaje + '%' : '-')}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="d-flex gap-2 border-top border-secondary border-opacity-10 pt-3">
+                      <button
+                        onClick={() => handleEdit(a)}
+                        className="btn btn-sm btn-outline-primary flex-fill"
+                      >
+                        <i className="bi bi-pencil me-1"></i> Editar
+                      </button>
+                      <button
+                        onClick={() => setManagingNutritionAlumno(a)}
+                        className="btn btn-sm btn-outline-success flex-fill"
+                      >
+                        <i className="bi bi-heart-pulse me-1"></i> Nutrición
+                      </button>
+                      <button
+                        onClick={() => handleDelete(a)}
+                        className="btn btn-sm btn-outline-danger flex-fill"
+                      >
+                        <i className="bi bi-trash me-1"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
           {/* Pagination */}
