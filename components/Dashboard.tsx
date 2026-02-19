@@ -30,10 +30,11 @@ interface FinancialChartData {
   egresos: number;
 }
 
-const Dashboard: React.FC = () => {
+const Dashboard: React.FC<{ onNavigate?: (view: string) => void }> = ({ onNavigate }) => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [financialChart, setFinancialChart] = useState<FinancialChartData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [periodosVencidos, setPeriodosVencidos] = useState(0);
 
   useEffect(() => {
     loadDashboardData();
@@ -42,12 +43,14 @@ const Dashboard: React.FC = () => {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      const [statsData, chartData] = await Promise.all([
+      const [statsData, chartData, vencidosData] = await Promise.all([
         apiService.getDashboardStats(),
-        apiService.getFinancialChart()
+        apiService.getFinancialChart(),
+        apiService.getPeriodosVencidos().catch(() => ({ totalCount: 0, data: [] }))
       ]);
       setStats(statsData);
       setFinancialChart(chartData);
+      setPeriodosVencidos(vencidosData.totalCount || 0);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
@@ -182,6 +185,16 @@ const Dashboard: React.FC = () => {
         ? `${stats.summaryData.alumnosRecientes.length} nuevo(s) en los últimos 30 días`
         : 'No hay alumnos recientes',
       count: stats.summaryData.alumnosRecientes.length
+    },
+    {
+      title: 'Períodos Vencidos',
+      icon: 'fa-calendar-times',
+      content: periodosVencidos > 0
+        ? `${periodosVencidos} mensualidad(es) sin pagar vencida(s)`
+        : 'No hay mensualidades vencidas',
+      count: periodosVencidos,
+      action: periodosVencidos > 0 ? () => onNavigate?.('periodos') : undefined,
+      isAlert: periodosVencidos > 0
     },
     {
       title: 'Notificaciones del Sistema',
@@ -326,22 +339,27 @@ const Dashboard: React.FC = () => {
       </div>
 
       <div className="row g-3 mt-3">
-        {summaryCards.map((card, i) => (
+        {summaryCards.map((card: any, i) => (
           <div key={i} className="col-lg-6">
-            <div className="card card-secondary card-outline">
+            <div className={`card card-outline ${card.isAlert ? 'card-danger border-danger' : 'card-secondary'}`}>
               <div className="card-header">
                 <h3 className="card-title">
-                  <i className={`fas ${card.icon} me-2`}></i>
+                  <i className={`fas ${card.icon} me-2 ${card.isAlert ? 'text-danger' : ''}`}></i>
                   {card.title}
                 </h3>
                 {card.count > 0 && (
-                  <span className="badge bg-primary float-end">{card.count}</span>
+                  <span className={`badge ${card.isAlert ? 'bg-danger' : 'bg-primary'} float-end`}>{card.count}</span>
                 )}
               </div>
               <div className="card-body">
-                <p className={`mb-0 ${card.count > 0 ? '' : 'text-muted fst-italic'}`}>
+                <p className={`mb-0 ${card.count > 0 ? (card.isAlert ? 'text-danger fw-bold' : '') : 'text-muted fst-italic'}`}>
                   {card.content}
                 </p>
+                {card.action && (
+                  <button className="btn btn-sm btn-outline-danger mt-2" onClick={card.action}>
+                    <i className="fas fa-arrow-right me-1"></i>Ver períodos vencidos
+                  </button>
+                )}
               </div>
             </div>
           </div>

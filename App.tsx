@@ -28,8 +28,9 @@ import LandingPage from './components/LandingPage';
 import LandingPageManagement from './components/LandingPageManagement';
 import PersonalManagement from './components/PersonalManagement';
 import NutritionalManagementPage from './components/NutritionalManagementPage';
+import PeriodosPagoManagement from './components/PeriodosPagoManagement';
 
-type View = 'representantes' | 'servicios' | 'grupos' | 'categorias' | 'atletas' | 'entrenamientos' | 'becas' | 'productos' | 'pagos' | 'ingresos' | 'egresos' | 'abonos' | 'usuarios' | 'tablero' | 'juegos' | 'calendario' | 'temporadas' | 'dashboard' | 'academia_config' | 'perfil' | 'configuracion' | 'landing_mgmt' | 'personal' | 'nutricion';
+type View = 'representantes' | 'servicios' | 'grupos' | 'categorias' | 'atletas' | 'entrenamientos' | 'becas' | 'productos' | 'pagos' | 'ingresos' | 'egresos' | 'abonos' | 'usuarios' | 'tablero' | 'juegos' | 'calendario' | 'temporadas' | 'dashboard' | 'academia_config' | 'perfil' | 'configuracion' | 'landing_mgmt' | 'personal' | 'nutricion' | 'periodos';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -158,7 +159,7 @@ const App: React.FC = () => {
 
   const renderView = () => {
     switch (currentView) {
-      case 'dashboard': return <Dashboard />;
+      case 'dashboard': return <Dashboard onNavigate={(v) => setCurrentView(v as View)} />;
       case 'representantes': return <RepresentativeManagement />;
       case 'servicios': return <ServiceManagement />;
       case 'grupos': return <GroupManagement />;
@@ -182,6 +183,7 @@ const App: React.FC = () => {
       case 'landing_mgmt': return <LandingPageManagement />;
       case 'personal': return <PersonalManagement />;
       case 'nutricion': return <NutritionalManagementPage />;
+      case 'periodos': return <PeriodosPagoManagement />;
       default:
         return (
           <div className="bg-white dark:bg-[#111827] p-8 rounded-lg border border-slate-200 dark:border-slate-800 text-center">
@@ -217,6 +219,7 @@ const App: React.FC = () => {
       case 'landing_mgmt': return 'Gestión de Página Web';
       case 'personal': return 'Mantenimiento de Personal';
       case 'nutricion': return 'Nutrición Deportiva';
+      case 'periodos': return 'Períodos de Pago';
       default: return 'Panel de Control';
     }
   };

@@ -328,6 +328,23 @@ export interface Expense {
   estado?: string;
 }
 
+export interface PeriodoPago {
+  id?: number;
+  alumnoId: number;
+  alumnoNombre?: string;
+  anio: number;
+  mes: number;
+  fechaInicio?: string;
+  fechaVencimiento?: string;
+  monto: number;
+  estado: 'Pendiente' | 'Pagado' | 'Vencido' | 'Exonerado';
+  reciboId?: number;
+  reciboNumero?: string;
+  observaciones?: string;
+  fechaCreacion?: string;
+  fechaModificacion?: string;
+}
+
 export interface TacticalBoard {
   id?: number;
   nombre: string;
@@ -601,6 +618,45 @@ class ApiService {
   createExpense(data: Expense) { return this.create<Expense>('expenses', data); }
   updateExpense(id: number, data: Expense) { return this.update<Expense>('expenses', id, data); }
   deleteExpense(id: number) { return this.delete('expenses', id); }
+
+  getPeriodosPago(params: any = {}) { return this.getPaginated<PeriodoPago>('periodospago', params); }
+  getPeriodosByAlumno(alumnoId: number) { return this.getAll<PeriodoPago>(`periodospago/alumno/${alumnoId}`); }
+  getPeriodosVencidos() { return this.getPaginated<PeriodoPago>('periodospago/vencidos', {}); }
+  createPeriodoPago(data: any) { return this.create<PeriodoPago>('periodospago', data); }
+  updatePeriodoPago(id: number, data: any) { return this.update<any>('periodospago', id, data); }
+  deletePeriodoPago(id: number) { return this.delete('periodospago', id); }
+  async generarPeriodos(alumnoId: number, opts?: { fechaHasta?: string; montoMensual?: number; diaVencimiento?: number }): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/periodospago/generar/${alumnoId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(opts || {})
+    });
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(err || 'Error generando períodos');
+    }
+    return response.json();
+  }
+  async marcarPeriodoPagado(id: number, reciboId?: number): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/periodospago/${id}/pagar`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reciboId: reciboId ?? null })
+    });
+    if (!response.ok) throw new Error('Error marcando período como pagado');
+  }
+  async generarTodosPeriodos(opts?: { montoMensual?: number; diaVencimiento?: number }): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/periodospago/generar-todos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(opts || {})
+    });
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(err || 'Error generando períodos');
+    }
+    return response.json();
+  }
 
   getSeasons() { return this.getAll<Season>('seasons'); }
   getSeason(id: number) { return this.getById<Season>('seasons', id); }

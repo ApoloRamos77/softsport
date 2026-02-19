@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { apiService } from '../services/api';
+import { apiService, PeriodoPago } from '../services/api';
 
 interface ReceiptFormProps {
   recibo?: any;
@@ -33,6 +33,8 @@ interface ReciboItem {
   precio: number;
   cantidad: number;
   subtotal: number;
+  periodoId?: number;  // linked payment period
+  periodoLabel?: string; // display label
 }
 
 const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
@@ -51,6 +53,10 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
   const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
   // Added state for observaciones
   const [observaciones, setObservaciones] = useState('');
+  // Pending periods for selected alumno
+  const [periodosPendientes, setPeriodosPendientes] = useState<PeriodoPago[]>([]);
+  const [periodosSeleccionados, setPeriodosSeleccionados] = useState<number[]>([]);
+  const [periodoIdSeleccionado, setPeriodoIdSeleccionado] = useState<string>('');
 
   // Autocomplete states
   const [searchTerm, setSearchTerm] = useState('');
@@ -69,6 +75,24 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
       loadAlumnos();
     }
   }, [searchTerm, destType]);
+
+  // Load pending periods when alumno is selected
+  useEffect(() => {
+    if (selectedAlumnoId && destType === 'alumnos') {
+      apiService.getPeriodosByAlumno(parseInt(selectedAlumnoId))
+        .then((data: any) => {
+          const pendientes = (Array.isArray(data) ? data : []).filter(
+            (p: PeriodoPago) => p.estado === 'Pendiente' || p.estado === 'Vencido'
+          );
+          setPeriodosPendientes(pendientes);
+          setPeriodosSeleccionados([]);
+        })
+        .catch(() => setPeriodosPendientes([]));
+    } else {
+      setPeriodosPendientes([]);
+      setPeriodosSeleccionados([]);
+    }
+  }, [selectedAlumnoId, destType]);
 
   useEffect(() => {
     const initializeForm = async () => {
@@ -188,12 +212,22 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
       nombre: item.nombre,
       precio: item.precio,
       cantidad: cantidad,
-      subtotal: item.precio * cantidad
+      subtotal: item.precio * cantidad,
+      ...(itemType === 'servicio' && periodoIdSeleccionado ? {
+        periodoId: parseInt(periodoIdSeleccionado),
+        periodoLabel: (() => {
+          const p = periodosPendientes.find(p => p.id === parseInt(periodoIdSeleccionado));
+          if (!p) return undefined;
+          const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+          return `${meses[p.mes - 1]} ${p.anio}`;
+        })()
+      } : {})
     };
 
     setItems([...items, nuevoItem]);
     setSelectedItemId('');
     setCantidad(1);
+    setPeriodoIdSeleccionado('');
   };
 
   const handleEliminarItem = (index: number) => {
@@ -248,7 +282,15 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
       if (isEditMode && recibo?.id) {
         await apiService.updateRecibo(recibo.id, reciboData);
       } else {
-        await apiService.createRecibo(reciboData);
+        const nuevoRecibo = await apiService.createRecibo(reciboData);
+        // Mark linked periods as paid
+        const periodosAMarcar = items.filter(i => i.periodoId);
+        if (periodosAMarcar.length > 0) {
+          const reciboId = nuevoRecibo?.id;
+          await Promise.allSettled(
+            periodosAMarcar.map(i => apiService.marcarPeriodoPagado(i.periodoId!, reciboId))
+          );
+        }
       }
 
       alert(`Recibo ${isEditMode ? 'actualizado' : 'creado'} exitosamente`);
@@ -380,6 +422,81 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
                             <i className="bi bi-check-circle-fill me-1"></i> Alumno seleccionado
                           </div>
                         )}
+
+                        {/* Pending Periods Panel */}
+                        {selectedAlumnoId && periodosPendientes.length > 0 && (
+                          <div className="mt-3 p-3 rounded" style={{ backgroundColor: '#1a1f2e', border: '1px solid #f0ad4e55' }}>
+                            <div className="d-flex justify-content-between align-items-center mb-2">
+                              <small className="fw-bold text-warning">
+                                <i className="bi bi-calendar-exclamation me-1"></i>
+                                {periodosPendientes.length} Período(s) Pendiente(s)
+                              </small>
+                              <button
+                                type="button"
+                                className="btn btn-xs btn-outline-warning"
+                                style={{ fontSize: '10px', padding: '2px 8px' }}
+                                onClick={() => {
+                                  // Select all
+                                  const allIds = periodosPendientes.map(p => p.id!);
+                                  setPeriodosSeleccionados(allIds.length === periodosSeleccionados.length ? [] : allIds);
+                                }}
+                              >
+                                {periodosSeleccionados.length === periodosPendientes.length ? 'Deseleccionar todo' : 'Seleccionar todo'}
+                              </button>
+                            </div>
+                            <div style={{ maxHeight: '140px', overflowY: 'auto' }}>
+                              {periodosPendientes.map(p => {
+                                const isSelected = periodosSeleccionados.includes(p.id!);
+                                const mes = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][p.mes - 1];
+                                return (
+                                  <label key={p.id} className="d-flex align-items-center gap-2 py-1 cursor-pointer" style={{ fontSize: '12px' }}>
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelected}
+                                      onChange={() => {
+                                        setPeriodosSeleccionados(prev =>
+                                          isSelected ? prev.filter(id => id !== p.id) : [...prev, p.id!]
+                                        );
+                                      }}
+                                    />
+                                    <span className={`flex-grow-1 ${p.estado === 'Vencido' ? 'text-danger' : 'text-warning'}`}>
+                                      {mes} {p.anio}
+                                      {p.estado === 'Vencido' && <span className="badge bg-danger ms-1" style={{ fontSize: '9px' }}>Vencido</span>}
+                                    </span>
+                                    <span className="text-secondary">{p.monto > 0 ? `S/. ${p.monto.toFixed(2)}` : ''}</span>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                            {periodosSeleccionados.length > 0 && (
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-warning w-100 mt-2"
+                                style={{ fontSize: '12px' }}
+                                onClick={() => {
+                                  const selected = periodosPendientes.filter(p => periodosSeleccionados.includes(p.id!));
+                                  const mes = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                                  selected.forEach(p => {
+                                    const nombre = `Mensualidad ${mes[p.mes - 1]} ${p.anio}`;
+                                    const nuevoItem: ReciboItem = {
+                                      tipo: 'servicio',
+                                      itemId: 0,
+                                      nombre,
+                                      precio: p.monto || 0,
+                                      cantidad: 1,
+                                      subtotal: p.monto || 0
+                                    };
+                                    setItems(prev => [...prev, nuevoItem]);
+                                  });
+                                  setPeriodosSeleccionados([]);
+                                }}
+                              >
+                                <i className="bi bi-plus-circle me-1"></i>
+                                Agregar {periodosSeleccionados.length} período(s) al recibo
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <select
@@ -450,6 +567,36 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
                     </div>
                   </div>
 
+                  {/* Period selector: shown when adding a service and an alumno with pending periods is selected */}
+                  {itemType === 'servicio' && destType === 'alumnos' && selectedAlumnoId && periodosPendientes.length > 0 && (
+                    <div className="mb-3">
+                      <label className="text-[10px] font-bold text-yellow-400 uppercase tracking-widest d-block mb-1">
+                        <i className="bi bi-calendar-check me-1"></i>Período de Pago (opcional)
+                      </label>
+                      <select
+                        value={periodoIdSeleccionado}
+                        onChange={e => setPeriodoIdSeleccionado(e.target.value)}
+                        className="form-select form-select-sm"
+                        style={{ fontSize: '12px' }}
+                      >
+                        <option value="">Sin vincular período</option>
+                        {periodosPendientes.map(p => {
+                          const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                          return (
+                            <option key={p.id} value={p.id}>
+                              {meses[p.mes - 1]} {p.anio}
+                              {p.estado === 'Vencido' ? ' ⚠ Vencido' : ''}
+                              {p.monto > 0 ? ` — S/. ${p.monto.toFixed(2)}` : ''}
+                            </option>
+                          );
+                        })}
+                      </select>
+                      <small className="text-secondary" style={{ fontSize: '11px' }}>
+                        Al agregar el recibo, el período seleccionado se marcará automáticamente como <strong className="text-success">Pagado</strong>.
+                      </small>
+                    </div>
+                  )}
+
                   <button
                     type="button"
                     onClick={handleAgregarItem}
@@ -491,6 +638,11 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ recibo, onCancel }) => {
                             <td className="ps-4 border-bottom border-secondary border-opacity-10 py-3">
                               <span className="fw-bold text-white">{item.nombre}</span>
                               <br /><small className="text-secondary text-uppercase" style={{ fontSize: '10px' }}>{item.tipo}</small>
+                              {item.periodoLabel && (
+                                <><br /><span className="badge bg-warning text-dark mt-1" style={{ fontSize: '10px' }}>
+                                  <i className="bi bi-calendar-check me-1"></i>{item.periodoLabel}
+                                </span></>
+                              )}
                             </td>
                             <td className="text-secondary border-bottom border-secondary border-opacity-10 py-3">{item.cantidad}</td>
                             <td className="text-secondary border-bottom border-secondary border-opacity-10 py-3">S/. {item.precio.toFixed(2)}</td>

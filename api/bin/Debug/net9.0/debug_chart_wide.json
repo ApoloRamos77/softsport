@@ -1,0 +1,66 @@
+{
+    "value":  [
+                  {
+                      "month":  "mar 2025",
+                      "ingresos":  0.0,
+                      "egresos":  0.0
+                  },
+                  {
+                      "month":  "abr 2025",
+                      "ingresos":  0.0,
+                      "egresos":  0.0
+                  },
+                  {
+                      "month":  "may 2025",
+                      "ingresos":  0.0,
+                      "egresos":  0.0
+                  },
+                  {
+                      "month":  "jun 2025",
+                      "ingresos":  0.0,
+                      "egresos":  0.0
+                  },
+                  {
+                      "month":  "jul 2025",
+                      "ingresos":  0.0,
+                      "egresos":  0.0
+                  },
+                  {
+                      "month":  "ago 2025",
+                      "ingresos":  0.0,
+                      "egresos":  0.0
+                  },
+                  {
+                      "month":  "sept 2025",
+                      "ingresos":  0.0,
+                      "egresos":  0.0
+                  },
+                  {
+                      "month":  "oct 2025",
+                      "ingresos":  0.0,
+                      "egresos":  0.0
+                  },
+                  {
+                      "month":  "nov 2025",
+                      "ingresos":  0.0,
+                      "egresos":  0.0
+                  },
+                  {
+                      "month":  "dic 2025",
+                      "ingresos":  0.0,
+                      "egresos":  0.0
+                  },
+                  {
+                      "month":  "ene 2026",
+                      "ingresos":  0.0,
+                      "egresos":  1720.00
+                  },
+                  {
+                      "month":  "feb 2026",
+                      "ingresos":  250.00,
+                      "egresos":  460.00
+                  }
+              ],
+    "Count":  12
+}
+

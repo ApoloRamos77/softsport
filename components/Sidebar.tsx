@@ -32,6 +32,7 @@ const menuSections = {
     { id: 'ingresos', name: 'Ingresos', icon: 'bi-cash-stack' },
     { id: 'egresos', name: 'Egresos', icon: 'bi-wallet2' },
     { id: 'abonos', name: 'Abonos', icon: 'bi-receipt-cutoff' },
+    { id: 'periodos', name: 'Períodos de Pago', icon: 'bi-calendar-check-fill' },
     { id: 'pagos', name: 'Métodos de Pago', icon: 'bi-credit-card-fill' },
   ],
   servicios: [

@@ -48,6 +48,7 @@ namespace SoftSportAPI.Data
         public DbSet<Suplementacion> Suplementaciones { get; set; }
         public DbSet<TrainingSchedule> TrainingSchedules { get; set; }
         public DbSet<TrainingCategoria> TrainingCategorias { get; set; }
+        public DbSet<PeriodoPago> PeriodosPago { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -126,6 +127,23 @@ namespace SoftSportAPI.Data
                 .WithMany()
                 .HasForeignKey(tc => tc.CategoriaId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure PeriodoPago relationships
+            modelBuilder.Entity<PeriodoPago>()
+                .HasOne(p => p.Alumno)
+                .WithMany()
+                .HasForeignKey(p => p.AlumnoId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PeriodoPago>()
+                .HasOne(p => p.Recibo)
+                .WithMany()
+                .HasForeignKey(p => p.ReciboId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<PeriodoPago>()
+                .HasIndex(p => new { p.AlumnoId, p.Anio, p.Mes })
+                .IsUnique();
 
             // Configure unique indexes
             modelBuilder.Entity<User>()
