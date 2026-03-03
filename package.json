@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node -e \"const fs=require('fs');fs.copyFileSync('Dockerfile.frontend-static','publish/frontend/Dockerfile');console.log('Dockerfile copied to publish/frontend');\"",
     "preview": "vite preview"
   },
   "dependencies": {
