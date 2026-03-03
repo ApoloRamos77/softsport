@@ -49,6 +49,7 @@ namespace SoftSportAPI.Data
         public DbSet<TrainingSchedule> TrainingSchedules { get; set; }
         public DbSet<TrainingCategoria> TrainingCategorias { get; set; }
         public DbSet<PeriodoPago> PeriodosPago { get; set; }
+        public DbSet<TrainingAsistencia> TrainingAsistencias { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -162,6 +163,23 @@ namespace SoftSportAPI.Data
                 .WithMany()
                 .HasForeignKey(rp => rp.ModuloId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure TrainingAsistencia
+            modelBuilder.Entity<TrainingAsistencia>()
+                .HasIndex(ta => new { ta.TrainingId, ta.AlumnoId })
+                .IsUnique();
+
+            modelBuilder.Entity<TrainingAsistencia>()
+                .HasOne(ta => ta.Training)
+                .WithMany()
+                .HasForeignKey(ta => ta.TrainingId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<TrainingAsistencia>()
+                .HasOne(ta => ta.Alumno)
+                .WithMany()
+                .HasForeignKey(ta => ta.AlumnoId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

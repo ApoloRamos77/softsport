@@ -406,6 +406,42 @@ export interface Suplementacion {
   observaciones?: string;
 }
 
+// ── Asistencia a Entrenamientos ─────────────────────────────
+export interface TrainingAsistencia {
+  id?: number;
+  trainingId: number;
+  alumnoId: number;
+  alumno?: {
+    id: number;
+    nombre: string;
+    apellido: string;
+    numeroCamiseta?: number;
+    fotografia?: string;
+  };
+  estado: 'Presente' | 'Tardanza' | 'Ausente';
+  minutosTardanza?: number;
+  observaciones?: string;
+  fechaCreacion?: string;
+}
+
+export interface AsistenciaStats {
+  total: number;
+  presentes: number;
+  tardanzas: number;
+  ausentes: number;
+  porcentajeAsistencia: number;
+}
+
+export interface BatchAsistenciaPayload {
+  trainingId: number;
+  registros: Array<{
+    alumnoId: number;
+    estado: 'Presente' | 'Tardanza' | 'Ausente';
+    minutosTardanza?: number;
+    observaciones?: string;
+  }>;
+}
+
 class ApiService {
   // Generic paginated GET
   async getPaginated<T>(endpoint: string, params: Record<string, any> = {}): Promise<{ totalCount: number, data: T[] }> {
@@ -707,6 +743,25 @@ class ApiService {
   createPlanNutricional(data: PlanNutricional) { return this.create<PlanNutricional>('plannutricional', data); }
   updatePlanNutricional(id: number, data: PlanNutricional) { return this.update<PlanNutricional>('plannutricional', id, data); }
   deletePlanNutricional(id: number) { return this.delete('plannutricional', id); }
+
+  // Asistencia a Entrenamientos
+  getAsistenciasByTraining(trainingId: number) { return this.getAll<TrainingAsistencia>(`trainingasistencias/training/${trainingId}`); }
+  getAsistenciasByAlumno(alumnoId: number) { return this.getAll<TrainingAsistencia>(`trainingasistencias/alumno/${alumnoId}`); }
+  getAsistenciasStats(trainingId: number) { return this.getAll<AsistenciaStats>(`trainingasistencias/stats/${trainingId}`); }
+
+  async saveAsistenciasBatch(payload: BatchAsistenciaPayload): Promise<{ mensaje: string; total: number; presentes: number; tardanzas: number; ausentes: number }> {
+    const response = await fetch(`${API_BASE_URL}/trainingasistencias/batch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || 'Error al guardar asistencia');
+    }
+    return response.json();
+  }
+
 
   async getDashboardStats(seasonId?: number): Promise<any> {
     const url = seasonId ? `${API_BASE_URL}/dashboard/stats?seasonId=${seasonId}` : `${API_BASE_URL}/dashboard/stats`;

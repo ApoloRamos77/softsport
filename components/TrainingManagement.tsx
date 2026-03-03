@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import TrainingForm from './TrainingForm';
 import TrainingConfig from './TrainingConfig';
+import AsistenciaModal from './AsistenciaModal';
 import { apiService, Categoria, Training } from '../services/api';
 
 const TrainingManagement: React.FC = () => {
@@ -20,16 +21,39 @@ const TrainingManagement: React.FC = () => {
   const [selectedTraining, setSelectedTraining] = useState<Training | null>(null);
   const [newStatus, setNewStatus] = useState('');
 
+  // Asistencia modal state
+  const [showAsistenciaModal, setShowAsistenciaModal] = useState(false);
+  const [trainingForAsistencia, setTrainingForAsistencia] = useState<Training | null>(null);
+  const [asistenciaStats, setAsistenciaStats] = useState<Record<number, { total: number; porcentaje: number }>>({});
+
   const loadTrainings = async () => {
     try {
       setLoading(true);
       const data = await apiService.getAll<Training>('trainings');
       setTrainings(data);
+      // Cargar estadísticas de asistencia para los entrenamientos pasados
+      loadAsistenciaStats(data);
     } catch (error) {
       console.error('Error loading trainings:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadAsistenciaStats = async (trainings: Training[]) => {
+    const pastTrainings = trainings.filter(t => t.fecha && isPastDate(t.fecha));
+    if (pastTrainings.length === 0) return;
+    const statsMap: Record<number, { total: number; porcentaje: number }> = {};
+    await Promise.allSettled(
+      pastTrainings.map(async (t) => {
+        try {
+          const stats = await apiService.getAsistenciasStats(t.id);
+          const s = Array.isArray(stats) ? (stats[0] as any) : (stats as any);
+          statsMap[t.id] = { total: s.total ?? 0, porcentaje: s.porcentajeAsistencia ?? 0 };
+        } catch { /* ignore */ }
+      })
+    );
+    setAsistenciaStats(statsMap);
   };
 
   const loadFilters = async () => {
@@ -47,6 +71,18 @@ const TrainingManagement: React.FC = () => {
       loadFilters();
     }
   }, [activeTab]);
+
+  const openAsistenciaModal = (training: Training) => {
+    setTrainingForAsistencia(training);
+    setShowAsistenciaModal(true);
+  };
+
+  const handleAsistenciaClose = () => {
+    setShowAsistenciaModal(false);
+    setTrainingForAsistencia(null);
+    // Recargar stats tras cerrar el modal
+    loadTrainings();
+  };
 
   const handleSave = async () => {
     await loadTrainings();
@@ -323,8 +359,14 @@ const TrainingManagement: React.FC = () => {
                   <div className="card-body d-flex justify-content-between align-items-start p-3">
                     <div>
                       <p className="text-secondary small fw-bold mb-1 text-uppercase" style={{ fontSize: '10px' }}>Asistencia</p>
-                      <h4 className="fw-bold mb-0 text-success">0%</h4>
-                      <small className="text-secondary opacity-50" style={{ fontSize: '10px' }}>Promedio mensual</small>
+                      <h4 className="fw-bold mb-0 text-success">
+                        {(() => {
+                          const vals = Object.values(asistenciaStats).filter(s => s.total > 0);
+                          if (vals.length === 0) return '—';
+                          return Math.round(vals.reduce((acc, s) => acc + s.porcentaje, 0) / vals.length) + '%';
+                        })()}
+                      </h4>
+                      <small className="text-secondary opacity-50" style={{ fontSize: '10px' }}>Promedio entrenamientos</small>
                     </div>
                     <div className="p-2 bg-success bg-opacity-10 rounded text-success border border-success border-opacity-10">
                       <i className="bi bi-check-circle fs-6"></i>
@@ -365,6 +407,7 @@ const TrainingManagement: React.FC = () => {
                       <th className="text-white border-bottom border-secondary border-opacity-25 py-3">Horario</th>
                       <th className="text-white border-bottom border-secondary border-opacity-25 py-3">Categoría</th>
                       <th className="text-white border-bottom border-secondary border-opacity-25 py-3">Estado</th>
+                      <th className="text-white border-bottom border-secondary border-opacity-25 py-3">Asistencia</th>
                       <th className="text-end pe-4 text-white border-bottom border-secondary border-opacity-25 py-3">Acciones</th>
                     </tr>
                   </thead>
@@ -426,6 +469,23 @@ const TrainingManagement: React.FC = () => {
                                 <i className="bi bi-clock me-1"></i>
                                 Programado
                               </span>
+                            )}
+                          </td>
+                          <td className="border-bottom border-secondary border-opacity-10 py-3">
+                            {isPastDate(training.fecha) ? (
+                              <button
+                                onClick={() => openAsistenciaModal(training)}
+                                className="btn btn-sm d-flex align-items-center gap-1"
+                                style={{ backgroundColor: 'rgba(31,111,235,0.12)', border: '1px solid rgba(31,111,235,0.3)', color: '#58a6ff', fontSize: '12px', fontWeight: 600, borderRadius: '6px' }}
+                                title="Registrar asistencia"
+                              >
+                                <i className="bi bi-clipboard-check"></i>
+                                {asistenciaStats[training.id]?.total > 0
+                                  ? <span>{asistenciaStats[training.id].total} <span style={{ opacity: 0.7 }}>alumnos</span></span>
+                                  : 'Lista'}
+                              </button>
+                            ) : (
+                              <span className="text-secondary" style={{ fontSize: '12px' }}>—</span>
                             )}
                           </td>
                           <td className="text-end pe-4 border-bottom border-secondary border-opacity-10 py-3">
@@ -514,7 +574,7 @@ const TrainingManagement: React.FC = () => {
                         )}
                       </div>
 
-                      <div className="d-grid">
+                      <div className="d-flex flex-column gap-2">
                         {isPastDate(training.fecha) ? (
                           <button
                             onClick={() => openStatusModal(training)}
@@ -531,6 +591,18 @@ const TrainingManagement: React.FC = () => {
                         ) : (
                           <button className="btn btn-sm btn-outline-primary disabled border-opacity-50 text-white" style={{ opacity: 1 }}>
                             <i className="bi bi-clock me-1"></i> Programado
+                          </button>
+                        )}
+                        {isPastDate(training.fecha) && (
+                          <button
+                            onClick={() => openAsistenciaModal(training)}
+                            className="btn btn-sm d-flex align-items-center justify-content-center gap-1"
+                            style={{ backgroundColor: 'rgba(31,111,235,0.12)', border: '1px solid rgba(31,111,235,0.3)', color: '#58a6ff', fontSize: '12px', fontWeight: 600, borderRadius: '6px' }}
+                          >
+                            <i className="bi bi-clipboard-check"></i>
+                            {asistenciaStats[training.id]?.total > 0
+                              ? `${asistenciaStats[training.id].total} alumnos registrados`
+                              : '📋 Pase de Lista'}
                           </button>
                         )}
                       </div>
@@ -621,7 +693,15 @@ const TrainingManagement: React.FC = () => {
           </div>
         )
       }
-    </div >
+
+      {/* Asistencia Modal */}
+      {showAsistenciaModal && trainingForAsistencia && (
+        <AsistenciaModal
+          training={trainingForAsistencia}
+          onClose={handleAsistenciaClose}
+        />
+      )}
+    </div>
   );
 };
 

@@ -41,7 +41,7 @@ const TrainingScheduleForm: React.FC<TrainingScheduleFormProps> = ({ schedule, o
                 setLoading(true);
                 const [cats, coaches] = await Promise.all([
                     apiService.getAll<Categoria>('categorias'),
-                    apiService.getPersonal({ cargo: 'Entrenador' })
+                    apiService.getPersonal({ cargo: 'Entrenador', estado: 'Activo' })
                 ]);
                 setCategorias(cats);
                 setEntrenadores(coaches);
@@ -53,6 +53,8 @@ const TrainingScheduleForm: React.FC<TrainingScheduleFormProps> = ({ schedule, o
         };
         loadData();
     }, []);
+
+
 
     // Load schedule data if editing
     useEffect(() => {
@@ -110,15 +112,23 @@ const TrainingScheduleForm: React.FC<TrainingScheduleFormProps> = ({ schedule, o
             return;
         }
 
+        if (formData.categoriaIds.length === 0) {
+            alert('Debes seleccionar al menos una categoría');
+            return;
+        }
+
         const formatTime = (time: { hora: string; minuto: string; periodo: string }) => {
-            if (time.hora === '--' || time.minuto === '--') return undefined;
-            let hour = parseInt(time.hora);
+            // Si no se seleccionaron hora/minuto usar 00:00:00 como default
+            const h = time.hora === '--' ? '00' : time.hora;
+            const m = time.minuto === '--' ? '00' : time.minuto;
+            let hour = parseInt(h);
             if (time.periodo === 'PM' && hour !== 12) hour += 12;
             if (time.periodo === 'AM' && hour === 12) hour = 0;
-            return `${hour.toString().padStart(2, '0')}:${time.minuto}:00`;
+            return `${hour.toString().padStart(2, '0')}:${m}:00`;
         };
 
         const scheduleData = {
+            id: schedule?.id ?? 0,           // ← CRÍTICO: incluir el id para el PUT
             nombre: formData.nombre,
             descripcion: formData.descripcion || null,
             categoriaId: formData.categoriaIds.length > 0 ? formData.categoriaIds[0] : null,
@@ -132,16 +142,17 @@ const TrainingScheduleForm: React.FC<TrainingScheduleFormProps> = ({ schedule, o
 
         try {
             if (schedule?.id) {
-                await apiService.update('trainingschedules', schedule.id, { ...scheduleData, id: schedule.id });
+                await apiService.update('trainingschedules', schedule.id, scheduleData);
             } else {
                 await apiService.create('trainingschedules', scheduleData);
             }
             onSave();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error al guardar configuración:', error);
-            alert('Error al guardar la configuración');
+            alert(`Error al guardar: ${error.message || 'Error desconocido'}`);
         }
     };
+
 
     return (
         <div className="animate-fadeIn" style={{ backgroundColor: '#0d1117', minHeight: '80vh', padding: '20px 0' }}>

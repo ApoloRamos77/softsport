@@ -45,24 +45,92 @@ namespace SoftSportAPI.Controllers
 
         // POST: api/TrainingSchedules
         [HttpPost]
-        public async Task<ActionResult<TrainingSchedule>> PostTrainingSchedule(TrainingSchedule trainingSchedule)
+        public async Task<ActionResult<TrainingSchedule>> PostTrainingSchedule([FromBody] TrainingScheduleUpdateDto dto)
         {
-            _context.TrainingSchedules.Add(trainingSchedule);
-            await _context.SaveChangesAsync();
+            // Validar entrenadorId antes de insertar (evita FK violation)
+            int? validEntrenadorId = null;
+            if (dto.EntrenadorId.HasValue && dto.EntrenadorId.Value > 0)
+            {
+                var existe = await _context.Personal.AnyAsync(p => p.Id == dto.EntrenadorId.Value);
+                validEntrenadorId = existe ? dto.EntrenadorId : null;
+            }
 
-            return CreatedAtAction(nameof(GetTrainingSchedule), new { id = trainingSchedule.Id }, trainingSchedule);
+            var schedule = new TrainingSchedule
+            {
+                Nombre       = dto.Nombre,
+                Descripcion  = dto.Descripcion,
+                CategoriaId  = dto.CategoriaId,
+                EntrenadorId = validEntrenadorId,
+                DiasSemana   = dto.DiasSemana ?? "",
+                Ubicacion    = dto.Ubicacion,
+                Estado       = dto.Estado ?? "Activo"
+            };
+
+            // Parsear horarios
+            if (!string.IsNullOrWhiteSpace(dto.HoraInicio) && TimeSpan.TryParse(dto.HoraInicio, out var hi))
+                schedule.HoraInicio = hi;
+            if (!string.IsNullOrWhiteSpace(dto.HoraFin) && TimeSpan.TryParse(dto.HoraFin, out var hf))
+                schedule.HoraFin = hf;
+
+            _context.TrainingSchedules.Add(schedule);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("fkey") == true
+                                            || ex.InnerException?.Message.Contains("foreign key") == true)
+            {
+                schedule.EntrenadorId = null;
+                await _context.SaveChangesAsync();
+            }
+
+            return CreatedAtAction(nameof(GetTrainingSchedule), new { id = schedule.Id }, schedule);
         }
+
+
 
         // PUT: api/TrainingSchedules/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutTrainingSchedule(int id, TrainingSchedule trainingSchedule)
+        public async Task<IActionResult> PutTrainingSchedule(int id, [FromBody] TrainingScheduleUpdateDto dto)
         {
-            if (id != trainingSchedule.Id)
+            if (id != dto.Id)
             {
-                return BadRequest();
+                return BadRequest("El ID de la URL no coincide con el ID del cuerpo.");
             }
 
-            _context.Entry(trainingSchedule).State = EntityState.Modified;
+            var schedule = await _context.TrainingSchedules.FindAsync(id);
+            if (schedule == null)
+            {
+                return NotFound($"Configuración {id} no encontrada.");
+            }
+
+            // Actualizar solo campos editables (NO tocar auditoría — SaveChangesAsync lo maneja)
+            schedule.Nombre      = dto.Nombre;
+            schedule.Descripcion = dto.Descripcion;
+            schedule.CategoriaId = dto.CategoriaId;
+            schedule.DiasSemana  = dto.DiasSemana ?? schedule.DiasSemana;
+            schedule.Ubicacion   = dto.Ubicacion;
+            schedule.Estado      = dto.Estado ?? schedule.Estado;
+
+            // Validar entrenadorId antes de asignar (evita FK violation)
+            if (dto.EntrenadorId.HasValue && dto.EntrenadorId.Value > 0)
+            {
+                var entrenadorExiste = await _context.Personal
+                    .AnyAsync(p => p.Id == dto.EntrenadorId.Value);
+                schedule.EntrenadorId = entrenadorExiste ? dto.EntrenadorId : null;
+            }
+            else
+            {
+                schedule.EntrenadorId = null;
+            }
+
+            // Parsear horarios (vienen como string "HH:mm:ss")
+            if (!string.IsNullOrWhiteSpace(dto.HoraInicio) && TimeSpan.TryParse(dto.HoraInicio, out var hi))
+                schedule.HoraInicio = hi;
+
+            if (!string.IsNullOrWhiteSpace(dto.HoraFin) && TimeSpan.TryParse(dto.HoraFin, out var hf))
+                schedule.HoraFin = hf;
 
             try
             {
@@ -71,17 +139,21 @@ namespace SoftSportAPI.Controllers
             catch (DbUpdateConcurrencyException)
             {
                 if (!TrainingScheduleExists(id))
-                {
                     return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                throw;
+            }
+            catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("fkey") == true
+                                             || ex.InnerException?.Message.Contains("foreign key") == true)
+            {
+                // FK violation — limpiar entrenadorId y reintentar
+                schedule.EntrenadorId = null;
+                await _context.SaveChangesAsync();
             }
 
             return NoContent();
         }
+
+
 
         // DELETE: api/TrainingSchedules/5
         [HttpDelete("{id}")]
@@ -170,5 +242,19 @@ namespace SoftSportAPI.Controllers
         public int ScheduleId { get; set; }
         public int Month { get; set; }
         public int Year { get; set; }
+    }
+
+    public class TrainingScheduleUpdateDto
+    {
+        public int     Id           { get; set; }
+        public string  Nombre       { get; set; } = string.Empty;
+        public string? Descripcion  { get; set; }
+        public int?    CategoriaId  { get; set; }
+        public int?    EntrenadorId { get; set; }
+        public string? DiasSemana   { get; set; }
+        public string? HoraInicio   { get; set; }
+        public string? HoraFin      { get; set; }
+        public string? Ubicacion    { get; set; }
+        public string? Estado       { get; set; }
     }
 }
