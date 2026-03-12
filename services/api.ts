@@ -337,7 +337,7 @@ export interface PeriodoPago {
   fechaInicio?: string;
   fechaVencimiento?: string;
   monto: number;
-  estado: 'Pendiente' | 'Pagado' | 'Vencido' | 'Exonerado';
+  estado: 'Pendiente' | 'Pagado' | 'Vencido' | 'Exonerado' | 'Invitado' | string;
   reciboId?: number;
   reciboNumero?: string;
   observaciones?: string;
@@ -681,7 +681,7 @@ class ApiService {
     });
     if (!response.ok) throw new Error('Error marcando período como pagado');
   }
-  async generarTodosPeriodos(opts?: { montoMensual?: number; diaVencimiento?: number }): Promise<any> {
+  async generarTodosPeriodos(opts?: { montoMensual?: number; diaVencimiento?: number; categoriaId?: number; mes?: number; anio?: number }): Promise<any> {
     const response = await fetch(`${API_BASE_URL}/periodospago/generar-todos`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

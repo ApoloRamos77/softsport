@@ -340,7 +340,7 @@ const AlumnoManagement: React.FC = () => {
                         </span>
                       </td>
                       <td className="border-bottom border-secondary border-opacity-10 py-3">
-                        <span className={`badge border border-opacity-30 text-white ${a.estado === 'Activo' ? 'bg-success bg-opacity-20 border-success' : 'bg-secondary bg-opacity-20 border-secondary'
+                        <span className={`badge border text-white ${a.estado === 'Activo' ? 'bg-success bg-opacity-20 border-success border-opacity-30' : 'bg-danger border-danger px-2 py-1 shadow-sm'
                           }`}>
                           {a.estado}
                         </span>
@@ -409,7 +409,7 @@ const AlumnoManagement: React.FC = () => {
                         <h6 className="text-white fw-bold mb-1">{a.nombre} {a.apellido}</h6>
                         <small className="text-secondary d-block" style={{ fontSize: '11px' }}>{a.documento || '-'}</small>
                       </div>
-                      <span className={`badge border border-opacity-30 text-white ${a.estado === 'Activo' ? 'bg-success bg-opacity-20 border-success' : 'bg-secondary bg-opacity-20 border-secondary'
+                      <span className={`badge border text-white ${a.estado === 'Activo' ? 'bg-success bg-opacity-20 border-success border-opacity-30' : 'bg-danger border-danger px-2 py-1 shadow-sm'
                         }`}>
                         {a.estado}
                       </span>

@@ -9,6 +9,7 @@ namespace SoftSportAPI.Controllers
     [ApiController]
     public class PeriodosPagoController : ControllerBase
     {
+        private static readonly string[] MESES_FULL = new string[] { "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre" };
         private readonly SoftSportDbContext _context;
 
         public PeriodosPagoController(SoftSportDbContext context)
@@ -211,78 +212,158 @@ namespace SoftSportAPI.Controllers
             var montoMensual = request?.MontoMensual ?? 0;
             var diaVencimiento = request?.DiaVencimiento ?? 10;
 
-            // Get all active students with an enrollment date
-            var alumnos = await _context.Alumnos
-                .Where(a => a.Estado == "Activo" || a.Estado == null)
-                .ToListAsync();
+            // Validate MontoMensual is greater than 0
+            if (montoMensual <= 0)
+                return BadRequest(new { error = "El monto mensual base es obligatorio y debe ser mayor a 0." });
+
+            // Base query for active students
+            var queryAlumnos = _context.Alumnos
+                .Include(a => a.Beca)
+                .Where(a => a.Estado == "Activo" || a.Estado == null);
+
+            if (request?.CategoriaId != null)
+            {
+                queryAlumnos = queryAlumnos.Where(a => a.CategoriaId == request.CategoriaId);
+            }
+
+            var alumnos = await queryAlumnos.ToListAsync();
 
             var totalGenerados = 0;
             var totalAlumnos = 0;
-            var errores = new List<string>();
+            var totalActualizados = 0;
 
-            // Get ALL existing periods at once for efficiency
-            var todosExistentes = await _context.PeriodosPago
-                .Select(p => new { p.AlumnoId, p.Anio, p.Mes })
+            // Optional Specific Month Target
+            bool hasSpecificTarget = request?.Mes != null && request?.Anio != null;
+            int anioTarget = request?.Anio ?? DateTime.Today.Year;
+            int mesTarget = request?.Mes ?? DateTime.Today.Month;
+
+            // Get ALL existing periods at once for efficiency based on the cohort of students
+            var alumnoIds = alumnos.Select(a => a.Id).ToList();
+            var todosExistentesModel = await _context.PeriodosPago
+                .Where(p => alumnoIds.Contains(p.AlumnoId))
                 .ToListAsync();
 
             var nuevos = new List<PeriodoPago>();
+            var actualizados = new List<PeriodoPago>();
 
             foreach (var alumno in alumnos)
             {
                 var fechaInicio = alumno.FechaInscripcion ?? alumno.FechaRegistro;
+                
+                // Calculte the amount based on the Beca
+                decimal multiplicador = 1m;
+                if (alumno.Beca != null && alumno.Beca.Porcentaje > 0)
+                {
+                    multiplicador = (100m - (decimal)alumno.Beca.Porcentaje) / 100m;
+                    if (multiplicador < 0m) multiplicador = 0m;
+                }
+                
+                decimal montoFinal = Math.Round(montoMensual * multiplicador, 2);
+                
+                // If Beca >= 100% or implies guest by name (handled visualy), backend explicitly supports Exonerado
+                bool isExonerado = alumno.Beca != null && (alumno.Beca.Porcentaje >= 100 || (alumno.Beca.Nombre ?? "").ToLower().Contains("invitado"));
 
-                var existentesAlumno = todosExistentes
+                var existentesAlumno = todosExistentesModel
                     .Where(e => e.AlumnoId == alumno.Id)
-                    .Select(e => new { e.Anio, e.Mes })
                     .ToList();
 
-                var current = new DateTime(fechaInicio.Year, fechaInicio.Month, 1);
-                var hasta = new DateTime(fechaHasta.Year, fechaHasta.Month, 1);
-                var generadosAlumno = 0;
-
-                while (current <= hasta)
+                if (hasSpecificTarget)
                 {
-                    var anio = current.Year;
-                    var mes = current.Month;
+                    // Generate or override specifically for this Target Month
+                    var existingPeriod = existentesAlumno.FirstOrDefault(e => e.Anio == anioTarget && e.Mes == mesTarget);
+                    var fechaVencimiento = new DateTime(anioTarget, mesTarget, Math.Min(diaVencimiento, DateTime.DaysInMonth(anioTarget, mesTarget)));
+                    var estadoCalculado = isExonerado ? "Exonerado" : (fechaVencimiento < DateTime.Today ? "Vencido" : "Pendiente");
 
-                    if (!existentesAlumno.Any(e => e.Anio == anio && e.Mes == mes))
+                    if (existingPeriod != null)
                     {
-                        var fechaVencimiento = new DateTime(anio, mes, Math.Min(diaVencimiento, DateTime.DaysInMonth(anio, mes)));
-                        var estadoInicial = fechaVencimiento < DateTime.Today ? "Vencido" : "Pendiente";
-
+                        // Overwrite logic (only if not Pagado, Exonerado manually overriding, etc)
+                        // Could safely override amount and due date. We won't touch "Pagado" ones naturally.
+                        if (existingPeriod.Estado != "Pagado")
+                        {
+                            existingPeriod.Monto = montoFinal;
+                            existingPeriod.FechaVencimiento = fechaVencimiento;
+                            existingPeriod.Estado = estadoCalculado;
+                            existingPeriod.FechaModificacion = DateTime.UtcNow;
+                            existingPeriod.UsuarioModificacion = "System";
+                            actualizados.Add(existingPeriod);
+                            totalActualizados++;
+                            totalAlumnos++; // Marked as affected
+                        }
+                    }
+                    else
+                    {
+                        // Create
                         nuevos.Add(new PeriodoPago
                         {
                             AlumnoId = alumno.Id,
-                            Anio = anio,
-                            Mes = mes,
+                            Anio = anioTarget,
+                            Mes = mesTarget,
                             FechaVencimiento = fechaVencimiento,
-                            Monto = montoMensual,
-                            Estado = estadoInicial,
+                            Monto = montoFinal,
+                            Estado = estadoCalculado,
                             FechaCreacion = DateTime.UtcNow,
                             UsuarioCreacion = "System"
                         });
-                        generadosAlumno++;
+                        totalGenerados++;
+                        totalAlumnos++;
+                    }
+                }
+                else
+                {
+                    // Generate history sequentially from inscription date
+                    var current = new DateTime(fechaInicio.Year, fechaInicio.Month, 1);
+                    var hasta = new DateTime(fechaHasta.Year, fechaHasta.Month, 1);
+                    var generadosAlumno = 0;
+
+                    while (current <= hasta)
+                    {
+                        var anio = current.Year;
+                        var mes = current.Month;
+
+                        if (!existentesAlumno.Any(e => e.Anio == anio && e.Mes == mes))
+                        {
+                            var fechaVencimiento = new DateTime(anio, mes, Math.Min(diaVencimiento, DateTime.DaysInMonth(anio, mes)));
+                            var estadoInicial = isExonerado ? "Exonerado" : (fechaVencimiento < DateTime.Today ? "Vencido" : "Pendiente");
+
+                            nuevos.Add(new PeriodoPago
+                            {
+                                AlumnoId = alumno.Id,
+                                Anio = anio,
+                                Mes = mes,
+                                FechaVencimiento = fechaVencimiento,
+                                Monto = montoFinal,
+                                Estado = estadoInicial,
+                                FechaCreacion = DateTime.UtcNow,
+                                UsuarioCreacion = "System"
+                            });
+                            generadosAlumno++;
+                        }
+
+                        current = current.AddMonths(1);
                     }
 
-                    current = current.AddMonths(1);
+                    if (generadosAlumno > 0) totalAlumnos++;
+                    totalGenerados += generadosAlumno;
                 }
-
-                if (generadosAlumno > 0) totalAlumnos++;
-                totalGenerados += generadosAlumno;
             }
 
             if (nuevos.Any())
             {
                 _context.PeriodosPago.AddRange(nuevos);
+            }
+            if (actualizados.Any() || nuevos.Any()) {
                 await _context.SaveChangesAsync();
             }
 
             return Ok(new
             {
-                message = $"Se generaron {totalGenerados} período(s) para {totalAlumnos} alumno(s).",
-                totalGenerados,
-                totalAlumnos,
-                totalAlumnosProcesados = alumnos.Count
+                message = hasSpecificTarget 
+                          ? $"Se generaron {nuevos.Count} y se actualizaron {actualizados.Count} período(s) de {MESES_FULL[mesTarget - 1]} {anioTarget}."
+                          : $"Se generaron {totalGenerados} período(s) histórico(s).",
+                totalGenerados = nuevos.Count,
+                totalActualizados = actualizados.Count,
+                totalAlumnosAfectados = actualizados.Any() || nuevos.Any() ? totalAlumnos : 0,
+                alumnosEvaluados = alumnos.Count
             });
         }
 
@@ -363,6 +444,9 @@ namespace SoftSportAPI.Controllers
         public DateTime? FechaHasta { get; set; }
         public decimal MontoMensual { get; set; } = 0;
         public int DiaVencimiento { get; set; } = 10;
+        public int? CategoriaId { get; set; }
+        public int? Mes { get; set; }
+        public int? Anio { get; set; }
     }
 
     public class MarcarPagadoRequest

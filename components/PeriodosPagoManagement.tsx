@@ -9,6 +9,7 @@ const estadoConfig: Record<string, { color: string; bg: string; icon: string; ba
     Pendiente: { color: '#856404', bg: '#fff3cd', icon: '⏳', badge: 'warning' },
     Vencido: { color: '#721c24', bg: '#f8d7da', icon: '⚠', badge: 'danger' },
     Exonerado: { color: '#6c757d', bg: '#e2e3e5', icon: '○', badge: 'secondary' },
+    Invitado: { color: '#17a2b8', bg: '#d1ecf1', icon: '★', badge: 'info' },
 };
 
 interface AlumnoSimple {
@@ -18,7 +19,17 @@ interface AlumnoSimple {
     fechaInscripcion?: string;
     categoriaId?: number;
     categoria?: { id?: number; nombre: string };
+    beca?: { id?: number; nombre: string; porcentaje: number };
 }
+
+// Helper to calculate display state based on scholarship
+const getDisplayEstado = (periodo: PeriodoPago, alumno?: AlumnoSimple | any): string => {
+    if (periodo.estado === 'Pendiente' || periodo.estado === 'Vencido') {
+        if (alumno?.beca?.porcentaje === 100) return 'Exonerado';
+        if (alumno?.beca?.nombre?.toLowerCase().includes('invitado')) return 'Invitado';
+    }
+    return periodo.estado;
+};
 
 interface GenerarModalState {
     open: boolean;
@@ -34,6 +45,7 @@ const PeriodosPagoManagement: React.FC = () => {
     const [alumnos, setAlumnos] = useState<AlumnoSimple[]>([]);
     const [loading, setLoading] = useState(true);
     const [filtroAlumnoId, setFiltroAlumnoId] = useState<string>('');
+    const [filtroCategoriaMain, setFiltroCategoriaMain] = useState<string>('');
     const [filtroEstado, setFiltroEstado] = useState<string>('');
     const [filtroAnio, setFiltroAnio] = useState<number>(new Date().getFullYear());
     const [searchAlumno, setSearchAlumno] = useState('');
@@ -46,7 +58,7 @@ const PeriodosPagoManagement: React.FC = () => {
     const [procesando, setProcesando] = useState(false);
     const [mensaje, setMensaje] = useState<{ tipo: 'success' | 'danger'; texto: string } | null>(null);
     const [generarTodosModal, setGenerarTodosModal] = useState(false);
-    const [generarTodosOpts, setGenerarTodosOpts] = useState({ montoMensual: 0, diaVencimiento: 10 });
+    const [generarTodosOpts, setGenerarTodosOpts] = useState<{ montoMensual: number; diaVencimiento: number; categoriaId?: number; mes?: number; anio?: number }>({ montoMensual: 0, diaVencimiento: 10 });
     // Filters for the vencidos panel
     const [vencidosSearchAlumno, setVencidosSearchAlumno] = useState('');
     const [vencidosCategoria, setVencidosCategoria] = useState('');
@@ -54,14 +66,14 @@ const PeriodosPagoManagement: React.FC = () => {
     const anioActual = new Date().getFullYear();
     const anios = Array.from({ length: 5 }, (_, i) => anioActual - 2 + i);
 
-    // Derived: unique categories from loaded alumnos
-    const categoriasDisponibles = Array.from(
+    // Derived: unique categories from loaded alumnos with ID
+    const categoriasUnicas = Array.from(
         new Map(
             alumnos
-                .filter(a => a.categoria?.nombre)
-                .map(a => [a.categoria!.nombre, a.categoria!.nombre])
+                .filter(a => a.categoria?.id && a.categoria?.nombre)
+                .map(a => [a.categoria!.id, { id: a.categoria!.id, nombre: a.categoria!.nombre }])
         ).values()
-    ).sort();
+    ).sort((a, b) => a.nombre.localeCompare(b.nombre));
 
     // Derived: vencidos filtered by alumno name and category
     const alumnoMap = new Map(alumnos.map(a => [a.id, a]));
@@ -96,9 +108,21 @@ const PeriodosPagoManagement: React.FC = () => {
                 apiService.getAlumnos({ pageSize: 500 })
             ]);
 
+            const allAlumnos = (alumnosRes.data || []).filter((a: any) => a.id != null) as AlumnoSimple[];
+            const allVencidos = vencidosRes.data || [];
+            
+            const alumnoMapTemp = new Map(allAlumnos.map(a => [a.id, a]));
+            
+            // Filter out Vencidos that should be Exonerado/Invitado
+            const realVencidos = allVencidos.filter((p: any) => {
+                const a = alumnoMapTemp.get(p.alumnoId);
+                const st = getDisplayEstado(p, a);
+                return st !== 'Exonerado' && st !== 'Invitado';
+            });
+
             setPeriodos(periodosRes.data || []);
-            setVencidos(vencidosRes.data || []);
-            setAlumnos((alumnosRes.data || []).filter((a: any) => a.id != null) as AlumnoSimple[]);
+            setVencidos(realVencidos);
+            setAlumnos(allAlumnos);
         } catch (err) {
             console.error('Error cargando períodos:', err);
         } finally {
@@ -109,6 +133,11 @@ const PeriodosPagoManagement: React.FC = () => {
     useEffect(() => { cargarDatos(); }, [cargarDatos]);
 
     const handleGenerarTodos = async () => {
+        if (!generarTodosOpts.montoMensual || generarTodosOpts.montoMensual <= 0) {
+            mostrarMensaje('danger', 'Debes ingresar un Monto Mensual base (> 0) para realizar la generación.');
+            return;
+        }
+
         setProcesando(true);
         try {
             const res = await apiService.generarTodosPeriodos(generarTodosOpts);
@@ -141,6 +170,11 @@ const PeriodosPagoManagement: React.FC = () => {
     };
 
     const handleCambiarEstado = async (periodo: PeriodoPago, nuevoEstado: string) => {
+        if (nuevoEstado === 'Pagado' && !periodo.reciboId && !periodo.reciboNumero) {
+            mostrarMensaje('danger', 'Para marcar un periodo como pagado, debe existir un ingreso de pago para este alumno y periodo en el módulo de Ingresos.');
+            return;
+        }
+
         try {
             await apiService.updatePeriodoPago(periodo.id!, { ...periodo, estado: nuevoEstado });
             mostrarMensaje('success', `Período actualizado a "${nuevoEstado}"`);
@@ -163,10 +197,59 @@ const PeriodosPagoManagement: React.FC = () => {
 
     const handleGuardarEdicion = async () => {
         if (!editandoPeriodo?.id) return;
+
+        // Validar Estado a enviar: 'Invitado' no existe nativamente en base de datos.
+        const estadoDb = editandoPeriodo.estado === 'Invitado' ? 'Exonerado' : editandoPeriodo.estado;
+
+        const payload = { ...editandoPeriodo, estado: estadoDb };
+        // Asegurar fechas válidas
+        if (!payload.fechaInicio) payload.fechaInicio = new Date().toISOString();
+        if (!payload.fechaVencimiento) {
+             const d = new Date(payload.fechaInicio);
+             d.setDate(d.getDate() + 30);
+             payload.fechaVencimiento = d.toISOString();
+        }
+
         setProcesando(true);
         try {
-            await apiService.updatePeriodoPago(editandoPeriodo.id, editandoPeriodo);
+            await apiService.updatePeriodoPago(editandoPeriodo.id, payload);
             mostrarMensaje('success', 'Período actualizado correctamente');
+            
+            // Lógica de actualización en cascada para periodos existentes posteriores
+            if (payload.fechaVencimiento) {
+                const fVencimientoOriginal = new Date(payload.fechaVencimiento);
+                
+                // Buscar periodos posteriores del mismo alumno
+                const periodosFuturos = periodos
+                    .filter(p => p.alumnoId === payload.alumnoId && (p.anio > payload.anio || (p.anio === payload.anio && p.mes > payload.mes)))
+                    .sort((a, b) => a.anio !== b.anio ? a.anio - b.anio : a.mes - b.mes);
+
+                let fechaActualVencimiento = new Date(fVencimientoOriginal);
+                
+                for (const pFuturo of periodosFuturos) {
+                    // La fecha de inicio del siguiente es la de vencimiento del anterior + 1 día
+                    let nuevaFechaInicio = new Date(fechaActualVencimiento);
+                    nuevaFechaInicio.setDate(nuevaFechaInicio.getDate() + 1);
+                    
+                    // La nueva fecha de vencimiento es la nueva fecha de inicio + 30 días
+                    let nuevaFechaVencimiento = new Date(nuevaFechaInicio);
+                    nuevaFechaVencimiento.setDate(nuevaFechaInicio.getDate() + 30);
+                    
+                    const pUpdate = { 
+                        ...pFuturo, 
+                        fechaInicio: nuevaFechaInicio.toISOString().split('T')[0], 
+                        fechaVencimiento: nuevaFechaVencimiento.toISOString().split('T')[0] 
+                    };
+                    
+                    await apiService.updatePeriodoPago(pFuturo.id!, pUpdate);
+                    fechaActualVencimiento = nuevaFechaVencimiento;
+                }
+                
+                if (periodosFuturos.length > 0) {
+                     mostrarMensaje('success', `Período actualizado y se auto-ajustaron ${periodosFuturos.length} período(s) posterior(es).`);
+                }
+            }
+            
             setEditandoPeriodo(null);
             cargarDatos();
         } catch (err: any) {
@@ -178,6 +261,7 @@ const PeriodosPagoManagement: React.FC = () => {
 
     // Group periods by student for grid view
     const alumnosFiltrados = alumnos.filter(a => {
+        if (filtroCategoriaMain && a.categoriaId !== parseInt(filtroCategoriaMain)) return false;
         if (!searchAlumno) return true;
         const q = searchAlumno.toLowerCase();
         return `${a.nombre} ${a.apellido}`.toLowerCase().includes(q);
@@ -192,6 +276,20 @@ const PeriodosPagoManagement: React.FC = () => {
     const alumnosConPeriodos = filtroAlumnoId
         ? alumnosFiltrados.filter(a => a.id === parseInt(filtroAlumnoId))
         : alumnosFiltrados.filter(a => periodosPorAlumno(a.id).length > 0);
+
+    const periodosFiltradosListView = periodos.filter(p => {
+        const alumno = alumnos.find(a => a.id === p.alumnoId);
+        if (!alumno) return false;
+        
+        if (searchAlumno) {
+            const q = searchAlumno.toLowerCase();
+            if (!`${alumno.nombre} ${alumno.apellido}`.toLowerCase().includes(q)) return false;
+        }
+        
+        if (filtroCategoriaMain && alumno.categoriaId !== parseInt(filtroCategoriaMain)) return false;
+        
+        return true;
+    });
 
     return (
         <div style={{ fontFamily: 'Inter, sans-serif' }}>
@@ -289,8 +387,8 @@ const PeriodosPagoManagement: React.FC = () => {
                                         style={{ flex: '1 1 150px', maxWidth: '200px', backgroundColor: '#2d1b1b', borderColor: '#6b2020', color: 'white', fontSize: '12px' }}
                                     >
                                         <option value="">Todas las categorías</option>
-                                        {categoriasDisponibles.map(c => (
-                                            <option key={c} value={c}>{c}</option>
+                                        {categoriasUnicas.map(c => (
+                                            <option key={c.id} value={c.nombre}>{c.nombre}</option>
                                         ))}
                                     </select>
                                     {(vencidosSearchAlumno || vencidosCategoria) && (
@@ -395,17 +493,17 @@ const PeriodosPagoManagement: React.FC = () => {
                         </button>
                     </div>
                     <div className="row g-3 align-items-end">
-                        <div className="col-md-3">
+                        <div className="col-md-2">
                             <label className="form-label text-secondary small fw-bold">Buscar Alumno</label>
                             <input
                                 type="text"
                                 className="form-control form-control-sm"
-                                placeholder="Nombre del alumno..."
+                                placeholder="Nombre..."
                                 value={searchAlumno}
                                 onChange={e => setSearchAlumno(e.target.value)}
                             />
                         </div>
-                        <div className="col-md-3">
+                        <div className="col-md-2">
                             <label className="form-label text-secondary small fw-bold">Alumno Específico</label>
                             <select
                                 className="form-select form-select-sm"
@@ -415,6 +513,19 @@ const PeriodosPagoManagement: React.FC = () => {
                                 <option value="">Todos los alumnos</option>
                                 {alumnos.map(a => (
                                     <option key={a.id} value={a.id}>{a.nombre} {a.apellido}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="col-md-2">
+                            <label className="form-label text-secondary small fw-bold">Categoría</label>
+                            <select
+                                className="form-select form-select-sm"
+                                value={filtroCategoriaMain}
+                                onChange={e => setFiltroCategoriaMain(e.target.value)}
+                            >
+                                <option value="">Todas</option>
+                                {categoriasUnicas.map(c => (
+                                    <option key={c.id} value={c.id}>{c.nombre}</option>
                                 ))}
                             </select>
                         </div>
@@ -440,6 +551,7 @@ const PeriodosPagoManagement: React.FC = () => {
                                 <option value="Pagado">Pagado</option>
                                 <option value="Vencido">Vencido</option>
                                 <option value="Exonerado">Exonerado</option>
+                                <option value="Invitado">Invitado</option>
                             </select>
                         </div>
                         <div className="col-md-2">
@@ -519,10 +631,12 @@ const PeriodosPagoManagement: React.FC = () => {
                                             </td>
                                             {Array.from({ length: 12 }, (_, i) => i + 1).map(mes => {
                                                 const p = getPeriodoMes(alumno.id, mes);
-                                                let cfg = p ? estadoConfig[p.estado] : null;
+                                                const alumnoData = alumnos.find(a => a.id === alumno.id);
+                                                const displayEstado = p ? getDisplayEstado(p, alumnoData) : '';
+                                                let cfg = p ? estadoConfig[displayEstado] || estadoConfig[p.estado] : null;
 
                                                 // Strict overdue check for visual representation
-                                                if (p && p.estado !== 'Pagado' && p.estado !== 'Exonerado') {
+                                                if (p && displayEstado !== 'Pagado' && displayEstado !== 'Exonerado' && displayEstado !== 'Invitado') {
                                                     const today = new Date();
                                                     today.setHours(0, 0, 0, 0);
 
@@ -647,7 +761,7 @@ const PeriodosPagoManagement: React.FC = () => {
                         <span className="badge bg-secondary">{periodos.length} período(s)</span>
                     </div>
                     <div className="card-body p-0" style={{ overflowX: 'auto' }}>
-                        {periodos.length === 0 ? (
+                        {periodosFiltradosListView.length === 0 ? (
                             <div className="text-center py-5 text-secondary">
                                 <i className="bi bi-calendar-x d-block h2 mb-2 opacity-25"></i>
                                 No hay períodos para mostrar.
@@ -666,8 +780,10 @@ const PeriodosPagoManagement: React.FC = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {periodos.map(p => {
-                                        const cfg = estadoConfig[p.estado] || estadoConfig.Pendiente;
+                                    {periodosFiltradosListView.map(p => {
+                                        const alumnoData = alumnos.find(a => a.id === p.alumnoId);
+                                        const displayEstado = getDisplayEstado(p, alumnoData);
+                                        const cfg = estadoConfig[displayEstado] || estadoConfig.Pendiente;
                                         return (
                                             <tr key={p.id} style={{ borderBottom: '1px solid #21262d' }}>
                                                 <td className="ps-3 text-white fw-bold">{p.alumnoNombre}</td>
@@ -680,10 +796,10 @@ const PeriodosPagoManagement: React.FC = () => {
                                                 </td>
                                                 <td>
                                                     <span
-                                                        className={`badge bg-${cfg.badge}`}
-                                                        style={{ fontSize: '11px' }}
+                                                        className="badge"
+                                                        style={{ backgroundColor: cfg.color, color: 'white', fontSize: '11px' }}
                                                     >
-                                                        {cfg.icon} {p.estado}
+                                                        {cfg.icon} {displayEstado}
                                                     </span>
                                                 </td>
                                                 <td className="text-secondary">
@@ -699,7 +815,7 @@ const PeriodosPagoManagement: React.FC = () => {
                                                         >
                                                             <i className="bi bi-pencil"></i>
                                                         </button>
-                                                        {p.estado !== 'Pagado' && (
+                                                        {displayEstado !== 'Pagado' && displayEstado !== 'Exonerado' && displayEstado !== 'Invitado' && (
                                                             <button
                                                                 className="btn btn-xs btn-success"
                                                                 style={{ fontSize: '11px', padding: '2px 6px' }}
@@ -817,6 +933,7 @@ const PeriodosPagoManagement: React.FC = () => {
                                             <option value="Pagado">Pagado</option>
                                             <option value="Vencido">Vencido</option>
                                             <option value="Exonerado">Exonerado</option>
+                                            <option value="Invitado">Invitado</option>
                                         </select>
                                     </div>
                                     <div className="col-6">
@@ -889,9 +1006,21 @@ const PeriodosPagoManagement: React.FC = () => {
                                         await handleGuardarEdicion();
                                     } else {
                                         // Create new period
+                                        // Validar estado local
+                                        const estadoDb = editandoPeriodo.estado === 'Invitado' ? 'Exonerado' : editandoPeriodo.estado;
+                                        const payload = { ...editandoPeriodo, estado: estadoDb };
+                                        
+                                        // Provide fallback valid dates
+                                        if (!payload.fechaInicio) payload.fechaInicio = new Date().toISOString();
+                                        if (!payload.fechaVencimiento) {
+                                            const d = new Date(payload.fechaInicio);
+                                            d.setDate(d.getDate() + 30);
+                                            payload.fechaVencimiento = d.toISOString();
+                                        }
+
                                         setProcesando(true);
                                         try {
-                                            await apiService.createPeriodoPago(editandoPeriodo);
+                                            await apiService.createPeriodoPago(payload);
                                             mostrarMensaje('success', 'Período creado correctamente');
                                             setEditandoPeriodo(null);
                                             cargarDatos();
@@ -924,20 +1053,65 @@ const PeriodosPagoManagement: React.FC = () => {
                             <div className="modal-body">
                                 <div className="alert alert-warning" style={{ fontSize: '13px' }}>
                                     <i className="bi bi-exclamation-triangle me-1"></i>
-                                    Se generarán períodos mensuales para <strong>todos los alumnos activos</strong> desde su fecha de inscripción hasta el mes actual. Los períodos ya existentes no serán duplicados.
+                                    Se generarán períodos mensuales para <strong>alumnos activos</strong>. Si seleccionas un Mes y Año, se creará/sobrescribirá únicamente ese mes. El sistema aplicará descuentos basados en la Beca de cada alumno sobre el monto base.
                                 </div>
+                                <div className="row g-3 mb-3">
+                                    <div className="col-12">
+                                        <label className="form-label text-secondary small fw-bold">Público Objetivo (Por Categoría)</label>
+                                        <select
+                                            className="form-select bg-dark text-white border-secondary"
+                                            value={generarTodosOpts.categoriaId || ''}
+                                            onChange={e => setGenerarTodosOpts(o => ({ ...o, categoriaId: e.target.value ? parseInt(e.target.value) : undefined }))}
+                                        >
+                                            <option value="">Todas las Categorías</option>
+                                            {categoriasUnicas.map(cat => (
+                                                <option key={cat.id} value={cat.id}>{cat.nombre}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="col-6">
+                                        <label className="form-label text-secondary small fw-bold">Mes Específico (Opcional)</label>
+                                        <select
+                                            className="form-select bg-dark text-white border-secondary"
+                                            value={generarTodosOpts.mes || ''}
+                                            onChange={e => setGenerarTodosOpts(o => ({ ...o, mes: e.target.value ? parseInt(e.target.value) : undefined }))}
+                                        >
+                                            <option value="">(Histórico completo)</option>
+                                            {MESES_FULL.map((m, i) => (
+                                                <option key={i + 1} value={i + 1}>{m}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="col-6">
+                                        <label className="form-label text-secondary small fw-bold">Año Específico (Opcional)</label>
+                                        <select
+                                            className="form-select bg-dark text-white border-secondary"
+                                            value={generarTodosOpts.anio || ''}
+                                            onChange={e => setGenerarTodosOpts(o => ({ ...o, anio: e.target.value ? parseInt(e.target.value) : undefined }))}
+                                        >
+                                            <option value="">(Histórico completo)</option>
+                                            {anios.map(a => (
+                                                <option key={a} value={a}>{a}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
                                 <div className="mb-3">
-                                    <label className="form-label text-secondary small fw-bold">Monto Mensual (S/.) — Opcional</label>
+                                    <label className="form-label text-secondary small fw-bold">
+                                        Monto Mensual Base al 100% (S/.) <span className="text-danger">* Obligatorio</span>
+                                    </label>
                                     <input
                                         type="number"
                                         className="form-control"
-                                        min="0"
+                                        min="0.01"
                                         step="0.01"
-                                        value={generarTodosOpts.montoMensual}
+                                        value={generarTodosOpts.montoMensual || ''}
                                         onChange={e => setGenerarTodosOpts(o => ({ ...o, montoMensual: parseFloat(e.target.value) || 0 }))}
-                                        placeholder="0.00 (dejar en 0 si varía por alumno)"
+                                        placeholder="Ej. 100.00"
+                                        required
                                     />
-                                    <small className="text-secondary">Dejar en 0 para definir el monto individualmente después.</small>
+                                    <small className="text-secondary">Si tiene beca (ej. 50%), el sistema guardará S/. 50.00.</small>
                                 </div>
                                 <div className="mb-3">
                                     <label className="form-label text-secondary small fw-bold">Día de Vencimiento</label>
