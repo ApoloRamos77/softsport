@@ -48,11 +48,11 @@ namespace SoftSportAPI.Controllers
             {
                 if (estado == "Activo")
                 {
-                    query = query.Where(a => a.FechaAnulacion == null);
+                    query = query.Where(a => a.Estado == "Activo" || a.Estado == null);
                 }
                 else if (estado == "Inactivo")
                 {
-                    query = query.Where(a => a.FechaAnulacion != null);
+                    query = query.Where(a => a.Estado == "Inactivo");
                 }
             }
 

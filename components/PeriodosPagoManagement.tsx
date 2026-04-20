@@ -41,27 +41,25 @@ interface GenerarModalState {
 
 const PeriodosPagoManagement: React.FC = () => {
     const [periodos, setPeriodos] = useState<PeriodoPago[]>([]);
-    const [vencidos, setVencidos] = useState<PeriodoPago[]>([]);
-    const [alumnos, setAlumnos] = useState<AlumnoSimple[]>([]);
-    const [loading, setLoading] = useState(true);
     const [filtroAlumnoId, setFiltroAlumnoId] = useState<string>('');
     const [filtroCategoriaMain, setFiltroCategoriaMain] = useState<string>('');
     const [filtroEstado, setFiltroEstado] = useState<string>('');
     const [filtroAnio, setFiltroAnio] = useState<number>(new Date().getFullYear());
     const [searchAlumno, setSearchAlumno] = useState('');
+    const [soloPagantes, setSoloPagantes] = useState<boolean>(true); // Nuevo filtro
     const [vistaActiva, setVistaActiva] = useState<'cuadricula' | 'lista'>('cuadricula');
-    const [generarModal, setGenerarModal] = useState<GenerarModalState>({
-        open: false, alumnoId: null, alumnoNombre: '', montoMensual: 0, diaVencimiento: 10
+    
+    // Modales de Generación
+    const [generarModal, setGenerarModal] = useState<{ open: boolean; alumnoId: number | null; alumnoNombre: string }>({
+        open: false, alumnoId: null, alumnoNombre: ''
     });
+    const [generarTodosModal, setGenerarTodosModal] = useState<{ open: boolean; tipo: 'historico' | 'mes_especifico'; mes: number; anio: number; categoriaId?: number }>({
+        open: false, tipo: 'historico', mes: new Date().getMonth() + 1, anio: new Date().getFullYear()
+    });
+
     const [editandoPeriodo, setEditandoPeriodo] = useState<PeriodoPago | null>(null);
-    const [alertaVisible, setAlertaVisible] = useState(true);
     const [procesando, setProcesando] = useState(false);
     const [mensaje, setMensaje] = useState<{ tipo: 'success' | 'danger'; texto: string } | null>(null);
-    const [generarTodosModal, setGenerarTodosModal] = useState(false);
-    const [generarTodosOpts, setGenerarTodosOpts] = useState<{ montoMensual: number; diaVencimiento: number; categoriaId?: number; mes?: number; anio?: number }>({ montoMensual: 0, diaVencimiento: 10 });
-    // Filters for the vencidos panel
-    const [vencidosSearchAlumno, setVencidosSearchAlumno] = useState('');
-    const [vencidosCategoria, setVencidosCategoria] = useState('');
 
     const anioActual = new Date().getFullYear();
     const anios = Array.from({ length: 5 }, (_, i) => anioActual - 2 + i);
@@ -75,18 +73,7 @@ const PeriodosPagoManagement: React.FC = () => {
         ).values()
     ).sort((a, b) => a.nombre.localeCompare(b.nombre));
 
-    // Derived: vencidos filtered by alumno name and category
-    const alumnoMap = new Map(alumnos.map(a => [a.id, a]));
-    const vencidosFiltrados = vencidos.filter(p => {
-        const alumno = alumnoMap.get(p.alumnoId);
-        const nombreCompleto = (p.alumnoNombre || '').toLowerCase();
-        if (vencidosSearchAlumno && !nombreCompleto.includes(vencidosSearchAlumno.toLowerCase())) return false;
-        if (vencidosCategoria) {
-            const cat = alumno?.categoria?.nombre || '';
-            if (cat !== vencidosCategoria) return false;
-        }
-        return true;
-    });
+    const countVencidos = periodos.filter(p => p.estado === 'Vencido').length;
 
     const mostrarMensaje = (tipo: 'success' | 'danger', texto: string) => {
         setMensaje({ tipo, texto });
@@ -102,26 +89,13 @@ const PeriodosPagoManagement: React.FC = () => {
             if (filtroAnio) params.anio = filtroAnio;
             params.pageSize = 500;
 
-            const [periodosRes, vencidosRes, alumnosRes] = await Promise.all([
+            const [periodosRes, alumnosRes] = await Promise.all([
                 apiService.getPeriodosPago(params),
-                apiService.getPeriodosVencidos(),
                 apiService.getAlumnos({ pageSize: 500 })
             ]);
 
             const allAlumnos = (alumnosRes.data || []).filter((a: any) => a.id != null) as AlumnoSimple[];
-            const allVencidos = vencidosRes.data || [];
-            
-            const alumnoMapTemp = new Map(allAlumnos.map(a => [a.id, a]));
-            
-            // Filter out Vencidos that should be Exonerado/Invitado
-            const realVencidos = allVencidos.filter((p: any) => {
-                const a = alumnoMapTemp.get(p.alumnoId);
-                const st = getDisplayEstado(p, a);
-                return st !== 'Exonerado' && st !== 'Invitado';
-            });
-
             setPeriodos(periodosRes.data || []);
-            setVencidos(realVencidos);
             setAlumnos(allAlumnos);
         } catch (err) {
             console.error('Error cargando períodos:', err);
@@ -133,16 +107,18 @@ const PeriodosPagoManagement: React.FC = () => {
     useEffect(() => { cargarDatos(); }, [cargarDatos]);
 
     const handleGenerarTodos = async () => {
-        if (!generarTodosOpts.montoMensual || generarTodosOpts.montoMensual <= 0) {
-            mostrarMensaje('danger', 'Debes ingresar un Monto Mensual base (> 0) para realizar la generación.');
-            return;
-        }
-
         setProcesando(true);
         try {
-            const res = await apiService.generarTodosPeriodos(generarTodosOpts);
+            const payload: any = { categoriaId: generarTodosModal.categoriaId };
+            if (generarTodosModal.tipo === 'mes_especifico') {
+                payload.mes = generarTodosModal.mes;
+                payload.anio = generarTodosModal.anio;
+            }
+            // No pasamos montoMensual ni diaVencimiento, el backend usará el per-student o default 0.
+            
+            const res = await apiService.generarTodosPeriodos(payload);
             mostrarMensaje('success', res.message || 'Períodos generados correctamente');
-            setGenerarTodosModal(false);
+            setGenerarTodosModal({ ...generarTodosModal, open: false });
             cargarDatos();
         } catch (err: any) {
             mostrarMensaje('danger', err.message || 'Error generando períodos');
@@ -155,12 +131,10 @@ const PeriodosPagoManagement: React.FC = () => {
         if (!generarModal.alumnoId) return;
         setProcesando(true);
         try {
-            const res = await apiService.generarPeriodos(generarModal.alumnoId, {
-                montoMensual: generarModal.montoMensual,
-                diaVencimiento: generarModal.diaVencimiento,
-            });
+            // El backend ya lee MontoMensualidad y FechaInicioPago de la tabla Alumnos
+            const res = await apiService.generarPeriodos(generarModal.alumnoId, {});
             mostrarMensaje('success', res.message || 'Períodos generados correctamente');
-            setGenerarModal(g => ({ ...g, open: false }));
+            setGenerarModal({ ...generarModal, open: false });
             cargarDatos();
         } catch (err: any) {
             mostrarMensaje('danger', err.message || 'Error generando períodos');
@@ -259,9 +233,18 @@ const PeriodosPagoManagement: React.FC = () => {
         }
     };
 
-    // Group periods by student for grid view
     const alumnosFiltrados = alumnos.filter(a => {
         if (filtroCategoriaMain && a.categoriaId !== parseInt(filtroCategoriaMain)) return false;
+        
+        // Excluir exonerados o de configuración incompleta si está en "Solo Pagantes"
+        if (soloPagantes) {
+            const esExonerado = a.beca?.porcentaje === 100 || a.beca?.nombre?.toLowerCase().includes('invitado');
+            // Nota: Aquí se asume que si tenemos el objeto alumno completo, idealmente backend pasaria 
+            // montoMensualidad o falta configuración, pero como aquí solo tenemos AlumnoSimple
+            // aplicamos filtro general y dependemos de la visualización.
+            if (esExonerado) return false;
+        }
+
         if (!searchAlumno) return true;
         const q = searchAlumno.toLowerCase();
         return `${a.nombre} ${a.apellido}`.toLowerCase().includes(q);
@@ -294,7 +277,6 @@ const PeriodosPagoManagement: React.FC = () => {
     // Stats calculation
     const totalPagado = periodos.filter(p => p.estado === 'Pagado').reduce((acc, p) => acc + (p.monto || 0), 0);
     const totalPendiente = periodos.filter(p => p.estado === 'Pendiente').reduce((acc, p) => acc + (p.monto || 0), 0);
-    const countVencidos = vencidos.length;
 
     return (
         <div style={{ fontFamily: 'Inter, sans-serif' }}>
@@ -310,10 +292,10 @@ const PeriodosPagoManagement: React.FC = () => {
                 <div className="d-flex gap-2">
                     <button
                         className="btn btn-success btn-sm"
-                        onClick={() => setGenerarTodosModal(true)}
+                        onClick={() => setGenerarTodosModal({ ...generarTodosModal, open: true })}
                         title="Generar períodos para todos los alumnos activos"
                     >
-                        <i className="bi bi-magic me-1"></i>Generar para Todos
+                        <i className="bi bi-magic me-1"></i>Generación Masiva
                     </button>
                     <button
                         className="btn btn-outline-secondary btn-sm"
@@ -367,166 +349,25 @@ const PeriodosPagoManagement: React.FC = () => {
                 </div>
             </div>
 
-            {/* Panel de Alertas - Vencidos */}
-            {vencidos.length > 0 && alertaVisible && (
-                (() => {
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
 
-                    // Filter strictly overdue vs informative
-                    const realVencidos = vencidos.filter(p => {
-                        if (!p.fechaVencimiento) return false;
-                        const d = new Date(p.fechaVencimiento);
-                        d.setHours(0, 0, 0, 0);
-                        return d < today;
-                    });
-
-                    const isStrictlyOverdue = realVencidos.length > 0;
-                    const alertClass = isStrictlyOverdue ? 'danger' : 'warning';
-                    const iconClass = isStrictlyOverdue ? 'exclamation-triangle-fill' : 'info-circle-fill';
-                    const titleText = isStrictlyOverdue
-                        ? `${realVencidos.length} Período${realVencidos.length !== 1 ? 's' : ''} Vencido${realVencidos.length !== 1 ? 's' : ''}`
-                        : `${vencidos.length} Período${vencidos.length !== 1 ? 's' : ''} con observación`;
-
-                    return (
-                        <div className={`card border-${alertClass} mb-4`} style={{ backgroundColor: '#2d1b1b' }}>
-                            <div className="card-header" style={{ backgroundColor: isStrictlyOverdue ? '#3d1f1f' : '#3d3a1f', borderColor: isStrictlyOverdue ? '#dc3545' : '#ffc107' }}>
-                                <div className="d-flex justify-content-between align-items-center mb-2">
-                                    <span className={`fw-bold text-${alertClass}`}>
-                                        <i className={`bi bi-${iconClass} me-2`}></i>
-                                        {isStrictlyOverdue ? '⚠ ' : ''}{titleText}
-                                        {vencidosFiltrados.length !== vencidos.length && (
-                                            <span className="text-white-50 ms-2" style={{ fontSize: '12px' }}>({vencidosFiltrados.length} mostrados)</span>
-                                        )}
-                                    </span>
-                                    <button className={`btn btn-sm btn-outline-${alertClass}`} onClick={() => setAlertaVisible(false)}>
-                                        <i className="bi bi-x"></i>
-                                    </button>
-                                </div>
-                                {/* Filters inside the panel */}
-                                <div className="d-flex gap-2 flex-wrap">
-                                    <div className="position-relative" style={{ flex: '1 1 180px', maxWidth: '260px' }}>
-                                        <i className="bi bi-search position-absolute text-secondary" style={{ left: '0.6rem', top: '50%', transform: 'translateY(-50%)', fontSize: '12px' }}></i>
-                                        <input
-                                            type="text"
-                                            className="form-control form-control-sm"
-                                            placeholder="Buscar alumno..."
-                                            value={vencidosSearchAlumno}
-                                            onChange={e => setVencidosSearchAlumno(e.target.value)}
-                                            style={{ paddingLeft: '1.8rem', backgroundColor: '#2d1b1b', borderColor: '#6b2020', color: 'white', fontSize: '12px' }}
-                                        />
-                                    </div>
-                                    <select
-                                        className="form-select form-select-sm"
-                                        value={vencidosCategoria}
-                                        onChange={e => setVencidosCategoria(e.target.value)}
-                                        style={{ flex: '1 1 150px', maxWidth: '200px', backgroundColor: '#2d1b1b', borderColor: '#6b2020', color: 'white', fontSize: '12px' }}
-                                    >
-                                        <option value="">Todas las categorías</option>
-                                        {categoriasUnicas.map(c => (
-                                            <option key={c.id} value={c.nombre}>{c.nombre}</option>
-                                        ))}
-                                    </select>
-                                    {(vencidosSearchAlumno || vencidosCategoria) && (
-                                        <button
-                                            className="btn btn-sm btn-outline-secondary"
-                                            style={{ fontSize: '11px' }}
-                                            onClick={() => { setVencidosSearchAlumno(''); setVencidosCategoria(''); }}
-                                        >
-                                            <i className="bi bi-x-circle me-1"></i>Limpiar
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="card-body p-0">
-                                <div style={{ maxHeight: '160px', overflowY: 'auto' }}>
-                                    <table className="table table-sm mb-0" style={{ fontSize: '13px' }}>
-                                        <thead style={{ backgroundColor: '#2d1b1b', position: 'sticky', top: 0 }}>
-                                            <tr>
-                                                <th className="text-danger ps-3">Alumno</th>
-                                                <th className="text-danger">Período</th>
-                                                <th className="text-danger">Vencimiento</th>
-                                                <th className="text-danger">Monto</th>
-                                                <th className="text-danger">Acción</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {vencidosFiltrados.length === 0 ? (
-                                                <tr><td colSpan={5} className="text-center text-secondary py-3" style={{ fontSize: '12px' }}>No hay períodos vencidos con los filtros aplicados</td></tr>
-                                            ) : vencidosFiltrados.map(p => {
-                                                const today = new Date();
-                                                today.setHours(0, 0, 0, 0);
-                                                const d = p.fechaVencimiento ? new Date(p.fechaVencimiento) : null;
-                                                if (d) d.setHours(0, 0, 0, 0);
-
-                                                const isOverdue = d && d < today;
-                                                const rowClass = isOverdue ? 'text-danger' : 'text-warning';
-
-                                                return (
-                                                    <tr key={p.id}>
-                                                        <td className="ps-3 text-white">{p.alumnoNombre}</td>
-                                                        <td className={rowClass}>{MESES_FULL[p.mes - 1]} {p.anio}</td>
-                                                        <td className={rowClass}>
-                                                            {p.fechaVencimiento ? new Date(p.fechaVencimiento).toLocaleDateString('es-PE') : '-'}
-                                                            {!isOverdue && <span className="badge bg-secondary ms-2" style={{ fontSize: '9px' }}>ALN</span>}
-                                                        </td>
-                                                        <td className="text-white">
-                                                            {p.monto > 0 ? `S/. ${p.monto.toFixed(2)}` : '-'}
-                                                        </td>
-                                                        <td>
-                                                            <button
-                                                                className="btn btn-xs btn-success"
-                                                                style={{ fontSize: '11px', padding: '2px 8px' }}
-                                                                onClick={() => handleCambiarEstado(p, 'Pagado')}
-                                                            >
-                                                                ✓ Marcar Pagado
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    );
-                })()
-            )}
-
-            {/* Filtros */}
+            {/* Filtros Clean */}
             <div className="card mb-4" style={{ backgroundColor: '#161b22', border: '1px solid #30363d' }}>
                 <div className="card-body py-3">
-                    {/* Quick-filter chips */}
-                    <div className="d-flex gap-2 mb-3 flex-wrap">
-                        <button
-                            className={`btn btn-sm ${filtroEstado === '' ? 'btn-primary' : 'btn-outline-secondary'}`}
-                            onClick={() => setFiltroEstado('')}
-                        >
-                            Todos
-                        </button>
-                        <button
-                            className={`btn btn-sm ${filtroEstado === 'Vencido' ? 'btn-danger' : 'btn-outline-danger'}`}
-                            onClick={() => setFiltroEstado('Vencido')}
-                        >
-                            <i className="bi bi-exclamation-triangle-fill me-1"></i>
-                            Vencidos
-                            {vencidos.length > 0 && (
-                                <span className="badge bg-white text-danger ms-1" style={{ fontSize: '10px' }}>{vencidos.length}</span>
-                            )}
-                        </button>
-                        <button
-                            className={`btn btn-sm ${filtroEstado === 'Pendiente' ? 'btn-warning' : 'btn-outline-warning'}`}
-                            onClick={() => setFiltroEstado('Pendiente')}
-                        >
-                            <i className="bi bi-clock me-1"></i>Pendientes
-                        </button>
-                        <button
-                            className={`btn btn-sm ${filtroEstado === 'Pagado' ? 'btn-success' : 'btn-outline-success'}`}
-                            onClick={() => setFiltroEstado('Pagado')}
-                        >
-                            <i className="bi bi-check-circle me-1"></i>Pagados
-                        </button>
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                        <h6 className="text-white m-0"><i className="bi bi-funnel me-2"></i>Filtros de Búsqueda</h6>
+                        <div className="form-check form-switch m-0 d-flex align-items-center gap-2">
+                            <input 
+                                className="form-check-input mt-0" 
+                                type="checkbox" 
+                                role="switch" 
+                                id="soloPagantesSwitch"
+                                checked={soloPagantes}
+                                onChange={(e) => setSoloPagantes(e.target.checked)}
+                            />
+                            <label className="form-check-label text-white small" htmlFor="soloPagantesSwitch">
+                                Solo Alumnos Pagantes
+                            </label>
+                        </div>
                     </div>
                     <div className="row g-3 align-items-end">
                         <div className="col-md-2">
@@ -591,8 +432,8 @@ const PeriodosPagoManagement: React.FC = () => {
                             </select>
                         </div>
                         <div className="col-md-2">
-                            <button className="btn btn-outline-primary btn-sm w-100" onClick={cargarDatos}>
-                                <i className="bi bi-funnel me-1"></i>Filtrar
+                            <button className="btn btn-primary btn-sm w-100" onClick={cargarDatos}>
+                                <i className="bi bi-search me-1"></i>Filtrar
                             </button>
                         </div>
                     </div>
@@ -638,7 +479,7 @@ const PeriodosPagoManagement: React.FC = () => {
                                         className="btn btn-primary btn-sm"
                                         onClick={() => {
                                             const primer = alumnos[0];
-                                            if (primer) setGenerarModal({ open: true, alumnoId: primer.id, alumnoNombre: `${primer.nombre} ${primer.apellido}`, montoMensual: 0, diaVencimiento: 10 });
+                                            if (primer) setGenerarModal({ open: true, alumnoId: primer.id, alumnoNombre: `${primer.nombre} ${primer.apellido}` });
                                         }}
                                     >
                                         <i className="bi bi-magic me-1"></i>Generar Períodos
@@ -770,9 +611,7 @@ const PeriodosPagoManagement: React.FC = () => {
                                                     onClick={() => setGenerarModal({
                                                         open: true,
                                                         alumnoId: alumno.id,
-                                                        alumnoNombre: `${alumno.nombre} ${alumno.apellido}`,
-                                                        montoMensual: 0,
-                                                        diaVencimiento: 10
+                                                        alumnoNombre: `${alumno.nombre} ${alumno.apellido}`
                                                     })}
                                                     title="Generar períodos automáticamente"
                                                 >
@@ -1075,99 +914,113 @@ const PeriodosPagoManagement: React.FC = () => {
                 </div>
             )}
             {/* ===== MODAL: Generar para Todos ===== */}
-            {generarTodosModal && (
+            {generarTodosModal.open && (
                 <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 9999 }}>
                     <div className="modal-dialog modal-dialog-centered">
                         <div className="modal-content" style={{ backgroundColor: '#161b22', border: '1px solid #30363d' }}>
                             <div className="modal-header" style={{ borderColor: '#30363d' }}>
                                 <h5 className="modal-title text-white">
                                     <i className="bi bi-magic me-2 text-success"></i>
-                                    Generar Períodos para Todos los Alumnos
+                                    Generación Masiva de Períodos
                                 </h5>
-                                <button className="btn-close btn-close-white" onClick={() => setGenerarTodosModal(false)}></button>
+                                <button className="btn-close btn-close-white" onClick={() => setGenerarTodosModal({ ...generarTodosModal, open: false })}></button>
                             </div>
                             <div className="modal-body">
                                 <div className="alert alert-warning" style={{ fontSize: '13px' }}>
                                     <i className="bi bi-exclamation-triangle me-1"></i>
-                                    Se generarán períodos mensuales para <strong>alumnos activos</strong>. Si seleccionas un Mes y Año, se creará/sobrescribirá únicamente ese mes. El sistema aplicará descuentos basados en la Beca de cada alumno sobre el monto base.
-                                </div>
-                                <div className="row g-3 mb-3">
-                                    <div className="col-12">
-                                        <label className="form-label text-secondary small fw-bold">Público Objetivo (Por Categoría)</label>
-                                        <select
-                                            className="form-select bg-dark text-white border-secondary"
-                                            value={generarTodosOpts.categoriaId || ''}
-                                            onChange={e => setGenerarTodosOpts(o => ({ ...o, categoriaId: e.target.value ? parseInt(e.target.value) : undefined }))}
-                                        >
-                                            <option value="">Todas las Categorías</option>
-                                            {categoriasUnicas.map(cat => (
-                                                <option key={cat.id} value={cat.id}>{cat.nombre}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div className="col-6">
-                                        <label className="form-label text-secondary small fw-bold">Mes Específico (Opcional)</label>
-                                        <select
-                                            className="form-select bg-dark text-white border-secondary"
-                                            value={generarTodosOpts.mes || ''}
-                                            onChange={e => setGenerarTodosOpts(o => ({ ...o, mes: e.target.value ? parseInt(e.target.value) : undefined }))}
-                                        >
-                                            <option value="">(Histórico completo)</option>
-                                            {MESES_FULL.map((m, i) => (
-                                                <option key={i + 1} value={i + 1}>{m}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div className="col-6">
-                                        <label className="form-label text-secondary small fw-bold">Año Específico (Opcional)</label>
-                                        <select
-                                            className="form-select bg-dark text-white border-secondary"
-                                            value={generarTodosOpts.anio || ''}
-                                            onChange={e => setGenerarTodosOpts(o => ({ ...o, anio: e.target.value ? parseInt(e.target.value) : undefined }))}
-                                        >
-                                            <option value="">(Histórico completo)</option>
-                                            {anios.map(a => (
-                                                <option key={a} value={a}>{a}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div className="mb-3">
-                                    <label className="form-label text-secondary small fw-bold">
-                                        Monto Mensual Base al 100% (S/.) <span className="text-danger">* Obligatorio</span>
-                                    </label>
-                                    <input
-                                        type="number"
-                                        className="form-control"
-                                        min="0.01"
-                                        step="0.01"
-                                        value={generarTodosOpts.montoMensual || ''}
-                                        onChange={e => setGenerarTodosOpts(o => ({ ...o, montoMensual: parseFloat(e.target.value) || 0 }))}
-                                        placeholder="Ej. 100.00"
-                                        required
-                                    />
-                                    <small className="text-secondary">Si tiene beca (ej. 50%), el sistema guardará S/. 50.00.</small>
+                                    Se generarán los períodos utilizando los parámetros configurados en el módulo de Alumnos (Mensualidad y Fecha de Inicio).
                                 </div>
                                 <div className="mb-3">
-                                    <label className="form-label text-secondary small fw-bold">Día de Vencimiento</label>
-                                    <input
-                                        type="number"
-                                        className="form-control"
-                                        min="1"
-                                        max="28"
-                                        value={generarTodosOpts.diaVencimiento}
-                                        onChange={e => setGenerarTodosOpts(o => ({ ...o, diaVencimiento: parseInt(e.target.value) || 10 }))}
-                                    />
-                                    <small className="text-secondary">Día del mes en que vence cada mensualidad (1-28).</small>
+                                    <label className="form-label text-secondary small fw-bold">Tipo de Generación</label>
+                                    <select
+                                        className="form-select bg-dark text-white border-secondary"
+                                        value={generarTodosModal.tipo}
+                                        onChange={e => setGenerarTodosModal(o => ({ ...o, tipo: e.target.value as any }))}
+                                    >
+                                        <option value="historico">Histórico Completo (Meses Restantes)</option>
+                                        <option value="mes_especifico">Mes Específico</option>
+                                    </select>
+                                </div>
+                                
+                                {generarTodosModal.tipo === 'mes_especifico' && (
+                                    <div className="row g-3 mb-3">
+                                        <div className="col-6">
+                                            <label className="form-label text-secondary small fw-bold">Mes</label>
+                                            <select
+                                                className="form-select bg-dark text-white border-secondary"
+                                                value={generarTodosModal.mes}
+                                                onChange={e => setGenerarTodosModal(o => ({ ...o, mes: parseInt(e.target.value) }))}
+                                            >
+                                                {MESES_FULL.map((m, i) => (
+                                                    <option key={i + 1} value={i + 1}>{m}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="col-6">
+                                            <label className="form-label text-secondary small fw-bold">Año</label>
+                                            <select
+                                                className="form-select bg-dark text-white border-secondary"
+                                                value={generarTodosModal.anio}
+                                                onChange={e => setGenerarTodosModal(o => ({ ...o, anio: parseInt(e.target.value) }))}
+                                            >
+                                                {anios.map(a => (
+                                                    <option key={a} value={a}>{a}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                <div className="mb-3">
+                                    <label className="form-label text-secondary small fw-bold">Público Objetivo (Por Categoría)</label>
+                                    <select
+                                        className="form-select bg-dark text-white border-secondary"
+                                        value={generarTodosModal.categoriaId || ''}
+                                        onChange={e => setGenerarTodosModal(o => ({ ...o, categoriaId: e.target.value ? parseInt(e.target.value) : undefined }))}
+                                    >
+                                        <option value="">Todas las Categorías</option>
+                                        {categoriasUnicas.map(cat => (
+                                            <option key={cat.id} value={cat.id}>{cat.nombre}</option>
+                                        ))}
+                                    </select>
                                 </div>
                             </div>
                             <div className="modal-footer" style={{ borderColor: '#30363d' }}>
-                                <button className="btn btn-secondary" onClick={() => setGenerarTodosModal(false)}>Cancelar</button>
+                                <button className="btn btn-secondary" onClick={() => setGenerarTodosModal({ ...generarTodosModal, open: false })}>Cancelar</button>
                                 <button className="btn btn-success" onClick={handleGenerarTodos} disabled={procesando}>
                                     {procesando
-                                        ? <><span className="spinner-border spinner-border-sm me-1"></span>Generando...</>
-                                        : <><i className="bi bi-magic me-1"></i>Generar para Todos</>}
+                                        ? <><span className="spinner-border spinner-border-sm me-1"></span>Procesando...</>
+                                        : <><i className="bi bi-magic me-1"></i>Generar</>}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ===== MODAL: Generar Individual ===== */}
+            {generarModal.open && (
+                <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 9998 }}>
+                    <div className="modal-dialog modal-sm modal-dialog-centered">
+                        <div className="modal-content" style={{ backgroundColor: '#161b22', border: '1px solid #30363d' }}>
+                            <div className="modal-header" style={{ borderColor: '#30363d' }}>
+                                <h6 className="modal-title text-white">
+                                    <i className="bi bi-magic me-2 text-primary"></i>
+                                    Generar Pagos
+                                </h6>
+                                <button className="btn-close btn-close-white" onClick={() => setGenerarModal({ ...generarModal, open: false })}></button>
+                            </div>
+                            <div className="modal-body">
+                                <p className="text-secondary small mb-1">Alumno:</p>
+                                <p className="text-white fw-bold">{generarModal.alumnoNombre}</p>
+                                <p className="text-secondary" style={{ fontSize: '13px' }}>
+                                    Esto generará todos los meses faltantes de este año según la configuración guardada del alumno.
+                                </p>
+                            </div>
+                            <div className="modal-footer" style={{ borderColor: '#30363d' }}>
+                                <button className="btn btn-secondary btn-sm" onClick={() => setGenerarModal({ ...generarModal, open: false })}>Cancelar</button>
+                                <button className="btn btn-primary btn-sm" onClick={handleGenerarPeriodos} disabled={procesando}>
+                                    {procesando ? 'Procesando...' : 'Confirmar'}
                                 </button>
                             </div>
                         </div>
