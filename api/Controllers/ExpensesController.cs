@@ -24,7 +24,7 @@ namespace SoftSportAPI.Controllers
             DateTime? desde = null,
             DateTime? hasta = null)
         {
-            var query = _context.Expenses.AsQueryable();
+            var query = _context.Expenses.AsNoTracking().AsQueryable();
 
             if (!string.IsNullOrEmpty(searchTerm))
             {
@@ -63,7 +63,7 @@ namespace SoftSportAPI.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Expense>> GetExpense(int id)
         {
-            var expense = await _context.Expenses.FindAsync(id);
+            var expense = await _context.Expenses.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id);
 
             if (expense == null)
             {

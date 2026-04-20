@@ -32,5 +32,9 @@ namespace SoftSportAPI.Models
         [Column("estado")]
         [MaxLength(50)]
         public string Estado { get; set; } = "Activo";
+
+        [Column("comprobante_url")]
+        [MaxLength(1000)]
+        public string? ComprobanteUrl { get; set; }
     }
 }

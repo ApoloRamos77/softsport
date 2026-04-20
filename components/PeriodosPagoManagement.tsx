@@ -291,6 +291,11 @@ const PeriodosPagoManagement: React.FC = () => {
         return true;
     });
 
+    // Stats calculation
+    const totalPagado = periodos.filter(p => p.estado === 'Pagado').reduce((acc, p) => acc + (p.monto || 0), 0);
+    const totalPendiente = periodos.filter(p => p.estado === 'Pendiente').reduce((acc, p) => acc + (p.monto || 0), 0);
+    const countVencidos = vencidos.length;
+
     return (
         <div style={{ fontFamily: 'Inter, sans-serif' }}>
             {/* Header */}
@@ -325,11 +330,42 @@ const PeriodosPagoManagement: React.FC = () => {
 
             {/* Mensaje flash */}
             {mensaje && (
-                <div className={`alert alert-${mensaje.tipo} alert-dismissible fade show`} role="alert">
+                <div className={`alert alert-${mensaje.tipo} alert-dismissible fade show shadow-sm`} role="alert">
                     {mensaje.texto}
                     <button type="button" className="btn-close" onClick={() => setMensaje(null)}></button>
                 </div>
             )}
+
+            {/* Dashboard Visual */}
+            <div className="row g-3 mb-4">
+                <div className="col-12 col-md-4">
+                    <div className="card border-0 shadow-sm h-100" style={{ backgroundColor: '#0f1419', borderRadius: '12px', borderLeft: '4px solid var(--success)' }}>
+                        <div className="card-body">
+                            <h6 className="text-secondary text-uppercase fw-bold mb-2" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Ingresos Recaudados</h6>
+                            <h3 className="text-white mb-0">S/. {totalPagado.toFixed(2)}</h3>
+                            <small className="text-success mt-1 d-block"><i className="bi bi-graph-up me-1"></i>En períodos mostrados</small>
+                        </div>
+                    </div>
+                </div>
+                <div className="col-12 col-md-4">
+                    <div className="card border-0 shadow-sm h-100" style={{ backgroundColor: '#0f1419', borderRadius: '12px', borderLeft: '4px solid var(--warning)' }}>
+                        <div className="card-body">
+                            <h6 className="text-secondary text-uppercase fw-bold mb-2" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Por Recaudar</h6>
+                            <h3 className="text-white mb-0">S/. {totalPendiente.toFixed(2)}</h3>
+                            <small className="text-warning mt-1 d-block"><i className="bi bi-clock-history me-1"></i>Pendiente activo</small>
+                        </div>
+                    </div>
+                </div>
+                <div className="col-12 col-md-4">
+                    <div className="card border-0 shadow-sm h-100" style={{ backgroundColor: '#0f1419', borderRadius: '12px', borderLeft: '4px solid var(--danger)' }}>
+                        <div className="card-body">
+                            <h6 className="text-secondary text-uppercase fw-bold mb-2" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Tasa de Morosidad</h6>
+                            <h3 className="text-white mb-0">{countVencidos} <span className="h6 text-secondary">períodos</span></h3>
+                            <small className="text-danger mt-1 d-block"><i className="bi bi-exclamation-triangle-fill me-1"></i>Vencidos actuales</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             {/* Panel de Alertas - Vencidos */}
             {vencidos.length > 0 && alertaVisible && (

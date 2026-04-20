@@ -30,6 +30,7 @@ namespace SoftSportAPI.Controllers
             var query = _context.PeriodosPago
                 .Include(p => p.Alumno)
                 .Include(p => p.Recibo)
+                .AsNoTracking()
                 .AsQueryable();
 
             if (alumnoId.HasValue)
@@ -65,6 +66,7 @@ namespace SoftSportAPI.Controllers
             var periodos = await _context.PeriodosPago
                 .Include(p => p.Alumno)
                 .Include(p => p.Recibo)
+                .AsNoTracking()
                 .Where(p => p.AlumnoId == alumnoId)
                 .OrderBy(p => p.Anio)
                 .ThenBy(p => p.Mes)
@@ -95,6 +97,7 @@ namespace SoftSportAPI.Controllers
 
             var vencidos = await _context.PeriodosPago
                 .Include(p => p.Alumno)
+                .AsNoTracking()
                 .Where(p => p.Estado == "Vencido")
                 .OrderBy(p => p.Anio)
                 .ThenBy(p => p.Mes)
@@ -114,6 +117,7 @@ namespace SoftSportAPI.Controllers
             var periodo = await _context.PeriodosPago
                 .Include(p => p.Alumno)
                 .Include(p => p.Recibo)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (periodo == null) return NotFound();

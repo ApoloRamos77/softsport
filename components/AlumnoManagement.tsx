@@ -21,6 +21,7 @@ const AlumnoManagement: React.FC = () => {
   const [availableGroups, setAvailableGroups] = useState<{ id: number, nombre: string }[]>([]);
   const [availableCategories, setAvailableCategories] = useState<{ id: number, nombre: string }[]>([]);
   const [alumnosConVencidos, setAlumnosConVencidos] = useState<Set<number>>(new Set());
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
   const [totalAlumnos, setTotalAlumnos] = useState(0);
 
@@ -178,7 +179,25 @@ const AlumnoManagement: React.FC = () => {
           <h2 className="mb-1 text-white fw-bold h4">Gestión de Alumnos</h2>
           <p className="text-secondary mb-0 small">Administra los expedientes y registros de los atletas</p>
         </div>
-        <div className="d-flex gap-2">
+        <div className="d-flex gap-2 flex-wrap justify-content-end">
+          <div className="btn-group me-2" role="group">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`btn btn-sm d-flex align-items-center justify-content-center ${viewMode === 'list' ? 'btn-primary' : 'btn-outline-secondary text-white border-secondary'}`}
+              style={{ width: '38px', height: '38px' }}
+              title="Vista de Tabla"
+            >
+              <i className="bi bi-list-ul"></i>
+            </button>
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`btn btn-sm d-flex align-items-center justify-content-center ${viewMode === 'grid' ? 'btn-primary' : 'btn-outline-secondary text-white border-secondary'}`}
+              style={{ width: '38px', height: '38px' }}
+              title="Vista de Cuadrícula"
+            >
+              <i className="bi bi-grid-fill"></i>
+            </button>
+          </div>
           <button
             className="btn btn-sm d-flex align-items-center gap-2 text-white border-secondary border-opacity-50"
             style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid #30363d' }}
@@ -279,8 +298,9 @@ const AlumnoManagement: React.FC = () => {
             Mostrando {alumnos.length} de {totalAlumnos} alumnos
           </div>
 
-          {/* Table */}
-          <div className="card border-0 shadow-sm d-none d-lg-block" style={{ backgroundColor: '#0f1419' }}>
+          {/* Table View */}
+          {viewMode === 'list' && (
+          <div className="card border-0 shadow-sm d-none d-lg-block" style={{ backgroundColor: '#0f1419', borderRadius: '12px', overflow: 'hidden' }}>
             <div className="table-responsive">
               <table className="table align-middle mb-0" style={{ borderColor: '#30363d' }}>
                 <thead style={{ backgroundColor: '#161b22' }}>
@@ -389,11 +409,14 @@ const AlumnoManagement: React.FC = () => {
               </table>
             </div>
           </div>
+          )}
 
-          {/* Mobile View (Cards) */}
-          <div className="d-lg-none d-flex flex-column gap-3">
+          {/* Grid View & Mobile View */}
+          {(viewMode === 'grid' || window.innerWidth < 992) && (
+          <div className={viewMode === 'grid' ? "row g-3" : "d-lg-none d-flex flex-column gap-3"}>
             {paginatedAlumnos.length === 0 ? (
-              <div className="card border-0 shadow-sm" style={{ backgroundColor: '#0f1419' }}>
+              <div className="col-12">
+                <div className="card border-0 shadow-sm h-100" style={{ backgroundColor: '#0f1419', borderRadius: '12px' }}>
                 <div className="card-body text-center py-5">
                   <i className="bi bi-people text-secondary display-4 mb-3"></i>
                   <p className="text-muted fw-medium mb-1">No se encontraron alumnos</p>
@@ -402,8 +425,9 @@ const AlumnoManagement: React.FC = () => {
               </div>
             ) : (
               paginatedAlumnos.map((a) => (
-                <div key={a.id} className="card border-0 shadow-sm" style={{ backgroundColor: '#0f1419' }}>
-                  <div className="card-header bg-transparent border-bottom border-secondary border-opacity-10 p-3">
+                <div key={a.id} className={viewMode === 'grid' ? "col-12 col-md-6 col-xl-4" : "col-12"}>
+                  <div className="card border-0 shadow-sm h-100" style={{ backgroundColor: '#0f1419', borderRadius: '12px', transition: 'transform 0.2s, box-shadow 0.2s' }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
+                    <div className="card-header bg-transparent border-bottom border-secondary border-opacity-10 p-3">
                     <div className="d-flex justify-content-between align-items-start mb-2">
                       <div>
                         <h6 className="text-white fw-bold mb-1">{a.nombre} {a.apellido}</h6>
@@ -472,6 +496,7 @@ const AlumnoManagement: React.FC = () => {
               ))
             )}
           </div>
+          )}
 
           {/* Pagination */}
           <div className="d-flex align-items-center justify-content-between mt-4 gap-2">
