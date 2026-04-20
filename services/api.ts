@@ -51,6 +51,11 @@ export interface Alumno {
   usuarioAnulacion?: string;
   fechaAnulacion?: string;
 
+  // Configuración de Pagos por Alumno
+  fechaInicioPago?: string;       // ISO date — el día define el vencimiento mensual
+  montoMensualidad?: number;      // Monto personalizado de mensualidad
+  tieneMensualidadEspecial?: boolean; // Si true, usa montoMensualidad ignorando cálculo base
+
   // Campos de Gestión Nutricional
   horarioEntrenamiento?: string;
   intolerancias?: string;

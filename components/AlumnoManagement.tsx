@@ -20,7 +20,6 @@ const AlumnoManagement: React.FC = () => {
   const [categoriaFiltro, setCategoriaFiltro] = useState('Todas');
   const [availableGroups, setAvailableGroups] = useState<{ id: number, nombre: string }[]>([]);
   const [availableCategories, setAvailableCategories] = useState<{ id: number, nombre: string }[]>([]);
-  const [alumnosConVencidos, setAlumnosConVencidos] = useState<Set<number>>(new Set());
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
   const [totalAlumnos, setTotalAlumnos] = useState(0);
@@ -89,40 +88,6 @@ const AlumnoManagement: React.FC = () => {
     loadAlumnos();
   }, [currentPage, itemsPerPage, searchTerm, estadoFiltro, grupoFiltro, categoriaFiltro]);
 
-  // Load overdue (unpaid) periods once to power the badge
-  useEffect(() => {
-    apiService.getPeriodosVencidos()
-      .then((res: any) => {
-        const data: any[] = res.data || (Array.isArray(res) ? res : []);
-        // Only count periods that are NOT paid AND strictly past due date
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        const ids = new Set<number>(
-          data
-            .filter((p: any) => {
-              if (p.estado === 'Pagado' || !p.alumnoId) return false;
-              // Strict check: must have a due date and it must be in the past
-              if (!p.fechaVencimiento) return false;
-
-              let dueDate = null;
-              const parts = String(p.fechaVencimiento).split('T')[0].split('-');
-              if (parts.length === 3) {
-                dueDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-              } else {
-                dueDate = new Date(p.fechaVencimiento);
-                dueDate.setHours(0, 0, 0, 0);
-              }
-
-              // Strict inequality: Due Date < Today
-              return dueDate < today;
-            })
-            .map((p: any) => p.alumnoId as number)
-        );
-        setAlumnosConVencidos(ids);
-      })
-      .catch(() => setAlumnosConVencidos(new Set()));
-  }, []);
 
   const handleSave = async () => {
     await loadAlumnos();
@@ -333,11 +298,6 @@ const AlumnoManagement: React.FC = () => {
                         <div className="d-flex flex-column">
                           <div className="d-flex align-items-center gap-2">
                             <span className="fw-bold text-white">{a.nombre} {a.apellido}</span>
-                            {a.id && alumnosConVencidos.has(a.id) && (
-                              <span className="badge bg-danger text-white border border-white border-opacity-25 fw-bold shadow-sm" style={{ fontSize: '10px', padding: '4px 8px' }} title="Tiene períodos de pago vencidos sin pagar">
-                                <i className="bi bi-exclamation-triangle-fill me-1"></i>PAGO VENCIDO
-                              </span>
-                            )}
                           </div>
                           <small className="text-secondary" style={{ fontSize: '11px' }}>{a.documento || '-'}</small>
                         </div>
@@ -439,11 +399,6 @@ const AlumnoManagement: React.FC = () => {
                         {a.estado}
                       </span>
                     </div>
-                    {a.id && alumnosConVencidos.has(a.id) && (
-                      <span className="badge bg-danger text-white border border-white border-opacity-25 fw-bold shadow-sm w-100 mt-1" style={{ fontSize: '10px', padding: '4px 8px' }} title="Tiene períodos de pago vencidos sin pagar">
-                        <i className="bi bi-exclamation-triangle-fill me-1"></i>PAGO VENCIDO
-                      </span>
-                    )}
                   </div>
                   <div className="card-body p-3">
                     <div className="row g-2 mb-3">

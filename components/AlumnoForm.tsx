@@ -70,7 +70,11 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
     estado: 'Activo',
     fechaRegistro: new Date().toLocaleDateString(),
     fechaInscripcion: new Date().toISOString().split('T')[0],
-    representanteId: ''
+    representanteId: '',
+    // Configuración de Pagos
+    fechaInicioPago: '',
+    montoMensualidad: '',
+    tieneMensualidadEspecial: false
   });
 
   useEffect(() => {
@@ -152,7 +156,11 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
         peso: '',
         talla: '',
         imc: '',
-        fechaToma: new Date().toISOString().split('T')[0]
+        fechaToma: new Date().toISOString().split('T')[0],
+        // Configuración de Pagos
+        fechaInicioPago: alumno.fechaInicioPago ? alumno.fechaInicioPago.split('T')[0] : '',
+        montoMensualidad: alumno.montoMensualidad?.toString() || '',
+        tieneMensualidadEspecial: alumno.tieneMensualidadEspecial ?? false
       });
       setFotografiaUrl(alumno.fotografia || '');
     }
@@ -259,7 +267,11 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
       grupoId: grupoId,
       categoriaId: categoriaId,
       becaId: becaId,
-      fechaInscripcion: formData.fechaInscripcion || null
+      fechaInscripcion: formData.fechaInscripcion || null,
+      // Configuración de Pagos
+      fechaInicioPago: formData.fechaInicioPago || null,
+      montoMensualidad: formData.montoMensualidad ? parseFloat(formData.montoMensualidad) : null,
+      tieneMensualidadEspecial: formData.tieneMensualidadEspecial
     };
 
     try {
@@ -631,6 +643,68 @@ const AlumnoForm: React.FC<AlumnoFormProps> = ({ alumno, onCancel, onSave }) => 
                   <small className="text-muted d-block mt-1">
                     <i className="bi bi-info-circle me-1"></i>
                     Se usa para calcular fechas de pago mensual
+                  </small>
+                </div>
+              </div>
+            </div>
+
+            {/* Configuración de Pagos */}
+            <div className="p-4 rounded-lg border border-warning border-opacity-20 bg-[#0d1117] bg-opacity-30">
+              <label className="text-[10px] font-bold text-warning uppercase tracking-widest mb-4 d-block border-bottom border-warning border-opacity-30 pb-2">
+                <i className="bi bi-currency-dollar me-1"></i>
+                Configuración de Pagos
+              </label>
+              {!formData.fechaInicioPago || !formData.montoMensualidad ? (
+                <div className="alert d-flex align-items-center gap-2 mb-3 py-2" style={{ backgroundColor: 'rgba(255,165,0,0.1)', border: '1px solid rgba(255,165,0,0.3)', borderRadius: '8px', color: '#ffa500' }}>
+                  <i className="bi bi-exclamation-triangle-fill"></i>
+                  <small>Sin configuración de pagos: los períodos se marcarán como <strong>"Falta Configurar"</strong>.</small>
+                </div>
+              ) : null}
+              <div className="row g-3">
+                <div className="col-md-5">
+                  <label className="text-secondary small mb-2 d-block">Fecha de Inicio de Pago</label>
+                  <DatePicker
+                    value={formData.fechaInicioPago}
+                    onChange={val => setFormData({ ...formData, fechaInicioPago: val })}
+                    placeholder="Seleccionar fecha"
+                  />
+                  <small className="text-muted d-block mt-1">
+                    <i className="bi bi-info-circle me-1"></i>
+                    El día de esta fecha será el vencimiento mensual.
+                  </small>
+                </div>
+                <div className="col-md-4">
+                  <label className="text-secondary small mb-2 d-block">Monto Mensualidad</label>
+                  <div className="input-group">
+                    <span className="input-group-text" style={{ backgroundColor: '#0d1117', borderColor: '#30363d', color: '#8b949e' }}>S/</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="form-control"
+                      placeholder="0.00"
+                      value={formData.montoMensualidad}
+                      onChange={e => setFormData({ ...formData, montoMensualidad: e.target.value })}
+                    />
+                  </div>
+                  <small className="text-muted d-block mt-1">Monto base para este alumno.</small>
+                </div>
+                <div className="col-md-3 d-flex flex-column justify-content-end">
+                  <div className="form-check form-switch mb-0">
+                    <input
+                      id="switchMensualidadEspecial"
+                      className="form-check-input"
+                      type="checkbox"
+                      role="switch"
+                      checked={formData.tieneMensualidadEspecial}
+                      onChange={() => setFormData({ ...formData, tieneMensualidadEspecial: !formData.tieneMensualidadEspecial })}
+                    />
+                    <label htmlFor="switchMensualidadEspecial" className="form-check-label text-white small ms-2">
+                      Monto especial
+                    </label>
+                  </div>
+                  <small className="text-muted mt-1" style={{ fontSize: '10px' }}>
+                    Sobreescribe el cálculo de becas.
                   </small>
                 </div>
               </div>

@@ -149,14 +149,31 @@ namespace SoftSportAPI.Controllers
         [HttpPost("generar/{alumnoId}")]
         public async Task<ActionResult<object>> GenerarPeriodos(int alumnoId, [FromBody] GenerarPeriodosRequest? request = null)
         {
-            var alumno = await _context.Alumnos.FindAsync(alumnoId);
+            var alumno = await _context.Alumnos
+                .Include(a => a.Beca)
+                .FirstOrDefaultAsync(a => a.Id == alumnoId);
             if (alumno == null) return NotFound(new { error = "Alumno no encontrado" });
 
-            // Use fechaInscripcion if available, otherwise fechaRegistro
-            var fechaInicio = alumno.FechaInscripcion ?? alumno.FechaRegistro;
+            // Evaluar si el alumno es Exonerado (Beca >= 100% o Invitado)
+            bool isExonerado = alumno.Beca != null &&
+                (alumno.Beca.Porcentaje >= 100 || (alumno.Beca.Nombre ?? "").ToLower().Contains("invitado"));
+
+            // Validar configuración de pago del alumno
+            bool faltaConfig = !alumno.FechaInicioPago.HasValue || !alumno.MontoMensualidad.HasValue;
+
+            // Usar FechaInicioPago del alumno como referencia de inicio y día de vencimiento
+            var fechaRef = alumno.FechaInicioPago ?? alumno.FechaInscripcion ?? alumno.FechaRegistro;
             var fechaHasta = request?.FechaHasta ?? DateTime.Today;
-            var montoMensual = request?.MontoMensual ?? 0;
-            var diaVencimiento = request?.DiaVencimiento ?? 10; // default: day 10 of each month
+            int diaVencimiento = fechaRef.Day; // el día exacto de FechaInicioPago
+
+            // Determinar el monto a cobrar
+            decimal montoFinal;
+            if (alumno.TieneMensualidadEspecial && alumno.MontoMensualidad.HasValue)
+                montoFinal = alumno.MontoMensualidad.Value;
+            else if (alumno.MontoMensualidad.HasValue)
+                montoFinal = alumno.MontoMensualidad.Value;
+            else
+                montoFinal = request?.MontoMensual ?? 0;
 
             // Get existing periods for this student
             var existentes = await _context.PeriodosPago
@@ -165,7 +182,7 @@ namespace SoftSportAPI.Controllers
                 .ToListAsync();
 
             var nuevos = new List<PeriodoPago>();
-            var current = new DateTime(fechaInicio.Year, fechaInicio.Month, 1);
+            var current = new DateTime(fechaRef.Year, fechaRef.Month, 1);
             var hasta = new DateTime(fechaHasta.Year, fechaHasta.Month, 1);
 
             while (current <= hasta)
@@ -175,8 +192,22 @@ namespace SoftSportAPI.Controllers
 
                 if (!existentes.Any(e => e.Anio == anio && e.Mes == mes))
                 {
-                    var fechaVencimiento = new DateTime(anio, mes, Math.Min(diaVencimiento, DateTime.DaysInMonth(anio, mes)));
-                    var estadoInicial = fechaVencimiento < DateTime.Today ? "Vencido" : "Pendiente";
+                    string estadoInicial;
+                    DateTime? fechaVencimiento = null;
+
+                    if (isExonerado)
+                    {
+                        estadoInicial = "Exonerado";
+                    }
+                    else if (faltaConfig)
+                    {
+                        estadoInicial = "Falta Configurar";
+                    }
+                    else
+                    {
+                        fechaVencimiento = new DateTime(anio, mes, Math.Min(diaVencimiento, DateTime.DaysInMonth(anio, mes)));
+                        estadoInicial = fechaVencimiento < DateTime.Today ? "Vencido" : "Pendiente";
+                    }
 
                     nuevos.Add(new PeriodoPago
                     {
@@ -184,7 +215,7 @@ namespace SoftSportAPI.Controllers
                         Anio = anio,
                         Mes = mes,
                         FechaVencimiento = fechaVencimiento,
-                        Monto = montoMensual,
+                        Monto = faltaConfig ? 0 : montoFinal,
                         Estado = estadoInicial,
                         FechaCreacion = DateTime.UtcNow,
                         UsuarioCreacion = "System"
@@ -204,7 +235,8 @@ namespace SoftSportAPI.Controllers
             {
                 message = $"Se generaron {nuevos.Count} período(s) para {alumno.Nombre} {alumno.Apellido}.",
                 generados = nuevos.Count,
-                existentes = existentes.Count
+                existentes = existentes.Count,
+                advertencia = faltaConfig && !isExonerado ? "El alumno no tiene FechaInicioPago o MontoMensualidad configurados. Los períodos se marcaron como 'Falta Configurar'." : null
             });
         }
 
@@ -213,12 +245,7 @@ namespace SoftSportAPI.Controllers
         public async Task<ActionResult<object>> GenerarPeriodosTodos([FromBody] GenerarPeriodosRequest? request = null)
         {
             var fechaHasta = request?.FechaHasta ?? DateTime.Today;
-            var montoMensual = request?.MontoMensual ?? 0;
-            var diaVencimiento = request?.DiaVencimiento ?? 10;
-
-            // Validate MontoMensual is greater than 0
-            if (montoMensual <= 0)
-                return BadRequest(new { error = "El monto mensual base es obligatorio y debe ser mayor a 0." });
+            var montoBaseGlobal = request?.MontoMensual ?? 0;
 
             // Base query for active students
             var queryAlumnos = _context.Alumnos
@@ -226,22 +253,21 @@ namespace SoftSportAPI.Controllers
                 .Where(a => a.Estado == "Activo" || a.Estado == null);
 
             if (request?.CategoriaId != null)
-            {
                 queryAlumnos = queryAlumnos.Where(a => a.CategoriaId == request.CategoriaId);
-            }
 
             var alumnos = await queryAlumnos.ToListAsync();
 
             var totalGenerados = 0;
             var totalAlumnos = 0;
             var totalActualizados = 0;
+            var sinConfigurar = 0;
 
             // Optional Specific Month Target
             bool hasSpecificTarget = request?.Mes != null && request?.Anio != null;
             int anioTarget = request?.Anio ?? DateTime.Today.Year;
             int mesTarget = request?.Mes ?? DateTime.Today.Month;
 
-            // Get ALL existing periods at once for efficiency based on the cohort of students
+            // Get ALL existing periods at once for efficiency
             var alumnoIds = alumnos.Select(a => a.Id).ToList();
             var todosExistentesModel = await _context.PeriodosPago
                 .Where(p => alumnoIds.Contains(p.AlumnoId))
@@ -252,20 +278,50 @@ namespace SoftSportAPI.Controllers
 
             foreach (var alumno in alumnos)
             {
-                var fechaInicio = alumno.FechaInscripcion ?? alumno.FechaRegistro;
-                
-                // Calculte the amount based on the Beca
-                decimal multiplicador = 1m;
-                if (alumno.Beca != null && alumno.Beca.Porcentaje > 0)
+                // Exonerado: Beca >= 100% o nombre del tipo "invitado"
+                bool isExonerado = alumno.Beca != null &&
+                    (alumno.Beca.Porcentaje >= 100 || (alumno.Beca.Nombre ?? "").ToLower().Contains("invitado"));
+
+                // Validar configuración de pago del alumno
+                bool faltaConfig = !isExonerado && (!alumno.FechaInicioPago.HasValue || !alumno.MontoMensualidad.HasValue);
+
+                // Fecha de referencia y día de vencimiento del alumno
+                var fechaRef = alumno.FechaInicioPago ?? alumno.FechaInscripcion ?? alumno.FechaRegistro;
+                int diaVencimiento = alumno.FechaInicioPago.HasValue ? alumno.FechaInicioPago.Value.Day : (request?.DiaVencimiento ?? 10);
+
+                // Monto a cobrar según configuración del alumno
+                decimal montoFinal = 0;
+                if (!faltaConfig && !isExonerado)
                 {
-                    multiplicador = (100m - (decimal)alumno.Beca.Porcentaje) / 100m;
-                    if (multiplicador < 0m) multiplicador = 0m;
+                    if (alumno.TieneMensualidadEspecial && alumno.MontoMensualidad.HasValue)
+                    {
+                        montoFinal = alumno.MontoMensualidad.Value;
+                    }
+                    else if (alumno.MontoMensualidad.HasValue)
+                    {
+                        // Aplicar beca sobre el monto del alumno
+                        decimal multiplicador = 1m;
+                        if (alumno.Beca != null && alumno.Beca.Porcentaje > 0)
+                        {
+                            multiplicador = (100m - (decimal)alumno.Beca.Porcentaje) / 100m;
+                            if (multiplicador < 0m) multiplicador = 0m;
+                        }
+                        montoFinal = Math.Round(alumno.MontoMensualidad.Value * multiplicador, 2);
+                    }
+                    else if (montoBaseGlobal > 0)
+                    {
+                        // Fallback al monto base global con beca
+                        decimal multiplicador = 1m;
+                        if (alumno.Beca != null && alumno.Beca.Porcentaje > 0)
+                        {
+                            multiplicador = (100m - (decimal)alumno.Beca.Porcentaje) / 100m;
+                            if (multiplicador < 0m) multiplicador = 0m;
+                        }
+                        montoFinal = Math.Round(montoBaseGlobal * multiplicador, 2);
+                    }
                 }
-                
-                decimal montoFinal = Math.Round(montoMensual * multiplicador, 2);
-                
-                // If Beca >= 100% or implies guest by name (handled visualy), backend explicitly supports Exonerado
-                bool isExonerado = alumno.Beca != null && (alumno.Beca.Porcentaje >= 100 || (alumno.Beca.Nombre ?? "").ToLower().Contains("invitado"));
+
+                if (faltaConfig) sinConfigurar++;
 
                 var existentesAlumno = todosExistentesModel
                     .Where(e => e.AlumnoId == alumno.Id)
@@ -273,15 +329,27 @@ namespace SoftSportAPI.Controllers
 
                 if (hasSpecificTarget)
                 {
-                    // Generate or override specifically for this Target Month
                     var existingPeriod = existentesAlumno.FirstOrDefault(e => e.Anio == anioTarget && e.Mes == mesTarget);
-                    var fechaVencimiento = new DateTime(anioTarget, mesTarget, Math.Min(diaVencimiento, DateTime.DaysInMonth(anioTarget, mesTarget)));
-                    var estadoCalculado = isExonerado ? "Exonerado" : (fechaVencimiento < DateTime.Today ? "Vencido" : "Pendiente");
+
+                    string estadoCalculado;
+                    DateTime? fechaVencimiento = null;
+
+                    if (isExonerado)
+                    {
+                        estadoCalculado = "Exonerado";
+                    }
+                    else if (faltaConfig)
+                    {
+                        estadoCalculado = "Falta Configurar";
+                    }
+                    else
+                    {
+                        fechaVencimiento = new DateTime(anioTarget, mesTarget, Math.Min(diaVencimiento, DateTime.DaysInMonth(anioTarget, mesTarget)));
+                        estadoCalculado = fechaVencimiento < DateTime.Today ? "Vencido" : "Pendiente";
+                    }
 
                     if (existingPeriod != null)
                     {
-                        // Overwrite logic (only if not Pagado, Exonerado manually overriding, etc)
-                        // Could safely override amount and due date. We won't touch "Pagado" ones naturally.
                         if (existingPeriod.Estado != "Pagado")
                         {
                             existingPeriod.Monto = montoFinal;
@@ -291,12 +359,11 @@ namespace SoftSportAPI.Controllers
                             existingPeriod.UsuarioModificacion = "System";
                             actualizados.Add(existingPeriod);
                             totalActualizados++;
-                            totalAlumnos++; // Marked as affected
+                            totalAlumnos++;
                         }
                     }
                     else
                     {
-                        // Create
                         nuevos.Add(new PeriodoPago
                         {
                             AlumnoId = alumno.Id,
@@ -314,8 +381,8 @@ namespace SoftSportAPI.Controllers
                 }
                 else
                 {
-                    // Generate history sequentially from inscription date
-                    var current = new DateTime(fechaInicio.Year, fechaInicio.Month, 1);
+                    // Historic generation from fechaRef
+                    var current = new DateTime(fechaRef.Year, fechaRef.Month, 1);
                     var hasta = new DateTime(fechaHasta.Year, fechaHasta.Month, 1);
                     var generadosAlumno = 0;
 
@@ -326,8 +393,22 @@ namespace SoftSportAPI.Controllers
 
                         if (!existentesAlumno.Any(e => e.Anio == anio && e.Mes == mes))
                         {
-                            var fechaVencimiento = new DateTime(anio, mes, Math.Min(diaVencimiento, DateTime.DaysInMonth(anio, mes)));
-                            var estadoInicial = isExonerado ? "Exonerado" : (fechaVencimiento < DateTime.Today ? "Vencido" : "Pendiente");
+                            string estadoInicial;
+                            DateTime? fechaVencimiento = null;
+
+                            if (isExonerado)
+                            {
+                                estadoInicial = "Exonerado";
+                            }
+                            else if (faltaConfig)
+                            {
+                                estadoInicial = "Falta Configurar";
+                            }
+                            else
+                            {
+                                fechaVencimiento = new DateTime(anio, mes, Math.Min(diaVencimiento, DateTime.DaysInMonth(anio, mes)));
+                                estadoInicial = fechaVencimiento < DateTime.Today ? "Vencido" : "Pendiente";
+                            }
 
                             nuevos.Add(new PeriodoPago
                             {
@@ -352,22 +433,21 @@ namespace SoftSportAPI.Controllers
             }
 
             if (nuevos.Any())
-            {
                 _context.PeriodosPago.AddRange(nuevos);
-            }
-            if (actualizados.Any() || nuevos.Any()) {
+
+            if (actualizados.Any() || nuevos.Any())
                 await _context.SaveChangesAsync();
-            }
 
             return Ok(new
             {
-                message = hasSpecificTarget 
+                message = hasSpecificTarget
                           ? $"Se generaron {nuevos.Count} y se actualizaron {actualizados.Count} período(s) de {MESES_FULL[mesTarget - 1]} {anioTarget}."
                           : $"Se generaron {totalGenerados} período(s) histórico(s).",
                 totalGenerados = nuevos.Count,
                 totalActualizados = actualizados.Count,
                 totalAlumnosAfectados = actualizados.Any() || nuevos.Any() ? totalAlumnos : 0,
-                alumnosEvaluados = alumnos.Count
+                alumnosEvaluados = alumnos.Count,
+                alumnosSinConfigurar = sinConfigurar
             });
         }
 

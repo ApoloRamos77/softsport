@@ -137,6 +137,28 @@ namespace SoftSportAPI.Models
         [Column("notas")]
         public string? Notas { get; set; }
 
+        // Configuración de Pagos por Alumno
+        /// <summary>
+        /// Fecha a partir de la cual el alumno debe pagar. El día de esta fecha
+        /// determina el día de vencimiento en los meses posteriores.
+        /// </summary>
+        [Column("fecha_inicio_pago")]
+        public DateTime? FechaInicioPago { get; set; }
+
+        /// <summary>
+        /// Monto de la mensualidad personalizada del alumno.
+        /// Solo aplica cuando TieneMensualidadEspecial = true.
+        /// </summary>
+        [Column("monto_mensualidad")]
+        public decimal? MontoMensualidad { get; set; }
+
+        /// <summary>
+        /// Indica si el alumno tiene un monto de mensualidad especial
+        /// que sobreescribe el monto base global en la generación masiva.
+        /// </summary>
+        [Column("tiene_mensualidad_especial")]
+        public bool TieneMensualidadEspecial { get; set; } = false;
+
         // Campos de Gestión Nutricional
         [Column("horario_entrenamiento")]
         [MaxLength(200)]
