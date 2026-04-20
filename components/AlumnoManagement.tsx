@@ -423,6 +423,7 @@ const AlumnoManagement: React.FC = () => {
                   <small className="text-secondary">Intenta ajustar los filtros o agregar un nuevo alumno</small>
                 </div>
               </div>
+            </div>
             ) : (
               paginatedAlumnos.map((a) => (
                 <div key={a.id} className={viewMode === 'grid' ? "col-12 col-md-6 col-xl-4" : "col-12"}>
@@ -490,6 +491,7 @@ const AlumnoManagement: React.FC = () => {
                       >
                         <i className="bi bi-trash me-1"></i>
                       </button>
+                    </div>
                     </div>
                   </div>
                 </div>
