@@ -41,6 +41,8 @@ interface GenerarModalState {
 
 const PeriodosPagoManagement: React.FC = () => {
     const [periodos, setPeriodos] = useState<PeriodoPago[]>([]);
+    const [alumnos, setAlumnos] = useState<AlumnoSimple[]>([]);
+    const [loading, setLoading] = useState(true);
     const [filtroAlumnoId, setFiltroAlumnoId] = useState<string>('');
     const [filtroCategoriaMain, setFiltroCategoriaMain] = useState<string>('');
     const [filtroEstado, setFiltroEstado] = useState<string>('');
