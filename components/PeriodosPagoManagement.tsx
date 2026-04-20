@@ -18,6 +18,7 @@ interface AlumnoSimple {
     apellido: string;
     fechaInscripcion?: string;
     categoriaId?: number;
+    estado?: string;
     categoria?: { id?: number; nombre: string };
     beca?: { id?: number; nombre: string; porcentaje: number };
 }
@@ -238,12 +239,14 @@ const PeriodosPagoManagement: React.FC = () => {
     const alumnosFiltrados = alumnos.filter(a => {
         if (filtroCategoriaMain && a.categoriaId !== parseInt(filtroCategoriaMain)) return false;
         
-        // Excluir exonerados o de configuración incompleta si está en "Solo Pagantes"
+        // Filtrar por Estado: Siempre mostrar solo activos en esta vista de pagos por defecto
+        // O al menos cuando el filtro "Solo Pagantes" esté activo.
+        // El usuario pidió "ademas de solo mostrar los pagantes mostrar solo los alumnos activos"
         if (soloPagantes) {
+            const esActivo = a.estado === 'Activo' || !a.estado; // null asume activo por defecto en BD
+            if (!esActivo) return false;
+
             const esExonerado = a.beca?.porcentaje === 100 || a.beca?.nombre?.toLowerCase().includes('invitado');
-            // Nota: Aquí se asume que si tenemos el objeto alumno completo, idealmente backend pasaria 
-            // montoMensualidad o falta configuración, pero como aquí solo tenemos AlumnoSimple
-            // aplicamos filtro general y dependemos de la visualización.
             if (esExonerado) return false;
         }
 
